@@ -16,7 +16,7 @@ const router = createRouter({
         {
           path: '/discounts',
           name: 'discounts',
-          component: () => import('@/views/pages/discount/Discount.vue')
+          component: () => import('@/views/discount/Discount.vue')
       },
     ]
     },
