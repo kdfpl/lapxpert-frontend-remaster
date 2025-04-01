@@ -20,6 +20,30 @@ const formatDateTime = (dateString) => {
   return new Intl.DateTimeFormat('vi-VN', options).format(new Date(dateString))
 }
 
+// Format `ngayBatDau` for the input
+const formattedNgayBatDau = computed({
+  get() {
+    return discount.value.ngayBatDau
+      ? new Date(discount.value.ngayBatDau).toISOString().slice(0, 16)
+      : ''
+  },
+  set(value) {
+    discount.value.ngayBatDau = value ? new Date(value).toISOString() : ''
+  },
+})
+
+// Format `ngayKetThuc` for the input
+const formattedNgayKetThuc = computed({
+  get() {
+    return discount.value.ngayKetThuc
+      ? new Date(discount.value.ngayKetThuc).toISOString().slice(0, 16)
+      : ''
+  },
+  set(value) {
+    discount.value.ngayKetThuc = value ? new Date(value).toISOString() : ''
+  },
+})
+
 onBeforeMount(async () => {
   await discountStore.fetchDiscounts()
 })
@@ -109,7 +133,7 @@ function confirmDeleteDiscounts() {
 
       <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
       <Column header="STT">
-        <template #body="{ data, index }">
+        <template #body="{ index }">
           {{ index + 1 }}
         </template>
       </Column>
@@ -157,7 +181,7 @@ function confirmDeleteDiscounts() {
     <div class="flex flex-col gap-6">
       <div class="grid grid-cols-12 gap-4">
         <div class="col-span-6">
-          <label for="maDotGiamGia" class="block font-bold mb-3">_id</label>
+          <label for="idDotGiamGia" class="block font-bold mb-3">_id</label>
           <InputText
             id="idDotGiamGia"
             v-model.trim="discount.id"
@@ -200,24 +224,21 @@ function confirmDeleteDiscounts() {
           </small>
         </div>
         <div class="col-span-3">
-          <label for="tenDotGiamGia" class="block font-bold mb-3">Phần trăm giảm</label>
+          <label for="phanTramGiam" class="block font-bold mb-3">Phần trăm giảm</label>
           <InputNumber
             id="phanTramGiam"
-            inputId="percent" prefix="% "
+            inputId="percent"
+            prefix="% "
             v-model.trim="discount.phanTramGiam"
-            required="true"
+            :required="true"
             autofocus
             :invalid="submitted && !discount.phanTramGiam"
             mode="decimal"
+            showButtons
             :min="0"
             :max="100"
             :minFractionDigits="0"
             :maxFractionDigits="2"
-            :showButtons="true"
-            :buttonLayout="'horizontal'"
-            :incrementButtonIcon="'pi pi-plus'"
-            :decrementButtonIcon="'pi pi-minus'"
-            :buttonClass="'p-button-secondary'"
             fluid
           />
           <small v-if="submitted && !discount.tenDotGiamGia" class="text-red-500">
@@ -227,52 +248,35 @@ function confirmDeleteDiscounts() {
       </div>
       <div class="grid grid-cols-12 gap-4">
         <div class="col-span-6">
-          <FloatLabel variant="on">
-            <DatePicker
-              inputId="ngayBatDau"
-              v-model="discount.ngayBatDau"
-              showIcon
-              iconDisplay="input"
-              :showButtonBar="true"
-              showTime
-              :hourFormat="24"
-              :dateFormat="'dd/mm/yy hh:mm'"
-              :disabledDates="[new Date()]"
-              :minDate="new Date()"
-              :required="true"
-              autofocus
-              :invalid="submitted && !discount.ngayBatDau"
-              fluid
-            />
-            <label for="ngayBatDau" class="block font-bold mb-3">Ngày bắt đầu</label>
-            <small v-if="submitted && !discount.ngayBatDau" class="text-red-500">
-              Ngày bắt đầu không được để trống
-            </small>
-          </FloatLabel>
+          <label for="ngayBatDau" class="block font-bold mb-3">Ngày bắt đầu</label>
+          <input
+            id="ngayBatDau"
+            type="datetime-local"
+            v-model="formattedNgayBatDau"
+            :min="new Date().toISOString().slice(0, 16)"
+            class="p-inputtext p-component w-full"
+            :class="{ 'p-invalid': submitted && !discount.ngayBatDau }"
+            required
+          />
+          <small v-if="submitted && !discount.ngayBatDau" class="text-red-500">
+            Ngày bắt đầu không được để trống
+          </small>
         </div>
+
         <div class="col-span-6">
-          <FloatLabel variant="on">
-            <DatePicker
-              inputId="ngayBatDau"
-              v-model="discount.ngayBatDau"
-              showIcon
-              iconDisplay="input"
-              :showButtonBar="true"
-              :showTime="true"
-              :hourFormat="24"
-              :dateFormat="'dd/mm/yy hh:mm'"
-              :disabledDates="[new Date()]"
-              :minDate="new Date()"
-              :required="true"
-              autofocus
-              :invalid="submitted && !discount.ngayBatDau"
-              fluid
-            />
-            <label for="ngayBatDau" class="block font-bold mb-3">Ngày bắt đầu</label>
-            <small v-if="submitted && !discount.ngayBatDau" class="text-red-500">
-              Ngày bắt đầu không được để trống
-            </small>
-          </FloatLabel>
+          <label for="ngayKetThuc" class="block font-bold mb-3">Ngày kết thúc</label>
+          <input
+            id="ngayKetThuc"
+            type="datetime-local"
+            v-model="formattedNgayKetThuc"
+            :min="formattedNgayBatDau"
+            class="p-inputtext p-component w-full"
+            :class="{ 'p-invalid': submitted && !discount.ngayKetThuc }"
+            required
+          />
+          <small v-if="submitted && !discount.ngayKetThuc" class="text-red-500">
+            Ngày kết thúc không được để trống
+          </small>
         </div>
       </div>
     </div>
