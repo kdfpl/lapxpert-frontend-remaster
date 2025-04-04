@@ -48,10 +48,7 @@ const submitted = ref(false)
 onBeforeMount(async () => {
   await discountStore.fetchDiscounts()
   await productStore.fetchProducts()
-  discounts.value.forEach((discount) => {
-    discount.ngayBatDau = discount.ngayBatDau ? new Date(discount.ngayBatDau) : null;
-    discount.ngayKetThuc = discount.ngayKetThuc ? new Date(discount.ngayKetThuc) : null;
-  });
+
 })
 
 function clearFilter() {
