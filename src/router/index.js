@@ -9,16 +9,21 @@ const router = createRouter({
       component: AppLayout,
       children: [
         {
-            path: '/',
-            name: 'dashboard',
-            component: () => import('@/views/Dashboard.vue')
+          path: '/',
+          name: 'dashboard',
+          component: () => import('@/views/Dashboard.vue'),
         },
         {
           path: '/discounts',
           name: 'discounts',
-          component: () => import('@/views/discount/Discount.vue')
-      },
-    ]
+          component: () => import('@/views/discount/Discount.vue'),
+        },
+        {
+          path: '/products/list',
+          name: 'products',
+          component: () => import('@/views/product/Product.vue'),
+        },
+      ],
     },
   ],
 })
