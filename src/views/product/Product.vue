@@ -319,190 +319,261 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
-import productService from '@/apis/product' // Dịch vụ lấy dữ liệu sản phẩm
-import productDetailService from '@/apis/productdetail' // Dịch vụ lấy dữ liệu sản phẩm chi tiết
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
+import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 import { useProductStore } from '@/stores/productstore'
+// import productService from '@/apis/product' // Not used directly, store handles it
+// import productDetailService from '@/apis/productdetail' // Not used directly, store handles it
 
+// --- 1. Store Access ---
 const productStore = useProductStore()
 const toast = useToast()
 
-const products = computed(() => productStore.activeProducts)
+// --- 2. State ---
+
+// Loading states
+const loadingSanPham = ref(true)
+const loadingSanPhamChiTiet = ref(true) // Keep separate if fetches are distinct logic in store
+
+// Table expansion state
+const expandedRowsSanPhamChiTiet = ref([])
+
+// --- 3. Computed Data ---
+
+// Raw products from store
+const products = computed(() => productStore.activeProducts) // Assumes store returns SanPhamDto[] with nested SanPhamChiTietDto[]
+
+// Flattened list for the Detailed Product table
 const productsDetails = computed(() => {
+  // flatMap iterates through each product, then maps its sanPhamChiTiets,
+  // adding parent product info, and flattens the result into a single array.
   return products.value.flatMap((product) =>
     product.sanPhamChiTiets.map((detail) => ({
-      ...detail,
+      ...detail, // Spread all properties of SanPhamChiTietDto
+      // Explicitly add properties from the parent SanPhamDto needed in the detailed table/expansion
       tenSanPham: product.tenSanPham,
-      ngayRaMat: product.ngayRaMat,
+      ngayRaMat: product.ngayRaMat, // Example, add others if needed by columns/filters
+      // idSanPham: product.id // Could be useful
     })),
   )
 })
 
-const loadingSanPham = ref(true)
-const loadingSanPhamChiTiet = ref(true)
+// --- 4. Filters ---
 
-const filtersSanPham = ref({
+// Initial filter definitions to avoid repetition
+const initialFiltersSanPham = {
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   maSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
   tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'thuongHieu.moTaThuongHieu': { value: null, matchMode: FilterMatchMode.EQUALS },
+  'thuongHieu.moTaThuongHieu': { value: null, matchMode: FilterMatchMode.EQUALS }, // Adjust match mode if needed (CONTAINS?)
   trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
   ngayRaMat: {
     operator: FilterOperator.AND,
     constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
   },
-})
+}
 
-const filtersSanPhamChiTiet = ref({
+const initialFiltersSanPhamChiTiet = {
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  'sanPham.tenSanPham': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+  tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH }, // Matches the 'tenSanPham' added in computed
   sku: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
   mauSac: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  soLuongTonKho: { value: null, matchMode: FilterMatchMode.EQUALS },
-  giaBan: { value: null, matchMode: FilterMatchMode.EQUALS },
-  'cpu.moTaCpu': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'ram.moTaRam': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'oCung.moTaOCung': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'gpu.moTaGpu': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'manHinh.moTaManHinh': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'congGiaoTiep.moTaCongGiaoTiep': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'banPhim.moTaBanPhim': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'ketNoiMang.moTaKetNoiMang': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'amThanh.moTaAmThanh': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'webcam.moTaWebcam': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'baoMat.moTaBaoMat': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'heDieuHanh.moTaHeDieuHanh': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'pin.moTaPin': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'thietKe.moTaThietKe': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+  soLuongTonKho: { value: null, matchMode: FilterMatchMode.EQUALS }, // Or BETWEEN, >= etc.
+  giaBan: { value: null, matchMode: FilterMatchMode.EQUALS }, // Or BETWEEN, >= etc.
+  'cpu.moTaCpu': { value: null, matchMode: FilterMatchMode.CONTAINS }, // Contains might be better
+  'ram.moTaRam': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'oCung.moTaOCung': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'gpu.moTaGpu': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'manHinh.moTaManHinh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'congGiaoTiep.moTaCongGiaoTiep': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'banPhim.moTaBanPhim': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'ketNoiMang.moTaKetNoiMang': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'amThanh.moTaAmThanh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'webcam.moTaWebcam': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'baoMat.moTaBaoMat': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'heDieuHanh.moTaHeDieuHanh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'pin.moTaPin': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'thietKe.moTaThietKe': { value: null, matchMode: FilterMatchMode.CONTAINS },
   ngayRaMat: {
     operator: FilterOperator.AND,
     constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
-  },
-})
-
-const expandedRowsSanPhamChiTiet = ref([])
-const onRowToggle = (event) => {
-  expandedRowsSanPhamChiTiet.value = event.data
+  }, // Matches ngayRaMat added in computed
 }
 
+// Reactive filter refs, initialized with deep copies
+const filtersSanPham = ref(JSON.parse(JSON.stringify(initialFiltersSanPham)))
+const filtersSanPhamChiTiet = ref(JSON.parse(JSON.stringify(initialFiltersSanPhamChiTiet)))
+
+// --- 5. Lifecycle Hooks ---
+onMounted(() => {
+  // Use Promise.all to fetch data concurrently (if store actions allow)
+  Promise.all([
+    fetchData(productStore.fetchActiveProducts, loadingSanPham, 'Lỗi tải danh sách sản phẩm').then(
+      () => {
+        loadingSanPhamChiTiet.value = false
+      },
+    ),
+    // fetchData(productStore.fetchActiveProductsDetailed, loadingSanPhamChiTiet, 'Lỗi tải danh sách sản phẩm chi tiết')
+  ]).catch((error) => {
+    console.error('Error during initial data fetching:', error)
+  })
+})
+
+// --- 6. Utility Functions ---
+
+/**
+ * Helper function to fetch data, manage loading state, and show toast on error.
+ * @param {Function} fetchFunction - The async function from the store to call.
+ * @param {Ref<Boolean>} loadingRef - The ref controlling the loading state.
+ * @param {string} errorMessage - The error message for the toast.
+ */
 const fetchData = async (fetchFunction, loadingRef, errorMessage) => {
+  loadingRef.value = true // Set loading true *before* fetching
   try {
     await fetchFunction()
   } catch (error) {
     console.error(`${errorMessage}:`, error.response?.data || error.message)
-    toast.add({ severity: 'error', summary: 'Error', detail: errorMessage })
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: `${errorMessage}: ${error.message || 'Unknown error'}`,
+      life: 4000,
+    })
   } finally {
     loadingRef.value = false
   }
 }
 
-onMounted(() => {
-  fetchData(productStore.fetchActiveProducts, loadingSanPham, 'Lỗi tải danh sách sản phẩm')
-  fetchData(
-    productStore.fetchActiveProductsDetailed,
-    loadingSanPhamChiTiet,
-    'Lỗi tải danh sách sản phẩm chi tiết',
-  )
-})
-
-// Watcher để theo dõi sự thay đổi của filters
-watch(
-  filtersSanPham,
-  (newFilters) => {
-    console.log('Filters sản phẩm thay đổi:', newFilters)
-  },
-  { deep: true },
-)
-
-watch(
-  filtersSanPhamChiTiet,
-  (newFilters) => {
-    console.log('Filters sản phẩm chi tiết thay đổi:', newFilters)
-  },
-  { deep: true },
-)
-
-// Hàm xóa filter
-const clearFilterSanPham = () => {
-  filtersSanPham.value = {
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    maSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'thuongHieu.moTaThuongHieu': { value: null, matchMode: FilterMatchMode.EQUALS },
-    trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
-    ngayRaMat: {
-      operator: FilterOperator.AND,
-      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
-    },
+/**
+ * Formats a date string (or Date object) into dd/MM/yyyy format.
+ * @param {string | Date | null | undefined} dateInput - The date to format.
+ * @returns {string} Formatted date string or 'N/A'.
+ */
+const formatDate = (dateInput) => {
+  if (!dateInput) return 'N/A'
+  try {
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(new Date(dateInput))
+  } catch (e) {
+    console.error('Error formatting date:', e)
+    return 'Invalid Date'
   }
 }
 
-const clearFilterSanPhamChiTiet = () => {
-  filtersSanPhamChiTiet.value = {
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'sanPham.tenSanPham': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    sku: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    mauSac: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    soLuongTonKho: { value: null, matchMode: FilterMatchMode.EQUALS },
-    giaBan: { value: null, matchMode: FilterMatchMode.EQUALS },
-    'cpu.moTaCpu': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'ram.moTaRam': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'oCung.moTaOCung': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'gpu.moTaGpu': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'manHinh.moTaManHinh': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'congGiaoTiep.moTaCongGiaoTiep': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'banPhim.moTaBanPhim': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'ketNoiMang.moTaKetNoiMang': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'amThanh.moTaAmThanh': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'webcam.moTaWebcam': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'baoMat.moTaBaoMat': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'heDieuHanh.moTaHeDieuHanh': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'pin.moTaPin': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    'thietKe.moTaThietKe': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    ngayRaMat: {
-      operator: FilterOperator.AND,
-      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
-    },
-  }
-}
-
-// Hàm định dạng ngày tháng
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A'
-  return new Intl.DateTimeFormat('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(dateString))
-}
+/**
+ * Formats a number as Vietnamese currency (VND).
+ * @param {number | null | undefined} value - The numeric value to format.
+ * @returns {string} Formatted currency string or empty string.
+ */
 const formatCurrency = (value) => {
+  if (typeof value !== 'number') return ''
   return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
 }
 
-// Sửa sản phẩm
-const suaSanPham = (data) => {
-  console.log('Sửa sản phẩm:', data)
-  // Mở form hoặc giao diện chỉnh sửa sản phẩm
+// --- 7. Filter Control Methods ---
+
+/** Clears filters for the SanPham table. */
+const clearFilterSanPham = () => {
+  filtersSanPham.value = JSON.parse(JSON.stringify(initialFiltersSanPham))
 }
 
-// Sửa sản phẩm chi tiết
-const suaSanPhamChiTiet = (data) => {
-  console.log('Sửa sản phẩm chi tiết:', data)
-  // Mở form hoặc giao diện chỉnh sửa sản phẩm chi tiết
+/** Clears filters for the SanPhamChiTiet table. */
+const clearFilterSanPhamChiTiet = () => {
+  filtersSanPhamChiTiet.value = JSON.parse(JSON.stringify(initialFiltersSanPhamChiTiet))
 }
 
-// Xóa sản phẩm
-const xoaSanPham = (id) => {
-  console.log('Xóa sản phẩm với ID:', id)
-  // Thực hiện xóa mềm hoặc yêu cầu xác nhận trước khi xóa
+// --- 8. Table Interaction Methods ---
+
+/** Handles row expansion toggle for the detailed products table. */
+const onRowToggle = (event) => {
+  // PrimeVue typically handles the expandedRows update itself if v-model:expandedRows is used.
+  // This handler might be needed for custom logic or if not using v-model.
+  // If using v-model, this function might be redundant unless adding extra logic.
+  // Let's keep it for now assuming it might be needed or was intended.
+  // Check PrimeVue docs for the exact behavior of @rowToggle with v-model:expandedRows.
+  console.log('Row Toggled:', event.data)
+  // If not using v-model, you might need: expandedRowsSanPhamChiTiet.value = event.data;
 }
 
-// Xóa sản phẩm chi tiết
-const xoaSanPhamChiTiet = (id) => {
-  console.log('Xóa sản phẩm chi tiết với ID:', id)
-  // Thực hiện xóa mềm hoặc yêu cầu xác nhận trước khi xóa
+// --- 9. CRUD Placeholders ---
+// These should ideally open dialogs/modals or navigate to an edit page.
+
+/** Placeholder function to handle editing a SanPham. */
+const suaSanPham = (productData) => {
+  console.log('Sửa sản phẩm:', productData)
+  toast.add({
+    severity: 'warn',
+    summary: 'Thông tin',
+    detail: 'Chức năng sửa sản phẩm chưa được cài đặt.',
+    life: 3000,
+  })
+  // TODO: Implement navigation or dialog opening for editing SanPham
+  // Example: router.push(`/products/edit/${productData.id}`);
+}
+
+/** Placeholder function to handle editing a SanPhamChiTiet. */
+const suaSanPhamChiTiet = (productDetailData) => {
+  console.log('Sửa sản phẩm chi tiết:', productDetailData)
+  toast.add({
+    severity: 'warn',
+    summary: 'Thông tin',
+    detail: 'Chức năng sửa sản phẩm chi tiết chưa được cài đặt.',
+    life: 3000,
+  })
+  // TODO: Implement navigation or dialog opening for editing SanPhamChiTiet
+  // Example: showEditDetailDialog(productDetailData);
+}
+
+/** Placeholder function to handle deleting a SanPham. */
+const xoaSanPham = async (productId) => {
+  console.log('Xóa sản phẩm với ID:', productId)
+  // TODO: Implement confirmation dialog and actual API call using async/await
+  // Example:
+  // if (confirm(`Bạn có chắc muốn xóa sản phẩm ID ${productId}?`)) {
+  //   try {
+  //     loadingSanPham.value = true; // Show loading indicator
+  //     await productStore.deleteProduct(productId); // Assume store has delete action
+  //     toast.success('Xóa sản phẩm thành công');
+  //   } catch (error) {
+  //     toast.error(`Lỗi khi xóa sản phẩm: ${error.message}`);
+  //   } finally {
+  //      loadingSanPham.value = false;
+  //   }
+  // }
+  toast.add({
+    severity: 'warn',
+    summary: 'Thông tin',
+    detail: 'Chức năng xóa sản phẩm chưa được cài đặt.',
+    life: 3000,
+  })
+}
+
+/** Placeholder function to handle deleting a SanPhamChiTiet. */
+const xoaSanPhamChiTiet = async (productDetailId) => {
+  console.log('Xóa sản phẩm chi tiết với ID:', productDetailId)
+  // TODO: Implement confirmation dialog and actual API call using async/await
+  // Example:
+  // if (confirm(`Bạn có chắc muốn xóa chi tiết sản phẩm ID ${productDetailId}?`)) {
+  //   try {
+  //     loadingSanPhamChiTiet.value = true;
+  //     await productStore.deleteProductDetail(productDetailId); // Assume store has delete action
+  //     toast.success('Xóa chi tiết sản phẩm thành công');
+  //   } catch (error) {
+  //     toast.error(`Lỗi khi xóa chi tiết sản phẩm: ${error.message}`);
+  //   } finally {
+  //     loadingSanPhamChiTiet.value = false;
+  //   }
+  // }
+  toast.add({
+    severity: 'warn',
+    summary: 'Thông tin',
+    detail: 'Chức năng xóa sản phẩm chi tiết chưa được cài đặt.',
+    life: 3000,
+  })
 }
 </script>
 

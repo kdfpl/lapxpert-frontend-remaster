@@ -1,24 +1,41 @@
 <script setup>
+import { ref, computed, onBeforeMount } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
+import { format, parseISO } from 'date-fns'
 import { useDiscountStore } from '@/stores/discountstore'
 import { useProductStore } from '@/stores/productstore'
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
-import { onBeforeMount, ref, computed } from 'vue'
-import { useToast } from 'primevue/usetoast'
-import { format, parseISO } from 'date-fns'
 import discountService from '@/apis/discount'
 
+// --- 1. Store Access ---
 const discountStore = useDiscountStore()
 const productStore = useProductStore()
+
+// --- 2. State ---
+
+// Data from Stores
 const discounts = computed(() => discountStore.discounts)
 const products = computed(() => productStore.products)
-const discount = ref({})
-const selectedDiscounts = ref()
-const selectedProductDetails = ref(new Map())
-const originalSelectedProductDetailIds = ref(new Set())
 
+// Component State - Main Data & Selection
+const discount = ref({}) // Holds the discount being edited or created
+const selectedDiscounts = ref([]) // For multi-select in the main table
+const selectedProductDetails = ref(new Map()) // Map<productId, SanPhamChiTiet[]> for selections in the dialog table
+const originalSelectedProductDetailIds = ref(new Set()) // Tracks original product detail IDs for diffing on update
+
+// Component State - UI Control (Dialogs, Table, Form)
+const discountDialog = ref(false)
+const deleteDiscountDialog = ref(false)
+const deleteDiscountsDialog = ref(false)
+const submitted = ref(false) // Form submission status for validation
+const expandedRows = ref([]) // Controls expanded rows in the product table (dialog)
+
+// Component State - PrimeVue Utilities
 const toast = useToast()
-const expandedRows = ref([])
-const filters = ref({
+
+// --- 3. Filters ---
+// Define the initial structure for filters
+const initialFilters = {
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   maDotGiamGia: {
     operator: FilterOperator.AND,
@@ -28,7 +45,7 @@ const filters = ref({
     operator: FilterOperator.AND,
     constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
   },
-  phanTramGiam: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
+  phanTramGiam: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN }, // Assuming range slider or similar
   ngayBatDau: {
     operator: FilterOperator.AND,
     constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
@@ -38,151 +55,178 @@ const filters = ref({
     constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
   },
   trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
-})
-
-const discountDialog = ref(false)
-const deleteDiscountDialog = ref(false)
-const deleteDiscountsDialog = ref(false)
-const submitted = ref(false)
-
-onBeforeMount(async () => {
-  await discountStore.fetchDiscounts()
-  await productStore.fetchProducts()
-
-})
-
-function clearFilter() {
-  filters.value = {
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    maDotGiamGia: {
-      operator: FilterOperator.AND,
-      constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
-    },
-    tenDotGiamGia: {
-      operator: FilterOperator.AND,
-      constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
-    },
-    phanTramGiam: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
-    ngayBatDau: {
-      operator: FilterOperator.AND,
-      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
-    },
-    ngayKetThuc: {
-      operator: FilterOperator.AND,
-      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
-    },
-    trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
-  }
 }
 
+// Reactive reference for current filters, initialized with a deep copy
+const filters = ref(JSON.parse(JSON.stringify(initialFilters)))
+
+// Function to reset filters to their initial state
+function clearFilter() {
+  filters.value = JSON.parse(JSON.stringify(initialFilters))
+}
+
+// --- 4. Computed Properties ---
+
+// Computed properties for formatting dates in the form inputs
+const formattedNgayBatDau = createFormattedDateTime('ngayBatDau')
+const formattedNgayKetThuc = createFormattedDateTime('ngayKetThuc')
+
+// --- 5. Lifecycle Hooks ---
+onBeforeMount(async () => {
+  // Fetch initial data when the component is about to mount
+  try {
+    await Promise.all([discountStore.fetchDiscounts(), productStore.fetchProducts()])
+  } catch (error) {
+    console.error('Error fetching initial data:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải dữ liệu ban đầu',
+      life: 3000,
+    })
+  }
+})
+
+// --- 6. Utility Functions ---
+
+/**
+ * Formats an ISO date string into a locale-specific date and time string.
+ * @param {string} dateString - The ISO date string (UTC).
+ * @param {string} [locale=navigator.language] - The locale to use for formatting.
+ * @returns {string} Formatted date-time string or empty string if input is invalid.
+ */
 const formatDateTime = (dateString, locale = navigator.language) => {
   if (!dateString) return ''
-  const options = {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return '' // Check for invalid date
+    const options = {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true, // Use hour12: false for 24-hour format if needed
+    }
+    return new Intl.DateTimeFormat(locale, options).format(date)
+  } catch (error) {
+    console.error('Error formatting date-time:', error)
+    return '' // Return empty on error
   }
-  return new Intl.DateTimeFormat(locale, options).format(new Date(dateString))
 }
 
-// Hàm chuyển chuỗi ISO (UTC) thành chuỗi local datetime cho input
+/**
+ * Converts an ISO date string (UTC) to a local datetime string suitable for <input type="datetime-local">.
+ * @param {string} dateString - The ISO date string (UTC).
+ * @returns {string} Formatted string (yyyy-MM-ddTHH:mm) or empty string if input is invalid.
+ */
 const formatLocalDateTime = (dateString) => {
   if (!dateString) return ''
-  // parseISO chuyển chuỗi UTC thành Date theo giờ địa phương
-  const date = parseISO(dateString)
-  // format chuyển Date về dạng "YYYY-MM-DDTHH:mm" (không có timezone)
-  return format(date, "yyyy-MM-dd'T'HH:mm")
+  try {
+    const date = parseISO(dateString) // parseISO correctly handles UTC string to local Date object
+    return format(date, "yyyy-MM-dd'T'HH:mm") // Format for datetime-local input
+  } catch (error) {
+    console.error('Error formatting local date-time:', error)
+    return ''
+  }
 }
 
+/**
+ * Formats a number as Vietnamese currency (VND).
+ * @param {number} value - The numeric value to format.
+ * @returns {string} Formatted currency string.
+ */
+const formatCurrency = (value) => {
+  if (typeof value !== 'number') return ''
+  return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+}
+
+/**
+ * Factory function to create computed properties for handling date fields (get/set).
+ * Converts between ISO string (model) and datetime-local string (input).
+ * @param {string} fieldName - The name of the date field in the `discount.value` object.
+ */
 function createFormattedDateTime(fieldName) {
   return computed({
     get() {
       return discount.value[fieldName] ? formatLocalDateTime(discount.value[fieldName]) : ''
     },
     set(value) {
-      discount.value[fieldName] = value ? new Date(value).toISOString() : ''
+      // When input changes, convert back to ISO string (UTC)
+      discount.value[fieldName] = value ? new Date(value).toISOString() : null // Use null for empty
     },
   })
 }
 
-const formattedNgayBatDau = createFormattedDateTime('ngayBatDau')
-const formattedNgayKetThuc = createFormattedDateTime('ngayKetThuc')
-
+/**
+ * Gets the severity level for a discount status tag based on its state.
+ * @param {string} trangThai - The status ('CHUA_DIEN_RA', 'DA_DIEN_RA', 'KET_THUC').
+ * @returns {string|null} PrimeVue severity ('warn', 'success', 'danger') or null.
+ */
 function getSeverity(trangThai) {
-  switch (trangThai) {
-    case 'CHUA_DIEN_RA':
-      return 'warn'
-    case 'DA_DIEN_RA':
-      return 'success'
-    case 'KET_THUC':
-      return 'danger'
-    default:
-      return null
+  const severityMap = {
+    CHUA_DIEN_RA: 'warn',
+    DA_DIEN_RA: 'success',
+    KET_THUC: 'danger',
   }
+  return severityMap[trangThai] || null
 }
 
+/**
+ * Gets the display label for a discount status.
+ * @param {string} trangThai - The status ('CHUA_DIEN_RA', 'DA_DIEN_RA', 'KET_THUC').
+ * @returns {string} User-friendly status label.
+ */
 function getTrangThaiLabel(trangThai) {
-  switch (trangThai) {
-    case 'CHUA_DIEN_RA':
-      return 'Chưa hoạt động'
-    case 'DA_DIEN_RA':
-      return 'Đang hoạt động'
-    case 'KET_THUC':
-      return 'Ngưng hoạt động'
-    default:
-      return 'Unknown'
+  const labelMap = {
+    CHUA_DIEN_RA: 'Chưa hoạt động',
+    DA_DIEN_RA: 'Đang hoạt động',
+    KET_THUC: 'Ngưng hoạt động',
   }
+  return labelMap[trangThai] || 'Không xác định'
 }
 
+// --- 7. Dialog Control Methods ---
+
+/** Closes the main discount detail dialog and resets submission state. */
 function hideDialog() {
   discountDialog.value = false
   submitted.value = false
 }
 
-function expandAll() {
-  expandedRows.value = products.value.reduce((acc, p) => (acc[p.id] = true) && acc, {})
-}
-
-function collapseAll() {
-  expandedRows.value = null
-}
-
-async function editDiscount(data) {
-  discount.value = { ...data }
+/** Opens the dialog to create a new discount, resetting relevant state. */
+function newDiscount() {
+  discount.value = {} // Reset discount object
+  selectedProductDetails.value.clear()
+  originalSelectedProductDetailIds.value.clear()
+  submitted.value = false // Reset validation state
   discountDialog.value = true
-  selectedProductDetails.value.clear() // Reset UI selection
-  originalSelectedProductDetailIds.value.clear() // Reset original IDs
+}
 
+/**
+ * Opens the dialog to edit an existing discount, populating the form and loading associated products.
+ * @param {object} discountData - The discount data object from the table row.
+ */
+async function editDiscount(discountData) {
+  discount.value = { ...discountData } // Copy data to avoid modifying the original object directly
+  selectedProductDetails.value.clear()
+  originalSelectedProductDetailIds.value.clear()
+  submitted.value = false
+  discountDialog.value = true
+
+  // Fetch and pre-select products associated with this discount
   try {
-    // Lấy danh sách ID hoặc đối tượng chi tiết sản phẩm thuộc về đợt giảm giá này
-    const discountProductsResponse = await discountService.getDiscountProducts(discount.value.id)
-    const discountProductIds = new Set() // Dùng Set để lưu ID gốc
+    const discountProducts = await discountService.getDiscountProducts(discount.value.id)
+    const discountProductIds = new Set(discountProducts.map((p) => p.id))
+    originalSelectedProductDetailIds.value = new Set(discountProductIds) // Store original IDs for diffing
 
-    discountProductsResponse.forEach((p) => {
-      discountProductIds.add(p.id)
-      originalSelectedProductDetailIds.value.add(p.id) // <-- Lưu ID gốc
-    })
-
-    // Lặp qua danh sách sản phẩm chính (đang được dùng để hiển thị trong DataTable)
-    products.value.forEach((sanPham) => {
-      const sanPhamId = sanPham.id
-      const selectedChiTietsForSanPham = []
-
-      // Lặp qua danh sách chi tiết của sản phẩm hiện tại
-      sanPham.sanPhamChiTiets.forEach((chiTiet) => {
-        // Kiểm tra xem ID của chi tiết này có nằm trong danh sách ID lấy từ API không
-        if (discountProductIds.has(chiTiet.id)) {
-          // Nếu có, thêm *đối tượng chiTiet đầy đủ* vào danh sách chọn lựa cho sản phẩm cha này
-          selectedChiTietsForSanPham.push(chiTiet)
-        }
-      })
-
-      // Nếu có chi tiết nào được chọn cho sản phẩm này, cập nhật Map
-      if (selectedChiTietsForSanPham.length > 0) {
-        selectedProductDetails.value.set(sanPhamId, selectedChiTietsForSanPham)
+    // Populate the selectedProductDetails Map for the UI checkboxes
+    products.value.forEach((product) => {
+      const selectedDetailsForProduct = product.sanPhamChiTiets.filter((detail) =>
+        discountProductIds.has(detail.id),
+      )
+      if (selectedDetailsForProduct.length > 0) {
+        selectedProductDetails.value.set(product.id, selectedDetailsForProduct)
       }
     })
   } catch (error) {
@@ -190,93 +234,153 @@ async function editDiscount(data) {
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: 'Có lỗi xảy ra khi tải sản phẩm của đợt giảm giá',
+      detail: 'Không thể tải sản phẩm của đợt giảm giá',
       life: 3000,
     })
   }
 }
 
-function newDiscount() {
-  selectedProductDetails.value.clear()
-  originalSelectedProductDetailIds.value.clear()
-  discount.value = {}
-  discountDialog.value = true
+/**
+ * Opens the confirmation dialog for deleting a single discount.
+ * @param {object} discountData - The discount data object.
+ */
+function confirmDeleteDiscount(discountData) {
+  discount.value = discountData // Store the discount to be deleted
+  deleteDiscountDialog.value = true
 }
 
-function deleteDiscount() {
-  discountService
-    .deleteDiscount(discount.value.id)
-    .then(() => {
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Xoá đợt giảm giá thành công',
-        life: 3000,
-      })
-      discountStore.fetchDiscounts()
-      deleteDiscountDialog.value = false
+/** Opens the confirmation dialog for deleting multiple selected discounts. */
+function confirmDeleteDiscounts() {
+  if (!selectedDiscounts.value || selectedDiscounts.value.length === 0) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: 'Chưa chọn đợt giảm giá nào để xóa',
+      life: 3000,
     })
-    .catch((error) => {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Có lỗi xảy ra khi xoá đợt giảm giá',
-        error,
-        life: 3000,
-      })
-    })
+    return
+  }
+  deleteDiscountsDialog.value = true
 }
 
-function deleteSelectedDiscounts() {
+// --- 8. CRUD Action Methods ---
+
+/** Handles the actual deletion of a single discount after confirmation. */
+async function deleteSingleDiscount() {
+  if (!discount.value || !discount.value.id) return
+
+  try {
+    await discountService.deleteDiscount(discount.value.id)
+    toast.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: 'Xoá đợt giảm giá thành công',
+      life: 3000,
+    })
+    await discountStore.fetchDiscounts() // Refresh the list
+    deleteDiscountDialog.value = false
+    discount.value = {} // Clear the reference
+  } catch (error) {
+    console.error('Error deleting discount:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: `Có lỗi xảy ra khi xoá: ${error.message || 'Lỗi không xác định'}`,
+      life: 3000,
+    })
+  }
+}
+
+/** Handles the actual deletion of multiple selected discounts after confirmation. */
+async function deleteMultipleDiscounts() {
+  if (!selectedDiscounts.value || selectedDiscounts.value.length === 0) return
+
   const selectedIds = selectedDiscounts.value.map((item) => item.id)
-  console.log('Selected IDs:', selectedIds)
-  discountService
-    .deleteDiscounts(selectedIds)
-    .then(() => {
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Xoá đợt giảm giá thành công',
-        life: 3000,
-      })
-      discountStore.fetchDiscounts()
-      deleteDiscountsDialog.value = false
+  try {
+    await discountService.deleteDiscounts(selectedIds)
+    toast.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: `Đã xoá ${selectedIds.length} đợt giảm giá`,
+      life: 3000,
     })
-    .catch((error) => {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Có lỗi xảy ra khi xoá đợt giảm giá',
-        error,
-        life: 3000,
-      })
+    await discountStore.fetchDiscounts() // Refresh the list
+    deleteDiscountsDialog.value = false
+    selectedDiscounts.value = [] // Clear selection
+  } catch (error) {
+    console.error('Error deleting multiple discounts:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: `Có lỗi xảy ra khi xoá: ${error.message || 'Lỗi không xác định'}`,
+      life: 3000,
     })
+  }
 }
 
+/** Saves the current discount (creates or updates). */
 async function saveDiscount() {
-  submitted.value = true
-  console.log('Dữ liệu gửi đi:', JSON.stringify(discount.value))
+  submitted.value = true // Trigger validation display
 
-  // Kiểm tra xem các trường có bị trống không
+  // Basic Validation
   if (
-    !discount.value.maDotGiamGia ||
-    !discount.value.tenDotGiamGia ||
-    !discount.value.phanTramGiam ||
+    !discount.value.maDotGiamGia?.trim() ||
+    !discount.value.tenDotGiamGia?.trim() ||
+    discount.value.phanTramGiam == null || // Check for null/undefined
     !discount.value.ngayBatDau ||
     !discount.value.ngayKetThuc
   ) {
     toast.add({
       severity: 'warn',
       summary: 'Cảnh báo',
-      detail: 'Vui lòng điền đầy đủ thông tin trước khi lưu!',
+      detail: 'Vui lòng điền đầy đủ thông tin bắt buộc!',
+      life: 3000,
+    })
+    return
+  }
+
+  // Date Validation
+  if (
+    discount.value.ngayBatDau &&
+    discount.value.ngayKetThuc &&
+    new Date(discount.value.ngayKetThuc) < new Date(discount.value.ngayBatDau)
+  ) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: 'Ngày kết thúc không được trước ngày bắt đầu!',
       life: 3000,
     })
     return
   }
 
   try {
-    let discountId
     const isUpdating = !!discount.value.id
+    let savedDiscountData // To potentially get the ID if creating
+
+    // --- Save Core Discount Info ---
+    if (isUpdating) {
+      savedDiscountData = await discountService.saveDiscount(discount.value)
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Cập nhật thông tin đợt giảm giá thành công',
+        life: 2000,
+      })
+    } else {
+      savedDiscountData = await discountService.saveDiscount(discount.value)
+      discount.value.id = savedDiscountData.id // Get the new ID for product association
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Tạo đợt giảm giá thành công',
+        life: 3000,
+      })
+    }
+
+    const discountId = discount.value.id
+
+    // --- Handle Product Association (Only if discount save was successful) ---
     const currentSelectedIds = new Set(
       Array.from(selectedProductDetails.value.values())
         .flat()
@@ -284,68 +388,40 @@ async function saveDiscount() {
     )
 
     if (isUpdating) {
-      discountId = discount.value.id
+      // Calculate differences
+      const idsToAdd = [...currentSelectedIds].filter(
+        (id) => !originalSelectedProductDetailIds.value.has(id),
+      )
+      const idsToRemove = [...originalSelectedProductDetailIds.value].filter(
+        (id) => !currentSelectedIds.has(id),
+      )
 
-      // 1. Lưu thông tin chính của đợt giảm giá
-      await discountService.saveDiscount(discount.value)
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Cập nhật thông tin đợt giảm giá thành công',
-        life: 2000,
-      })
-
-      // 2. Xác định sản phẩm cần thêm và cần xóa
-      const idsToAdd = []
-      currentSelectedIds.forEach((currentId) => {
-        if (!originalSelectedProductDetailIds.value.has(currentId)) {
-          idsToAdd.push(currentId)
-        }
-      })
-
-      const idsToRemove = []
-      originalSelectedProductDetailIds.value.forEach((originalId) => {
-        if (!currentSelectedIds.has(originalId)) {
-          idsToRemove.push(originalId)
-        }
-      })
-
-      // 3. Gọi API xóa (nếu có)
+      // API Calls for Associations (execute concurrently if possible and desired)
+      const associationPromises = []
       if (idsToRemove.length > 0) {
         console.log('Removing discount from product IDs:', idsToRemove)
-        await discountService.removeDiscountFromProducts(discountId, idsToRemove)
-        toast.add({
-          severity: 'success',
-          summary: 'Thành công',
-          detail: `Đã gỡ bỏ ${idsToRemove.length} sản phẩm khỏi đợt giảm giá`,
-          life: 3000,
-        })
+        associationPromises.push(
+          discountService.removeDiscountFromProducts(discountId, idsToRemove),
+        )
       }
-
-      // 4. Gọi API thêm (nếu có)
       if (idsToAdd.length > 0) {
         console.log('Adding discount to product IDs:', idsToAdd)
-        await discountService.addDiscountToProducts(discountId, idsToAdd)
+        associationPromises.push(discountService.addDiscountToProducts(discountId, idsToAdd))
+      }
+
+      // Wait for association updates and show feedback
+      if (associationPromises.length > 0) {
+        await Promise.all(associationPromises)
         toast.add({
-          severity: 'success',
-          summary: 'Thành công',
-          detail: `Đã thêm ${idsToAdd.length} sản phẩm vào đợt giảm giá`,
+          severity: 'info',
+          summary: 'Thông tin',
+          detail: 'Cập nhật liên kết sản phẩm thành công',
           life: 3000,
         })
       }
     } else {
-      // 1. Lưu thông tin chính để lấy ID
-      const response = await discountService.saveDiscount(discount.value)
-      discountId = response.id // Lấy ID mới trả về
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Tạo đợt giảm giá thành công',
-        life: 3000,
-      })
-
-      // 2. Thêm tất cả sản phẩm đã chọn vào đợt giảm giá mới này (nếu có)
-      const allSelectedIdsForNew = Array.from(currentSelectedIds) // Chuyển Set thành Array
+      // Creating: Add all currently selected products
+      const allSelectedIdsForNew = Array.from(currentSelectedIds)
       if (allSelectedIdsForNew.length > 0) {
         console.log('Adding discount to product IDs for new discount:', allSelectedIdsForNew)
         await discountService.addDiscountToProducts(discountId, allSelectedIdsForNew)
@@ -358,29 +434,40 @@ async function saveDiscount() {
       }
     }
 
-    await discountStore.fetchDiscounts() // Tải lại danh sách
-    hideDialog() // Đóng dialog
-    discount.value = {} // Reset form discount
-    selectedProductDetails.value.clear() // Reset selection Map
-    originalSelectedProductDetailIds.value.clear() // Reset ID gốc đã lưu
+    // --- Final Steps ---
+    await discountStore.fetchDiscounts() // Refresh the main list
+    hideDialog() // Close the dialog
+    // Reset state for the next operation
+    discount.value = {}
+    selectedProductDetails.value.clear()
+    originalSelectedProductDetailIds.value.clear()
   } catch (error) {
+    console.error('Error saving discount:', error)
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: 'Có lỗi xảy ra khi lưu đợt giảm giá',
-      error,
+      detail: `Lưu thất bại: ${error.response?.data?.message || error.message || 'Lỗi không xác định'}`,
       life: 3000,
     })
+  } finally {
+    submitted.value = false // Reset submission state regardless of outcome (optional)
   }
 }
 
-function confirmDeleteDiscount(data) {
-  discount.value = data
-  deleteDiscountDialog.value = true
+// --- 9. Table Interaction Methods ---
+
+/** Expands all rows in the product details table within the dialog. */
+function expandAll() {
+  // Create an object where keys are product IDs and values are true
+  expandedRows.value = products.value.reduce((acc, product) => {
+    acc[product.id] = true
+    return acc
+  }, {})
 }
 
-function confirmDeleteDiscounts() {
-  deleteDiscountsDialog.value = true
+/** Collapses all rows in the product details table within the dialog. */
+function collapseAll() {
+  expandedRows.value = [] // Set to empty array or null depending on PrimeVue DataTable expectation
 }
 </script>
 
@@ -480,21 +567,43 @@ function confirmDeleteDiscounts() {
         </template>
       </Column>
 
-      <Column field="ngayBatDau" header="Ngày bắt đầu" dataType="date" sortable style="min-width: 12rem">
+      <Column
+        field="ngayBatDau"
+        header="Ngày bắt đầu"
+        dataType="date"
+        sortable
+        style="min-width: 12rem"
+      >
         <template #body="{ data }">
           {{ formatDateTime(data.ngayBatDau) }}
         </template>
         <template #filter="{ filterModel }">
-          <DatePicker v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" showButtonBar/>
+          <DatePicker
+            v-model="filterModel.value"
+            dateFormat="mm/dd/yy"
+            placeholder="mm/dd/yyyy"
+            showButtonBar
+          />
         </template>
       </Column>
 
-      <Column field="ngayKetThuc" header="Ngày kết thúc" dataType="date" sortable style="min-width: 12rem">
+      <Column
+        field="ngayKetThuc"
+        header="Ngày kết thúc"
+        dataType="date"
+        sortable
+        style="min-width: 12rem"
+      >
         <template #body="{ data }">
           {{ formatDateTime(data.ngayKetThuc) }}
         </template>
         <template #filter="{ filterModel }">
-          <DatePicker v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" showButtonBar/>
+          <DatePicker
+            v-model="filterModel.value"
+            dateFormat="mm/dd/yy"
+            placeholder="mm/dd/yyyy"
+            showButtonBar
+          />
         </template>
       </Column>
 
@@ -711,7 +820,11 @@ function confirmDeleteDiscounts() {
                 </template>
               </Column>
               <Column field="sku" header="SKU" sortable></Column>
-              <Column field="giaBan" header="Giá bán" sortable></Column>
+              <Column field="giaBan" header="Giá bán" sortable>
+                <template #body="{ data }">
+                  {{ formatCurrency(data.giaBan) }}
+                </template>
+              </Column>
             </DataTable>
           </div>
         </template>
@@ -739,7 +852,7 @@ function confirmDeleteDiscounts() {
     </div>
     <template #footer>
       <Button label="Huỷ" icon="pi pi-times" text @click="deleteDiscountDialog = false" />
-      <Button label="Đồng ý" icon="pi pi-check" @click="deleteDiscount" />
+      <Button label="Đồng ý" icon="pi pi-check" @click="deleteSingleDiscount" />
     </template>
   </Dialog>
 
@@ -755,7 +868,7 @@ function confirmDeleteDiscounts() {
     </div>
     <template #footer>
       <Button label="Huỷ" icon="pi pi-times" text @click="deleteDiscountsDialog = false" />
-      <Button label="Đồng ý" icon="pi pi-check" @click="deleteSelectedDiscounts" />
+      <Button label="Đồng ý" icon="pi pi-check" @click="deleteMultipleDiscounts" />
     </template>
   </Dialog>
 </template>
