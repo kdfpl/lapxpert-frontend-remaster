@@ -135,14 +135,14 @@
               filterDisplay="menu"
               :loading="loadingSanPhamChiTiet"
               :globalFilterFields="[
-                'sanPham.tenSanPham',
+                'tenSanPham',
                 'sku',
                 'mauSac',
                 'soLuongTonKho',
                 'giaBan',
                 'cpu.moTaCpu',
                 'ram.moTaRam',
-                'oCung.moTaOCung',
+                'ocung.moTaOCung',
                 'gpu.moTaGpu',
                 'manHinh.moTaManHinh',
                 'congGiaoTiep.moTaCongGiaoTiep',
@@ -182,9 +182,9 @@
               <template #loading> Loading product data. Please wait. </template>
               <Column expander style="width: 3rem" />
               <!-- Sản phẩm -->
-              <Column field="sanPham.tenSanPham" header="Sản Phẩm" style="min-width: 12rem">
+              <Column field="tenSanPham" header="Sản Phẩm" style="min-width: 12rem">
                 <template #body="{ data }">
-                  {{ data.sanPham?.tenSanPham || 'No product' }}
+                  {{ data.tenSanPham || 'No product' }}
                 </template>
                 <template #filter="{ filterModel }">
                   <InputText
@@ -330,7 +330,15 @@ const productStore = useProductStore()
 const toast = useToast()
 
 const products = computed(() => productStore.activeProducts)
-const productsDetails = computed(() => productStore.activeProductsDetailed)
+const productsDetails = computed(() => {
+  return products.value.flatMap((product) =>
+    product.sanPhamChiTiets.map((detail) => ({
+      ...detail,
+      tenSanPham: product.tenSanPham,
+      ngayRaMat: product.ngayRaMat,
+    })),
+  )
+})
 
 const loadingSanPham = ref(true)
 const loadingSanPhamChiTiet = ref(true)
