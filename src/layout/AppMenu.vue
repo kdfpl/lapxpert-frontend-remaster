@@ -35,38 +35,7 @@ const model = ref([
       {
         label: 'Thuộc tính',
         icon: 'icon-[ep--cpu] size-5',
-        items: [
-          {
-            label: 'CPU',
-            icon: 'icon-[ep--cpu] size-5',
-            to: '/products/attributes/cpu',
-          },
-          {
-            label: 'RAM',
-            icon: 'icon-[ph--memory-light] size-5',
-            to: '/products/attributes/ram',
-          },
-          {
-            label: 'GPU',
-            icon: 'icon-[ph--graphics-card-thin] size-5',
-            to: '/products/attributes/gpu',
-          },
-          {
-            label: 'Ổ cứng',
-            icon: 'icon-[clarity--hard-disk-line] size-5',
-            to: '/products/attributes/disk',
-          },
-          {
-            label: 'Màn hình',
-            icon: 'icon-[solar--display-broken] size-5',
-            to: '/products/attributes/display',
-          },
-          {
-            label: 'Màu sắc',
-            icon: 'icon-[heroicons-outline--color-swatch] size-5',
-            to: '/products/attributes/color',
-          },
-        ],
+        to: '/products/attributes',
       },
     ],
   },
