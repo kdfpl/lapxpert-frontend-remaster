@@ -1,10 +1,21 @@
 <template>
   <div class="card">
+    <Toolbar class="mb-4">
+      <template #start>
+        <Button
+          label="Thêm sản phẩm"
+          icon="pi pi-plus"
+          class="p-button-success mr-2"
+          @click="goToAdd"
+        />
+        <Button label="In" icon="pi pi-print" class="mr-2" severity="secondary" />
+        <Button label="Xuất" icon="pi pi-upload" class="mr-2" severity="secondary" />
+      </template>
+    </Toolbar>
     <Tabs value="0">
       <TabList>
         <Tab value="0">Products</Tab>
         <Tab value="1">Detailed Product</Tab>
-        <Tab value="2">Add New Product</Tab>
       </TabList>
       <TabPanels>
         <TabPanel value="0">
@@ -42,6 +53,7 @@
               paginator
               showGridlines
               :rows="10"
+              :rowsPerPageOptions="[5, 10, 20, 50]"
               dataKey="id"
               filterDisplay="menu"
               :loading="loadingSanPham"
@@ -158,6 +170,7 @@
               @rowToggle="onRowToggle"
               showGridlines
               :rows="10"
+              :rowsPerPageOptions="[5, 10, 20, 50]"
               dataKey="id"
               filterDisplay="menu"
               :loading="loadingSanPhamChiTiet"
@@ -278,42 +291,54 @@
                 </template>
               </Column>
               <template #expansion="{ data }">
-            <div class="p-3">
-              <h5>Chi tiết cấu hình: {{ data.tenSanPham }} - {{ data.sku }}</h5>
-              <DataTable
-                 :value="formatExpansionData(data)"
-                 class="p-datatable-sm"
-                 responsiveLayout="scroll"
-                 :showGridlines="false" 
-                 :rows="1"        
-                 dataKey="id"       
-              >
-                 <!-- Định nghĩa MỖI THUỘC TÍNH là một CỘT -->
-                 <Column field="cpu" header="CPU" style="min-width: 15rem;"></Column>
-                 <Column field="ram" header="RAM" style="min-width: 12rem;"></Column>
-                 <Column field="oCung" header="Ổ cứng" style="min-width: 12rem;"></Column>
-                 <Column field="gpu" header="GPU" style="min-width: 15rem;"></Column>
-                 <Column field="manHinh" header="Màn hình" style="min-width: 15rem;"></Column>
-                 <Column field="congGiaoTiep" header="Cổng giao tiếp" style="min-width: 18rem;"></Column>
-                 <Column field="banPhim" header="Bàn phím" style="min-width: 15rem;"></Column>
-                 <Column field="ketNoiMang" header="Kết nối mạng" style="min-width: 15rem;"></Column>
-                 <Column field="amThanh" header="Âm thanh" style="min-width: 12rem;"></Column>
-                 <Column field="webcam" header="Webcam" style="min-width: 10rem;"></Column>
-                 <Column field="baoMat" header="Bảo mật" style="min-width: 12rem;"></Column>
-                 <Column field="heDieuHanh" header="Hệ điều hành" style="min-width: 15rem;"></Column>
-                 <Column field="pin" header="Pin" style="min-width: 12rem;"></Column>
-                 <Column field="thietKe" header="Thiết kế" style="min-width: 15rem;"></Column>
+                <div class="p-3">
+                  <h5>Chi tiết cấu hình: {{ data.tenSanPham }} - {{ data.sku }}</h5>
+                  <DataTable
+                    :value="formatExpansionData(data)"
+                    class="p-datatable-sm"
+                    responsiveLayout="scroll"
+                    :showGridlines="false"
+                    :rows="1"
+                    dataKey="id"
+                  >
+                    <!-- Định nghĩa MỖI THUỘC TÍNH là một CỘT -->
+                    <Column field="cpu" header="CPU" style="min-width: 15rem"></Column>
+                    <Column field="ram" header="RAM" style="min-width: 12rem"></Column>
+                    <Column field="oCung" header="Ổ cứng" style="min-width: 12rem"></Column>
+                    <Column field="gpu" header="GPU" style="min-width: 15rem"></Column>
+                    <Column field="manHinh" header="Màn hình" style="min-width: 15rem"></Column>
+                    <Column
+                      field="congGiaoTiep"
+                      header="Cổng giao tiếp"
+                      style="min-width: 18rem"
+                    ></Column>
+                    <Column field="banPhim" header="Bàn phím" style="min-width: 15rem"></Column>
+                    <Column
+                      field="ketNoiMang"
+                      header="Kết nối mạng"
+                      style="min-width: 15rem"
+                    ></Column>
+                    <Column field="amThanh" header="Âm thanh" style="min-width: 12rem"></Column>
+                    <Column field="webcam" header="Webcam" style="min-width: 10rem"></Column>
+                    <Column field="baoMat" header="Bảo mật" style="min-width: 12rem"></Column>
+                    <Column
+                      field="heDieuHanh"
+                      header="Hệ điều hành"
+                      style="min-width: 15rem"
+                    ></Column>
+                    <Column field="pin" header="Pin" style="min-width: 12rem"></Column>
+                    <Column field="thietKe" header="Thiết kế" style="min-width: 15rem"></Column>
 
-                 <!-- Bạn cũng có thể thêm các cột cơ bản nếu muốn -->
-                 <!--
+                    <!-- Bạn cũng có thể thêm các cột cơ bản nếu muốn -->
+                    <!--
                  <Column field="sku" header="SKU" style="min-width: 10rem;"></Column>
                  <Column field="mauSac" header="Màu sắc" style="min-width: 8rem;"></Column>
                  <Column field="soLuongTonKho" header="Tồn kho" style="min-width: 8rem;"></Column>
                  <Column field="giaBan" header="Giá bán" style="min-width: 10rem;"></Column>
                  -->
-              </DataTable>
-            </div>
-          </template>
+                  </DataTable>
+                </div>
+              </template>
 
               <!-- Hành động -->
               <Column header="Hành động">
@@ -332,16 +357,6 @@
               </Column>
             </DataTable>
           </div>
-        </TabPanel>
-        <TabPanel value="2">
-          <p class="m-0">
-            At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium
-            voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint
-            occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt
-            mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et
-            expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque
-            nihil impedit quo minus.
-          </p>
         </TabPanel>
       </TabPanels>
     </Tabs>
@@ -469,7 +484,9 @@ import { useProductStore } from '@/stores/productstore'
 import { useAttributeStore } from '@/stores/attributesstore'
 import productService from '@/apis/product'
 import productDetailService from '@/apis/productdetail'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 // Stores
 const productStore = useProductStore()
 const attributeStore = useAttributeStore()
@@ -504,7 +521,7 @@ const productsDetails = computed(() => {
 const thuongHieus = computed(() => attributeStore.brand)
 
 const formatExpansionData = (detailData) => {
-  if (!detailData) return []; // Trả về mảng rỗng nếu không có dữ liệu
+  if (!detailData) return [] // Trả về mảng rỗng nếu không có dữ liệu
 
   // Tạo một object duy nhất chứa tất cả các thuộc tính mong muốn
   const formattedObject = {
@@ -529,11 +546,11 @@ const formatExpansionData = (detailData) => {
     heDieuHanh: detailData.heDieuHanh?.moTaHeDieuHanh ?? 'Không có',
     pin: detailData.pin?.moTaPin ?? 'Không có',
     thietKe: detailData.thietKe?.moTaThietKe ?? 'Không có',
-  };
+  }
 
   // Trả về một mảng chứa object duy nhất đó
-  return [formattedObject];
-};
+  return [formattedObject]
+}
 
 // Initialize filters
 const filtersSanPham = ref({
@@ -628,12 +645,12 @@ async function saveProduct() {
 
 function editProduct(prod) {
   product.value = {
-     ...prod,
-     thuongHieu: prod.thuongHieu ? { ...prod.thuongHieu } : null,
-     ngayRaMat: prod.ngayRaMat ? new Date(prod.ngayRaMat) : null,
-  };
-  submitted.value = false;
-  productDialog.value = true;
+    ...prod,
+    thuongHieu: prod.thuongHieu ? { ...prod.thuongHieu } : null,
+    ngayRaMat: prod.ngayRaMat ? new Date(prod.ngayRaMat) : null,
+  }
+  submitted.value = false
+  productDialog.value = true
 }
 
 function confirmDeleteProduct(id) {
@@ -690,6 +707,10 @@ async function deleteSelectedProducts() {
       life: 3000,
     })
   }
+}
+
+const goToAdd = () => {
+  router.push({ name: 'productAdd' })
 }
 
 // Utility Functions
