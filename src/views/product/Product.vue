@@ -9,6 +9,33 @@
       <TabPanels>
         <TabPanel value="0">
           <div class="card">
+            <Toolbar class="mb-6">
+              <template #start>
+                <Button
+                  label="New"
+                  icon="pi pi-plus"
+                  severity="secondary"
+                  class="mr-2"
+                  @click="openNew"
+                />
+                <Button
+                  label="Delete"
+                  icon="pi pi-trash"
+                  severity="secondary"
+                  @click="confirmDeleteSelected"
+                  :disabled="!selectedProducts || !selectedProducts.length"
+                />
+              </template>
+
+              <template #end>
+                <Button
+                  label="Export"
+                  icon="pi pi-upload"
+                  severity="secondary"
+                  @click="exportCSV($event)"
+                />
+              </template>
+            </Toolbar>
             <DataTable
               v-model:filters="filtersSanPham"
               :value="products"
@@ -109,12 +136,12 @@
                   <Button
                     icon="pi pi-pencil"
                     class="p-button-text p-button-warning"
-                    @click="suaSanPham(data)"
+                    @click="editProduct(data)"
                   />
                   <Button
                     icon="pi pi-trash"
                     class="p-button-text p-button-danger"
-                    @click="xoaSanPham(data.id)"
+                    @click="confirmDeleteProduct(data.id)"
                   />
                 </template>
               </Column>
@@ -315,6 +342,119 @@
         </TabPanel>
       </TabPanels>
     </Tabs>
+
+    <!-- Add Dialog Components -->
+    <Dialog
+      v-model:visible="productDialog"
+      :style="{ width: '450px' }"
+      header="Product Details"
+      :modal="true"
+    >
+      <div class="flex flex-col gap-6">
+        <div>
+          <label for="maSanPham" class="block font-bold mb-3">Mã Sản Phẩm</label>
+          <InputText
+            id="maSanPham"
+            v-model.trim="product.maSanPham"
+            required="true"
+            autofocus
+            :invalid="submitted && !product.maSanPham"
+            fluid
+          />
+          <small v-if="submitted && !product.maSanPham" class="text-red-500"
+            >Code is required.</small
+          >
+        </div>
+        <div>
+          <label for="tenSanPham" class="block font-bold mb-3">Tên Sản Phẩm</label>
+          <InputText
+            id="tenSanPham"
+            v-model.trim="product.tenSanPham"
+            required="true"
+            autofocus
+            :invalid="submitted && !product.tenSanPham"
+            fluid
+          />
+          <small v-if="submitted && !product.tenSanPham" class="text-red-500"
+            >Name is required.</small
+          >
+        </div>
+        <div>
+          <label for="thuongHieu" class="block font-bold mb-3">Thương Hiệu</label>
+          <Select
+            id="thuongHieuId"
+            v-model="product.thuongHieu"
+            :options="thuongHieus"
+            optionLabel="moTaThuongHieu"
+            placeholder="Select a Brand"
+            class="w-full"
+            dataKey="id"
+            :invalid="submitted && !product.thuongHieu"
+          ></Select>
+          <small v-if="submitted && !product.thuongHieu" class="text-red-500">
+            Brand is required.
+            <!-- Hoặc thông báo phù hợp -->
+          </small>
+        </div>
+        <div>
+          <label for="moTa" class="block font-bold mb-3">Mô Tả</label>
+          <Textarea id="moTa" v-model="product.moTa" required="true" rows="3" cols="20" fluid />
+        </div>
+        <div class="block font-bold mb-3">
+          <div class="col-span-6">
+            <label for="ngayRaMat" class="block font-bold mb-3">Ngày Ra Mắt</label>
+            <DatePicker
+              id="ngayRaMat"
+              v-model="product.ngayRaMat"
+              required="true"
+              :invalid="submitted && !product.ngayRaMat"
+              dateFormat="dd/mm/yy"
+              fluid
+            />
+            <small v-if="submitted && !product.ngayRaMat" class="text-red-500"
+              >Release Date is required.</small
+            >
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
+        <Button label="Save" icon="pi pi-check" @click="saveProduct" />
+      </template>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="deleteProductDialog"
+      :style="{ width: '450px' }"
+      header="Confirm"
+      :modal="true"
+    >
+      <div class="flex align-items-center justify-content-center">
+        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
+        <span>Are you sure you want to delete the selected product?</span>
+      </div>
+      <template #footer>
+        <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
+        <Button label="Yes" icon="pi pi-check" text @click="deleteProduct" />
+      </template>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="deleteProductsDialog"
+      :style="{ width: '450px' }"
+      header="Confirm"
+      :modal="true"
+    >
+      <div class="flex align-items-center justify-content-center">
+        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
+        <span>Are you sure you want to delete the selected products?</span>
+      </div>
+      <template #footer>
+        <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
+        <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -323,28 +463,28 @@ import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 import { useProductStore } from '@/stores/productstore'
-// import productService from '@/apis/product' // Not used directly, store handles it
-// import productDetailService from '@/apis/productdetail' // Not used directly, store handles it
+import { useAttributeStore } from '@/stores/attributesstore'
+import productService from '@/apis/product'
+import productDetailService from '@/apis/productdetail'
 
-// --- 1. Store Access ---
+// Stores
 const productStore = useProductStore()
+const attributeStore = useAttributeStore()
 const toast = useToast()
 
-// --- 2. State ---
-
-// Loading states
-const loadingSanPham = ref(true)
-const loadingSanPhamChiTiet = ref(true) // Keep separate if fetches are distinct logic in store
-
-// Table expansion state
+// State Management
+const productDialog = ref(false)
+const deleteProductDialog = ref(false)
+const deleteProductsDialog = ref(false)
+const product = ref({})
+const selectedProducts = ref()
+const submitted = ref(false)
 const expandedRowsSanPhamChiTiet = ref([])
+const loadingSanPham = ref(true)
+const loadingSanPhamChiTiet = ref(true)
 
-// --- 3. Computed Data ---
-
-// Raw products from store
-const products = computed(() => productStore.activeProducts) // Assumes store returns SanPhamDto[] with nested SanPhamChiTietDto[]
-
-// Flattened list for the Detailed Product table
+// Computed Properties
+const products = computed(() => productStore.activeProducts)
 const productsDetails = computed(() => {
   // flatMap iterates through each product, then maps its sanPhamChiTiets,
   // adding parent product info, and flattens the result into a single array.
@@ -358,11 +498,10 @@ const productsDetails = computed(() => {
     })),
   )
 })
+const thuongHieus = computed(() => attributeStore.brand)
 
-// --- 4. Filters ---
-
-// Initial filter definitions to avoid repetition
-const initialFiltersSanPham = {
+// Initialize filters
+const filtersSanPham = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   maSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
   tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
@@ -372,9 +511,9 @@ const initialFiltersSanPham = {
     operator: FilterOperator.AND,
     constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
   },
-}
+})
 
-const initialFiltersSanPhamChiTiet = {
+const filtersSanPhamChiTiet = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH }, // Matches the 'tenSanPham' added in computed
   sku: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
@@ -399,182 +538,210 @@ const initialFiltersSanPhamChiTiet = {
     operator: FilterOperator.AND,
     constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
   }, // Matches ngayRaMat added in computed
-}
-
-// Reactive filter refs, initialized with deep copies
-const filtersSanPham = ref(JSON.parse(JSON.stringify(initialFiltersSanPham)))
-const filtersSanPhamChiTiet = ref(JSON.parse(JSON.stringify(initialFiltersSanPhamChiTiet)))
-
-// --- 5. Lifecycle Hooks ---
-onMounted(() => {
-  // Use Promise.all to fetch data concurrently (if store actions allow)
-  Promise.all([
-    fetchData(productStore.fetchActiveProducts, loadingSanPham, 'Lỗi tải danh sách sản phẩm').then(
-      () => {
-        loadingSanPhamChiTiet.value = false
-      },
-    ),
-    // fetchData(productStore.fetchActiveProductsDetailed, loadingSanPhamChiTiet, 'Lỗi tải danh sách sản phẩm chi tiết')
-  ]).catch((error) => {
-    console.error('Error during initial data fetching:', error)
-  })
 })
 
-// --- 6. Utility Functions ---
+// Dialog Management Functions
+function openNew() {
+  product.value = {}
+  submitted.value = false
+  productDialog.value = true
+}
 
-/**
- * Helper function to fetch data, manage loading state, and show toast on error.
- * @param {Function} fetchFunction - The async function from the store to call.
- * @param {Ref<Boolean>} loadingRef - The ref controlling the loading state.
- * @param {string} errorMessage - The error message for the toast.
- */
-const fetchData = async (fetchFunction, loadingRef, errorMessage) => {
-  loadingRef.value = true // Set loading true *before* fetching
+function hideDialog() {
+  productDialog.value = false
+  submitted.value = false
+}
+
+// CRUD Operations
+async function saveProduct() {
+  submitted.value = true
+
+  if (product?.value.maSanPham?.trim()) {
+    try {
+      if (product.value.id) {
+        await productService.updateProduct(product.value.id, product.value)
+        toast.add({
+          severity: 'success',
+          summary: 'Successful',
+          detail: 'Product Updated',
+          life: 3000,
+        })
+      } else {
+        await productService.addProduct(product.value)
+        toast.add({
+          severity: 'success',
+          summary: 'Successful',
+          detail: 'Product Created',
+          life: 3000,
+        })
+      }
+
+      // Refresh products list
+      await productStore.fetchActiveProducts()
+      productDialog.value = false
+      product.value = {}
+    } catch (error) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: `Failed to ${product.value.id ? 'update' : 'create'} product: ${error.message}`,
+        life: 3000,
+      })
+    }
+  }
+}
+
+function editProduct(prod) {
+  product.value = {
+     ...prod,
+     thuongHieu: prod.thuongHieu ? { ...prod.thuongHieu } : null,
+     ngayRaMat: prod.ngayRaMat ? new Date(prod.ngayRaMat) : null,
+  };
+  submitted.value = false;
+  productDialog.value = true;
+}
+
+function confirmDeleteProduct(id) {
+  product.value = { id }
+  deleteProductDialog.value = true
+}
+
+async function deleteProduct() {
   try {
-    await fetchFunction()
+    await productService.softDeleteProduct(product.value.id)
+    await productStore.fetchActiveProducts()
+    deleteProductDialog.value = false
+    product.value = {}
+    toast.add({
+      severity: 'success',
+      summary: 'Successful',
+      detail: 'Product Deleted',
+      life: 3000,
+    })
   } catch (error) {
-    console.error(`${errorMessage}:`, error.response?.data || error.message)
     toast.add({
       severity: 'error',
-      summary: 'Lỗi',
-      detail: `${errorMessage}: ${error.message || 'Unknown error'}`,
-      life: 4000,
+      summary: 'Error',
+      detail: `Failed to delete product: ${error.message}`,
+      life: 3000,
     })
-  } finally {
-    loadingRef.value = false
   }
 }
 
-/**
- * Formats a date string (or Date object) into dd/MM/yyyy format.
- * @param {string | Date | null | undefined} dateInput - The date to format.
- * @returns {string} Formatted date string or 'N/A'.
- */
-const formatDate = (dateInput) => {
-  if (!dateInput) return 'N/A'
+function confirmDeleteSelected() {
+  deleteProductsDialog.value = true
+}
+
+async function deleteSelectedProducts() {
   try {
-    return new Intl.DateTimeFormat('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(new Date(dateInput))
-  } catch (e) {
-    console.error('Error formatting date:', e)
-    return 'Invalid Date'
+    // Assuming we want to soft delete all selected products
+    await Promise.all(
+      selectedProducts.value.map((product) => productService.softDeleteProduct(product.id)),
+    )
+    await productStore.fetchActiveProducts()
+    deleteProductsDialog.value = false
+    selectedProducts.value = null
+    toast.add({
+      severity: 'success',
+      summary: 'Successful',
+      detail: 'Products Deleted',
+      life: 3000,
+    })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: `Failed to delete products: ${error.message}`,
+      life: 3000,
+    })
   }
 }
 
-/**
- * Formats a number as Vietnamese currency (VND).
- * @param {number | null | undefined} value - The numeric value to format.
- * @returns {string} Formatted currency string or empty string.
- */
+// Utility Functions
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(dateString))
+}
+
 const formatCurrency = (value) => {
   if (typeof value !== 'number') return ''
   return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
 }
 
-// --- 7. Filter Control Methods ---
-
-/** Clears filters for the SanPham table. */
-const clearFilterSanPham = () => {
-  filtersSanPham.value = JSON.parse(JSON.stringify(initialFiltersSanPham))
-}
-
-/** Clears filters for the SanPhamChiTiet table. */
-const clearFilterSanPhamChiTiet = () => {
-  filtersSanPhamChiTiet.value = JSON.parse(JSON.stringify(initialFiltersSanPhamChiTiet))
-}
-
-// --- 8. Table Interaction Methods ---
-
-/** Handles row expansion toggle for the detailed products table. */
+// Row Expansion
 const onRowToggle = (event) => {
-  // PrimeVue typically handles the expandedRows update itself if v-model:expandedRows is used.
-  // This handler might be needed for custom logic or if not using v-model.
-  // If using v-model, this function might be redundant unless adding extra logic.
-  // Let's keep it for now assuming it might be needed or was intended.
-  // Check PrimeVue docs for the exact behavior of @rowToggle with v-model:expandedRows.
-  console.log('Row Toggled:', event.data)
-  // If not using v-model, you might need: expandedRowsSanPhamChiTiet.value = event.data;
+  expandedRowsSanPhamChiTiet.value = event.data
 }
 
-// --- 9. CRUD Placeholders ---
-// These should ideally open dialogs/modals or navigate to an edit page.
-
-/** Placeholder function to handle editing a SanPham. */
-const suaSanPham = (productData) => {
-  console.log('Sửa sản phẩm:', productData)
-  toast.add({
-    severity: 'warn',
-    summary: 'Thông tin',
-    detail: 'Chức năng sửa sản phẩm chưa được cài đặt.',
-    life: 3000,
-  })
-  // TODO: Implement navigation or dialog opening for editing SanPham
-  // Example: router.push(`/products/edit/${productData.id}`);
+// Filter Management
+const clearFilterSanPham = () => {
+  filtersSanPham.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    maSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    'thuongHieu.moTaThuongHieu': { value: null, matchMode: FilterMatchMode.EQUALS }, // Adjust match mode if needed (CONTAINS?)
+    trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
+    ngayRaMat: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    },
+  }
 }
 
-/** Placeholder function to handle editing a SanPhamChiTiet. */
-const suaSanPhamChiTiet = (productDetailData) => {
-  console.log('Sửa sản phẩm chi tiết:', productDetailData)
-  toast.add({
-    severity: 'warn',
-    summary: 'Thông tin',
-    detail: 'Chức năng sửa sản phẩm chi tiết chưa được cài đặt.',
-    life: 3000,
-  })
-  // TODO: Implement navigation or dialog opening for editing SanPhamChiTiet
-  // Example: showEditDetailDialog(productDetailData);
+const clearFilterSanPhamChiTiet = () => {
+  filtersSanPhamChiTiet.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH }, // Matches the 'tenSanPham' added in computed
+    sku: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    mauSac: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    soLuongTonKho: { value: null, matchMode: FilterMatchMode.EQUALS }, // Or BETWEEN, >= etc.
+    giaBan: { value: null, matchMode: FilterMatchMode.EQUALS }, // Or BETWEEN, >= etc.
+    'cpu.moTaCpu': { value: null, matchMode: FilterMatchMode.CONTAINS }, // Contains might be better
+    'ram.moTaRam': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'oCung.moTaOCung': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'gpu.moTaGpu': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'manHinh.moTaManHinh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'congGiaoTiep.moTaCongGiaoTiep': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'banPhim.moTaBanPhim': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'ketNoiMang.moTaKetNoiMang': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'amThanh.moTaAmThanh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'webcam.moTaWebcam': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'baoMat.moTaBaoMat': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'heDieuHanh.moTaHeDieuHanh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'pin.moTaPin': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'thietKe.moTaThietKe': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    ngayRaMat: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    }, // Matches ngayRaMat added in computed
+  }
 }
 
-/** Placeholder function to handle deleting a SanPham. */
-const xoaSanPham = async (productId) => {
-  console.log('Xóa sản phẩm với ID:', productId)
-  // TODO: Implement confirmation dialog and actual API call using async/await
-  // Example:
-  // if (confirm(`Bạn có chắc muốn xóa sản phẩm ID ${productId}?`)) {
-  //   try {
-  //     loadingSanPham.value = true; // Show loading indicator
-  //     await productStore.deleteProduct(productId); // Assume store has delete action
-  //     toast.success('Xóa sản phẩm thành công');
-  //   } catch (error) {
-  //     toast.error(`Lỗi khi xóa sản phẩm: ${error.message}`);
-  //   } finally {
-  //      loadingSanPham.value = false;
-  //   }
-  // }
-  toast.add({
-    severity: 'warn',
-    summary: 'Thông tin',
-    detail: 'Chức năng xóa sản phẩm chưa được cài đặt.',
-    life: 3000,
-  })
-}
-
-/** Placeholder function to handle deleting a SanPhamChiTiet. */
-const xoaSanPhamChiTiet = async (productDetailId) => {
-  console.log('Xóa sản phẩm chi tiết với ID:', productDetailId)
-  // TODO: Implement confirmation dialog and actual API call using async/await
-  // Example:
-  // if (confirm(`Bạn có chắc muốn xóa chi tiết sản phẩm ID ${productDetailId}?`)) {
-  //   try {
-  //     loadingSanPhamChiTiet.value = true;
-  //     await productStore.deleteProductDetail(productDetailId); // Assume store has delete action
-  //     toast.success('Xóa chi tiết sản phẩm thành công');
-  //   } catch (error) {
-  //     toast.error(`Lỗi khi xóa chi tiết sản phẩm: ${error.message}`);
-  //   } finally {
-  //     loadingSanPhamChiTiet.value = false;
-  //   }
-  // }
-  toast.add({
-    severity: 'warn',
-    summary: 'Thông tin',
-    detail: 'Chức năng xóa sản phẩm chi tiết chưa được cài đặt.',
-    life: 3000,
-  })
-}
+// Lifecycle Hooks
+onMounted(async () => {
+  try {
+    // Fetch all necessary data in parallel
+    await Promise.all([
+      productStore.fetchActiveProducts(),
+      productStore.fetchActiveProductsDetailed(),
+      attributeStore.fetchBrand(),
+    ])
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: `Failed to load data: ${error.message}`,
+      life: 3000,
+    })
+  } finally {
+    loadingSanPham.value = false
+    loadingSanPhamChiTiet.value = false
+  }
+})
 </script>
 
 <style scoped>
