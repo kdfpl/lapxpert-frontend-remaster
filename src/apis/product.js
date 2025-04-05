@@ -33,6 +33,16 @@ const productService = {
     }
   },
 
+  async addMultipleProduct(sanPham) {
+    try {
+      const response = await api.post(`${API_URL}/addMultiple`, sanPham);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding product:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   async updateProduct(id, sanPham) {
     try {
       const response = await api.put(`${API_URL}/update/${id}`, sanPham);
