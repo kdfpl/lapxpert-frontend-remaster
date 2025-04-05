@@ -28,6 +28,38 @@ const router = createRouter({
           name: 'products attributes',
           component: () => import('@/views/product/Attribute.vue'),
         },
+        {
+          path: '/users/employees',
+          name: 'employees',
+          component: () => import('@/views/user/employees/Staff.vue'),
+        },
+        {
+          path: '/staff/add',
+          name: 'StaffAdd',
+          component: () => import('@/views/user/employees/StaffForm.vue')
+        },
+        {
+          path: '/staff/edit/:id',
+          name: 'StaffEdit',
+          component: () => import('@/views/user/employees/StaffForm.vue'),
+          props: true
+        },
+        {
+          path: '/users/customers',
+          name: 'customers',
+          component: () => import('@/views/user/customer/Customer.vue'),
+        },
+        {
+          path: '/users/customers/edit/:id',
+          name: 'CustomerEdit',
+          component: () => import('@/views/user/customer/CustomerForm.vue'),
+          props: true
+        },
+        {
+          path: '/users/customers/add',
+          name: 'CustomerAdd',
+          component: () => import('@/views/user/customer/CustomerForm.vue')
+        },
       ],
     },
   ],
