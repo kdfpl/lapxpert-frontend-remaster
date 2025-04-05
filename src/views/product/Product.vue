@@ -278,39 +278,42 @@
                 </template>
               </Column>
               <template #expansion="{ data }">
-                <div class="p-4">
-                  <div><strong>CPU:</strong> {{ data.cpu?.moTaCpu || 'Không có' }}</div>
-                  <div><strong>RAM:</strong> {{ data.ram?.moTaRam || 'Không có' }}</div>
-                  <div><strong>Ổ cứng:</strong> {{ data.oCung?.moTaOCung || 'Không có' }}</div>
-                  <div><strong>GPU:</strong> {{ data.gpu?.moTaGpu || 'Không có' }}</div>
-                  <div>
-                    <strong>Màn hình:</strong> {{ data.manHinh?.moTaManHinh || 'Không có' }}
-                  </div>
-                  <div>
-                    <strong>Cổng giao tiếp:</strong>
-                    {{ data.congGiaoTiep?.moTaCongGiaoTiep || 'Không có' }}
-                  </div>
-                  <div>
-                    <strong>Bàn phím:</strong> {{ data.banPhim?.moTaBanPhim || 'Không có' }}
-                  </div>
-                  <div>
-                    <strong>Wifi:</strong> {{ data.ketNoiMang?.moTaKetNoiMang || 'Không có' }}
-                  </div>
-                  <div>
-                    <strong>Âm thanh:</strong> {{ data.amThanh?.moTaAmThanh || 'Không có' }}
-                  </div>
-                  <div><strong>Webcam:</strong> {{ data.webcam?.moTaWebcam || 'Không có' }}</div>
-                  <div><strong>Bảo mật:</strong> {{ data.baoMat?.moTaBaoMat || 'Không có' }}</div>
-                  <div>
-                    <strong>Hệ điều hành:</strong>
-                    {{ data.heDieuHanh?.moTaHeDieuHanh || 'Không có' }}
-                  </div>
-                  <div><strong>Pin:</strong> {{ data.pin?.moTaPin || 'Không có' }}</div>
-                  <div>
-                    <strong>Thiết kế:</strong> {{ data.thietKe?.moTaThietKe || 'Không có' }}
-                  </div>
-                </div>
-              </template>
+            <div class="p-3">
+              <h5>Chi tiết cấu hình: {{ data.tenSanPham }} - {{ data.sku }}</h5>
+              <DataTable
+                 :value="formatExpansionData(data)"
+                 class="p-datatable-sm"
+                 responsiveLayout="scroll"
+                 :showGridlines="false" 
+                 :rows="1"        
+                 dataKey="id"       
+              >
+                 <!-- Định nghĩa MỖI THUỘC TÍNH là một CỘT -->
+                 <Column field="cpu" header="CPU" style="min-width: 15rem;"></Column>
+                 <Column field="ram" header="RAM" style="min-width: 12rem;"></Column>
+                 <Column field="oCung" header="Ổ cứng" style="min-width: 12rem;"></Column>
+                 <Column field="gpu" header="GPU" style="min-width: 15rem;"></Column>
+                 <Column field="manHinh" header="Màn hình" style="min-width: 15rem;"></Column>
+                 <Column field="congGiaoTiep" header="Cổng giao tiếp" style="min-width: 18rem;"></Column>
+                 <Column field="banPhim" header="Bàn phím" style="min-width: 15rem;"></Column>
+                 <Column field="ketNoiMang" header="Kết nối mạng" style="min-width: 15rem;"></Column>
+                 <Column field="amThanh" header="Âm thanh" style="min-width: 12rem;"></Column>
+                 <Column field="webcam" header="Webcam" style="min-width: 10rem;"></Column>
+                 <Column field="baoMat" header="Bảo mật" style="min-width: 12rem;"></Column>
+                 <Column field="heDieuHanh" header="Hệ điều hành" style="min-width: 15rem;"></Column>
+                 <Column field="pin" header="Pin" style="min-width: 12rem;"></Column>
+                 <Column field="thietKe" header="Thiết kế" style="min-width: 15rem;"></Column>
+
+                 <!-- Bạn cũng có thể thêm các cột cơ bản nếu muốn -->
+                 <!--
+                 <Column field="sku" header="SKU" style="min-width: 10rem;"></Column>
+                 <Column field="mauSac" header="Màu sắc" style="min-width: 8rem;"></Column>
+                 <Column field="soLuongTonKho" header="Tồn kho" style="min-width: 8rem;"></Column>
+                 <Column field="giaBan" header="Giá bán" style="min-width: 10rem;"></Column>
+                 -->
+              </DataTable>
+            </div>
+          </template>
 
               <!-- Hành động -->
               <Column header="Hành động">
@@ -499,6 +502,38 @@ const productsDetails = computed(() => {
   )
 })
 const thuongHieus = computed(() => attributeStore.brand)
+
+const formatExpansionData = (detailData) => {
+  if (!detailData) return []; // Trả về mảng rỗng nếu không có dữ liệu
+
+  // Tạo một object duy nhất chứa tất cả các thuộc tính mong muốn
+  const formattedObject = {
+    id: detailData.id, // Giữ lại id nếu cần làm dataKey cho bảng (mặc dù chỉ có 1 hàng)
+    sku: detailData.sku || 'N/A',
+    mauSac: detailData.mauSac || 'N/A',
+    soLuongTonKho: detailData.soLuongTonKho?.toString() ?? 'N/A',
+    giaBan: formatCurrency(detailData.giaBan) || 'N/A',
+
+    // Các thuộc tính chi tiết - key sẽ là 'field' cho các Column
+    cpu: detailData.cpu?.moTaCpu ?? 'Không có',
+    ram: detailData.ram?.moTaRam ?? 'Không có',
+    oCung: detailData.oCung?.moTaOCung ?? 'Không có', // Giữ tên key giống dữ liệu gốc nếu tiện
+    gpu: detailData.gpu?.moTaGpu ?? 'Không có',
+    manHinh: detailData.manHinh?.moTaManHinh ?? 'Không có',
+    congGiaoTiep: detailData.congGiaoTiep?.moTaCongGiaoTiep ?? 'Không có',
+    banPhim: detailData.banPhim?.moTaBanPhim ?? 'Không có',
+    ketNoiMang: detailData.ketNoiMang?.moTaKetNoiMang ?? 'Không có',
+    amThanh: detailData.amThanh?.moTaAmThanh ?? 'Không có',
+    webcam: detailData.webcam?.moTaWebcam ?? 'Không có',
+    baoMat: detailData.baoMat?.moTaBaoMat ?? 'Không có',
+    heDieuHanh: detailData.heDieuHanh?.moTaHeDieuHanh ?? 'Không có',
+    pin: detailData.pin?.moTaPin ?? 'Không có',
+    thietKe: detailData.thietKe?.moTaThietKe ?? 'Không có',
+  };
+
+  // Trả về một mảng chứa object duy nhất đó
+  return [formattedObject];
+};
 
 // Initialize filters
 const filtersSanPham = ref({
