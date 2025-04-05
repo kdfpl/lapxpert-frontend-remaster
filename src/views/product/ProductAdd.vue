@@ -133,11 +133,11 @@
           <div class="p-card p-4 w-full">
             <div class="grid w-full">
               <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-6">
+                <div class="col-span-3">
                   <div class="field w-full">
                     <label for="oCung" class="font-medium">Ổ cứng</label>
                     <Dropdown
-                      id="oCung"
+                      id="ocung"
                       v-model="selectedOCung"
                       :options="storage"
                       optionLabel="moTaOCung"
@@ -154,7 +154,51 @@
                   </div>
                 </div>
 
-                <div class="col-span-6">
+                <!-- Hệ điều hành -->
+                <div class="col-span-3">
+                  <div class="field w-full">
+                    <label for="heDieuHanh" class="font-medium">Hệ điều hành</label>
+                    <Dropdown
+                      id="heDieuHanh"
+                      v-model="selectedHeDieuHanh"
+                      :options="os"
+                      optionLabel="moTaHeDieuHanh"
+                      optionValue="id"
+                      placeholder="Chọn hệ điều hành"
+                      class="w-full"
+                      :class="{ 'p-invalid': submitted && !selectedHeDieuHanh }"
+                      filter
+                      showClear
+                    />
+                    <small class="p-error" v-if="submitted && !selectedHeDieuHanh">
+                      Hệ điều hành là bắt buộc
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Mạng -->
+                <div class="col-span-3">
+                  <div class="field w-full">
+                    <label for="mang" class="font-medium">Kết nối mạng</label>
+                    <Dropdown
+                      id="ketNoiMang"
+                      v-model="selectedMang"
+                      :options="network"
+                      optionLabel="moTaKetNoi"
+                      optionValue="id"
+                      placeholder="Chọn kết nối mạng"
+                      class="w-full"
+                      :class="{ 'p-invalid': submitted && !selectedMang }"
+                      filter
+                      showClear
+                    />
+                    <small class="p-error" v-if="submitted && !selectedMang">
+                      Kết nối mạng là bắt buộc
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-span-3">
                   <div class="field w-full">
                     <label for="gpu" class="font-medium">GPU</label>
                     <Dropdown
@@ -177,7 +221,51 @@
               </div>
 
               <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-6">
+                <!-- Pin -->
+                <div class="col-span-3">
+                  <div class="field w-full">
+                    <label for="pin" class="font-medium">Pin</label>
+                    <Dropdown
+                      id="pin"
+                      v-model="selectedPin"
+                      :options="battery"
+                      optionLabel="moTaPin"
+                      optionValue="id"
+                      placeholder="Chọn thông số pin"
+                      class="w-full"
+                      :class="{ 'p-invalid': submitted && !selectedPin }"
+                      filter
+                      showClear
+                    />
+                    <small class="p-error" v-if="submitted && !selectedPin">
+                      Thông tin pin là bắt buộc
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Giao diện -->
+                <div class="col-span-3">
+                  <div class="field w-full">
+                    <label for="congGiaoTiep" class="font-medium">Cổng kết nối</label>
+                    <Dropdown
+                      id="congGiaoTiep"
+                      v-model="selectedCong"
+                      :options="inter"
+                      optionLabel="moTaCong"
+                      optionValue="id"
+                      placeholder="Chọn cổng kết nối"
+                      class="w-full"
+                      :class="{ 'p-invalid': submitted && !selectedCong }"
+                      filter
+                      showClear
+                    />
+                    <small class="p-error" v-if="submitted && !selectedCong">
+                      Cổng kết nối là bắt buộc
+                    </small>
+                  </div>
+                </div>
+
+                <div class="col-span-3">
                   <div class="field w-full">
                     <label for="banPhim" class="font-medium">Bàn phím</label>
                     <Dropdown
@@ -198,7 +286,7 @@
                   </div>
                 </div>
 
-                <div class="col-span-6">
+                <div class="col-span-3">
                   <div class="field w-full">
                     <label for="amThanh" class="font-medium">Âm thanh</label>
                     <Dropdown
@@ -215,6 +303,74 @@
                     />
                     <small class="p-error" v-if="submitted && !selectedAmThanh">
                       Ít nhất một âm thanh là bắt buộc
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-12 gap-4">
+                <!-- Bảo mật -->
+                <div class="col-span-4">
+                  <div class="field w-full">
+                    <label for="baoMat" class="font-medium">Bảo mật</label>
+                    <Dropdown
+                      id="baoMat"
+                      v-model="selectedBaoMat"
+                      :options="security"
+                      optionLabel="moTaBaoMat"
+                      optionValue="id"
+                      placeholder="Chọn tính năng bảo mật"
+                      class="w-full"
+                      :class="{ 'p-invalid': submitted && !selectedBaoMat }"
+                      filter
+                      showClear
+                    />
+                    <small class="p-error" v-if="submitted && !selectedBaoMat">
+                      Tính năng bảo mật là bắt buộc
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Thiết kế -->
+                <div class="col-span-4">
+                  <div class="field w-full">
+                    <label for="thietKe" class="font-medium">Thiết kế</label>
+                    <Dropdown
+                      id="thietKe"
+                      v-model="selectedThietKe"
+                      :options="design"
+                      optionLabel="moTaThietKe"
+                      optionValue="id"
+                      placeholder="Chọn thông số thiết kế"
+                      class="w-full"
+                      :class="{ 'p-invalid': submitted && !selectedThietKe }"
+                      filter
+                      showClear
+                    />
+                    <small class="p-error" v-if="submitted && !selectedThietKe">
+                      Thông tin thiết kế là bắt buộc
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Webcam -->
+                <div class="col-span-4">
+                  <div class="field w-full">
+                    <label for="webcam" class="font-medium">Webcam</label>
+                    <Dropdown
+                      id="webcam"
+                      v-model="selectedWebcam"
+                      :options="webcam"
+                      optionLabel="moTaWc"
+                      optionValue="id"
+                      placeholder="Chọn thông số webcam"
+                      class="w-full"
+                      :class="{ 'p-invalid': submitted && !selectedWebcam }"
+                      filter
+                      showClear
+                    />
+                    <small class="p-error" v-if="submitted && !selectedWebcam">
+                      Thông tin webcam là bắt buộc
                     </small>
                   </div>
                 </div>
@@ -627,7 +783,7 @@
           </div>
         </div>
 
-        <div class="flex flex-col md:flex-row  gap-3 mt-6 pt-4 border-t border-gray-200">
+        <div class="flex flex-col md:flex-row gap-3 mt-6 pt-4 border-t border-gray-200">
           <Button
             label="Hủy bỏ"
             icon="pi pi-times"
@@ -763,7 +919,6 @@ const router = useRouter()
 const toast = useToast()
 const attributeStore = useAttributeStore()
 
-// Load dữ liệu từ store
 onMounted(async () => {
   await attributeStore.fetchAllAttributes()
   initFilters()
@@ -773,7 +928,6 @@ const goBack = () => {
   router.push({ name: 'products' })
 }
 
-// Lấy dữ liệu từ store
 const brand = computed(() => attributeStore.brand)
 const category = computed(() => attributeStore.category)
 const ram = computed(() => attributeStore.ram)
@@ -783,6 +937,13 @@ const storage = computed(() => attributeStore.storage)
 const gpu = computed(() => attributeStore.gpu)
 const keyboard = computed(() => attributeStore.keyboard)
 const audio = computed(() => attributeStore.audio)
+const os = computed(() => attributeStore.os)
+const network = computed(() => attributeStore.network)
+const battery = computed(() => attributeStore.battery)
+const inter = computed(() => attributeStore.interface)
+const security = computed(() => attributeStore.security)
+const design = computed(() => attributeStore.design)
+const webcam = computed(() => attributeStore.webcam)
 
 // Form data
 const sanPham = ref({
@@ -804,6 +965,13 @@ const selectedOCung = ref(null)
 const selectedGpu = ref(null)
 const selectedBanPhim = ref(null)
 const selectedAmThanh = ref(null)
+const selectedHeDieuHanh = ref(null)
+const selectedMang = ref(null)
+const selectedPin = ref(null)
+const selectedCong = ref(null)
+const selectedBaoMat = ref(null)
+const selectedThietKe = ref(null)
+const selectedWebcam = ref(null)
 
 // Colors
 const colors = ref([
@@ -911,15 +1079,22 @@ const generateVariants = () => {
             cpu: cpuId,
             manHinh: manHinhId,
             mauSac: mauSac,
-            oCung: selectedOCung.value,
+            ocung: selectedOCung.value,
             gpu: selectedGpu.value,
             banPhim: selectedBanPhim.value,
             amThanh: selectedAmThanh.value,
+            ketNoiMang: selectedMang.value,
+            webcam: selectedWebcam.value,
+            baoMat: selectedBaoMat.value,
+            heDieuHanh: selectedHeDieuHanh.value,
+            thietKe: selectedThietKe.value,
+            congGiaoTiep: selectedCong.value,
+            pin: selectedPin.value,
             giaBan: 0,
             giaKhuyenMai: 0,
             trangThai: true,
-            skus: [], // Thêm mảng skus cho mỗi variant
-            soLuong: 0, // Số lượng ban đầu là 0
+            skus: [],
+            soLuong: 0,
           }
 
           group.variants.push(variant)
@@ -958,7 +1133,6 @@ const addSkuToVariant = (variant) => {
     hinhAnh: [],
   })
 
-  // Cập nhật số lượng
   variant.soLuong = variant.skus.length
 }
 
@@ -976,7 +1150,6 @@ const generateBaseSku = (ramId, cpuId, manHinhId, mauSac) => {
 
 const removeSku = (variant, index) => {
   variant.skus.splice(index, 1)
-  // Cập nhật số lượng
   variant.soLuong = variant.skus.length
   toast.add({
     severity: 'info',
@@ -1042,7 +1215,6 @@ const addSkusToVariant = (variant, skuInput) => {
     }
   })
 
-  // Cập nhật số lượng
   variant.soLuong = variant.skus.length
 
   toast.add({
@@ -1070,7 +1242,6 @@ const applyBulkPrice = () => {
     variant.giaBan = bulkPrice.value.giaBan
     variant.giaKhuyenMai = bulkPrice.value.giaKhuyenMai
 
-    // Cập nhật giá cho tất cả SKU của variant
     if (variant.skus && variant.skus.length > 0) {
       variant.skus.forEach((sku) => {
         sku.giaBan = bulkPrice.value.giaBan
@@ -1102,13 +1273,11 @@ const onBulkImageUpload = (event) => {
   if (!selectedGroupForBulkImage.value) return
 
   selectedGroupForBulkImage.value.variants.forEach((variant) => {
-    // Thêm ảnh cho từng variant
     if (!variant.hinhAnh) {
       variant.hinhAnh = []
     }
     variant.hinhAnh = [...variant.hinhAnh, ...uploadedFiles]
 
-    // Thêm ảnh cho tất cả SKU của variant
     if (variant.skus && variant.skus.length > 0) {
       variant.skus.forEach((sku) => {
         if (!sku.hinhAnh) {
@@ -1133,7 +1302,6 @@ const onBulkImageUpload = (event) => {
 const removeVariant = (groupIndex, variantIndex) => {
   variantGroups.value[groupIndex].variants.splice(variantIndex, 1)
 
-  // Nếu không còn variant nào trong group thì xóa luôn group
   if (variantGroups.value[groupIndex].variants.length === 0) {
     variantGroups.value.splice(groupIndex, 1)
   }
@@ -1230,15 +1398,22 @@ const submitForm = async () => {
           giaBan: sku.giaBan,
           giaKhuyenMai: sku.giaKhuyenMai || 0,
           hinhAnh: sku.hinhAnh || [],
-          soLuongTonKho: 1, // Mỗi SKU là 1 sản phẩm vật lý
+          soLuongTonKho: 1,
           ram: { id: Number(variant.ram) },
           cpu: { id: Number(variant.cpu) },
           manHinh: { id: Number(variant.manHinh) },
           mauSac: variant.mauSac,
-          oCung: variant.oCung ? { id: Number(variant.oCung) } : null,
+          ocung: variant.ocung ? { id: Number(variant.ocung) } : null,
           gpu: variant.gpu ? { id: Number(variant.gpu) } : null,
           banPhim: variant.banPhim ? { id: Number(variant.banPhim) } : null,
           amThanh: variant.amThanh ? { id: Number(variant.amThanh) } : null,
+          ketNoiMang: variant.ketNoiMang ? { id: Number(variant.ketNoiMang) } : null,
+          webcam: variant.webcam ? { id: Number(variant.webcam) } : null,
+          baoMat: variant.baoMat ? { id: Number(variant.baoMat) } : null,
+          heDieuHanh: variant.heDieuHanh ? { id: Number(variant.heDieuHanh) } : null,
+          pin: variant.pin ? { id: Number(variant.pin) } : null,
+          thietKe: variant.thietKe ? { id: Number(variant.thietKe) } : null,
+          congGiaoTiep: variant.congGiaoTiep ? { id: Number(variant.congGiaoTiep) } : null,
           trangThai: variant.trangThai,
         }))
       })
@@ -1259,6 +1434,7 @@ const submitForm = async () => {
 
     // Reset form
     resetForm()
+    router.push({ name: 'products' })
   } catch (error) {
     console.error('Error adding product:', error)
     toast.add({
