@@ -1,0 +1,58 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import AppLayout from '@/layout/AppLayout.vue'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      component: AppLayout,
+      children: [
+        {
+          path: '/',
+          name: 'dashboard',
+          component: () => import('@/views/Dashboard.vue'),
+        },
+        {
+          path: '/discounts',
+          name: 'discounts',
+          component: () => import('@/views/discount/Discount.vue'),
+        },
+        {
+          path: '/users/employees',
+          name: 'employees',
+          component: () => import('@/views/user/employees/Staff.vue'),
+        },
+        {
+          path: '/staff/add',
+          name: 'StaffAdd',
+          component: () => import('@/views/user/employees/StaffForm.vue')
+        },
+        {
+          path: '/staff/edit/:id',
+          name: 'StaffEdit',
+          component: () => import('@/views/user/employees/StaffForm.vue'),
+          props: true
+        },
+        {
+          path: '/users/customers',
+          name: 'customers',
+          component: () => import('@/views/user/customer/Customer.vue'),
+        },
+        {
+          path: '/users/customers/edit/:id',
+          name: 'CustomerEdit',
+          component: () => import('@/views/user/customer/CustomerForm.vue'),
+          props: true
+        },
+        {
+          path: '/users/customers/add',
+          name: 'CustomerAdd',
+          component: () => import('@/views/user/customer/CustomerForm.vue')
+        },
+      ],
+    },
+  ],
+})
+
+export default router
