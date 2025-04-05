@@ -489,7 +489,6 @@
   const getDistricts = async (address, index) => {
     try {
       const response = await addressApi.getDistricts(address.tinhThanh)
-      // Thay đổi ở đây: response.data chứa districts trực tiếp trong nó
       districts.value[index] = response.data.districts || []
       address.quanHuyen = ''
       address.phuongXa = ''
@@ -509,7 +508,6 @@
   const getWards = async (address, index) => {
     try {
       const response = await addressApi.getWards(address.quanHuyen)
-      // Thay đổi ở đây: response.data chứa wards trực tiếp trong nó
       wards.value[index] = response.data.wards || []
       address.phuongXa = ''
     } catch (error) {
