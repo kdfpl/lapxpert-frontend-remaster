@@ -5,7 +5,7 @@
         <Button
           label="Thêm sản phẩm"
           icon="pi pi-plus"
-          class="p-button-success mr-2"
+          class=" mr-2"
           @click="goToAdd"
         />
         <Button label="In" icon="pi pi-print" class="mr-2" severity="secondary" />
@@ -803,7 +803,6 @@ onMounted(async () => {
 <style scoped>
 .card {
   padding: 1rem;
-  background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
