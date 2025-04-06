@@ -60,6 +60,17 @@ const router = createRouter({
           name: 'CustomerAdd',
           component: () => import('@/views/user/customer/CustomerForm.vue')
         },
+        {
+          path: '/discounts/coupons',
+          name: 'coupons',
+          component: () => import('@/views/coupons/Coupons.vue')
+        },
+        {
+          path: '/discounts/couponsCRUD',
+          name: 'couponsCRUD',
+          component: () => import('@/views/coupons/CrudCoupons.vue'),
+          props: route => ({ id: route.query.id })
+        },
       ],
     },
   ],
