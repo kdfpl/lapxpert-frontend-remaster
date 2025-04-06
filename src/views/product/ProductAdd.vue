@@ -1496,7 +1496,6 @@ const resetForm = () => {
 
 .expansion-content {
   padding: 1rem;
-  background-color: #f8f9fa;
   border-radius: 4px;
   margin-top: 0.5rem;
 }
