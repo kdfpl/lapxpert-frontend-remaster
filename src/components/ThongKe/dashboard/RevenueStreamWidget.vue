@@ -36,6 +36,7 @@ function setChartData() {
                     topLeft: 8,
                     topRight: 8
                 },
+                
                 borderSkipped: true,
                 barThickness: 32
             }
