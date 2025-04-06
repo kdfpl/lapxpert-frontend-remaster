@@ -2,7 +2,7 @@
   <div class="phieu-giam-gia-list">
     <Toolbar class="mb-4">
       <template #start>
-        <Button label="Thêm phiếu giảm giá" icon="pi pi-plus" class="p-button-success mr-2" @click="goToAdd" />
+        <Button label="Thêm phiếu giảm giá" icon="pi pi-plus" class="mr-2" @click="goToAdd" />
       </template>
     </Toolbar>
 
