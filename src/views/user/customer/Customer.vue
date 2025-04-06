@@ -5,7 +5,7 @@
         <Button
           label="Thêm khách hàng"
           icon="pi pi-plus"
-          class="p-button-success mr-2"
+          class=" mr-2"
           @click="goToAdd"
         />
         <Button label="In" icon="pi pi-print" class="mr-2" severity="secondary" />

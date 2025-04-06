@@ -14,10 +14,10 @@
               <!-- Main Information Section -->
               <div class="grid">
                 <!-- Avatar Column -->
-                <div class="col-12 md:col-3 flex flex-col items-center gap-4">
+                <div class="col-12 md:col-3 flex flex-col items-center mb-5 gap-4">
                   <div class="w-full space-y-2">
-                    <label class="block font-medium text-gray-700">Ảnh đại diện</label>
-                    <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                    <label class="block font-medium ">Ảnh đại diện</label>
+                    <div class="border border-gray-200 rounded-lg p-3 ">
                       <FileUpload
                         mode="basic"
                         name="avatar"
@@ -39,7 +39,7 @@
                 <div class="col-12 md:col-9">
                   <div class="grid gap-4">
                     <div class="col-12 md:col-6 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Họ và tên <span class="text-red-500">*</span>
                       </label>
                       <InputText
@@ -54,7 +54,7 @@
                     </div>
   
                     <div class="col-12 md:col-6 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Giới tính <span class="text-red-500">*</span>
                       </label>
                       <Dropdown
@@ -72,7 +72,7 @@
                     </div>
   
                     <div class="col-12 md:col-6 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Ngày sinh <span class="text-red-500">*</span>
                       </label>
                       <Calendar
@@ -90,7 +90,7 @@
                     </div>
   
                     <div class="col-12 md:col-6 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Email <span class="text-red-500">*</span>
                       </label>
                       <InputText
@@ -109,7 +109,7 @@
                     </div>
   
                     <div class="col-12 md:col-6 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Số điện thoại <span class="text-red-500">*</span>
                       </label>
                       <InputText
@@ -129,7 +129,7 @@
   
                     <div class="col-12 md:col-6 flex items-center">
                       <div class="space-y-2">
-                        <label class="block font-medium text-gray-700">Trạng thái</label>
+                        <label class="block font-medium ">Trạng thái</label>
                         <InputSwitch 
                           v-model="form.trangThai" 
                           :trueValue="true" 
@@ -144,21 +144,21 @@
               <!-- Address Section -->
               <div class="space-y-4">
                 <Divider align="left" class="my-4">
-                  <div class="flex items-center gap-2 px-2 bg-white">
+                  <div class="flex items-center gap-2 px-2 ">
                     <i class="pi pi-map-marker text-primary"></i>
-                    <span class="font-semibold text-lg text-gray-800">Địa chỉ</span>
+                    <span class="font-semibold text-lg ">Địa chỉ</span>
                   </div>
                 </Divider>
   
                 <div
                   v-for="(address, index) in form.diaChis"
                   :key="index"
-                  class="p-4 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                  class="p-4 rounded-lg border border-gray-200  shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-2">
                       <i class="pi pi-home text-primary"></i>
-                      <h4 class="m-0 font-medium text-gray-800">Địa chỉ {{ index + 1 }}</h4>
+                      <h4 class="m-0 font-medium ">Địa chỉ {{ index + 1 }}</h4>
                     </div>
                     <Button
                       v-if="form.diaChis.length > 1"
@@ -176,7 +176,7 @@
                   <div class="grid gap-4">
                     <!-- Street -->
                     <div class="col-12 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Đường/Số nhà <span class="text-red-500">*</span>
                       </label>
                       <InputText
@@ -192,7 +192,7 @@
   
                     <!-- Province -->
                     <div class="col-12 md:col-4 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Tỉnh/Thành phố <span class="text-red-500">*</span>
                       </label>
                       <Dropdown
@@ -212,7 +212,7 @@
   
                     <!-- District -->
                     <div class="col-12 md:col-4 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Quận/Huyện <span class="text-red-500">*</span>
                       </label>
                       <Dropdown
@@ -233,7 +233,7 @@
   
                     <!-- Ward -->
                     <div class="col-12 md:col-4 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Phường/Xã <span class="text-red-500">*</span>
                       </label>
                       <Dropdown
@@ -253,7 +253,7 @@
   
                     <!-- Address Type -->
                     <div class="col-12 md:col-8 space-y-2">
-                      <label class="block font-medium text-gray-700">
+                      <label class="block font-medium ">
                         Loại địa chỉ
                       </label>
                       <InputText
@@ -273,7 +273,7 @@
                           :disabled="form.diaChis.length === 1"
                           inputId="defaultAddress"
                         />
-                        <label for="defaultAddress" class="text-gray-700">
+                        <label for="defaultAddress" class="">
                           Địa chỉ mặc định
                         </label>
                       </div>
@@ -307,8 +307,7 @@
                   type="submit"
                   :label="isEditMode ? 'Cập nhật' : 'Tạo mới'"
                   icon="pi pi-check"
-                  severity="success"
-                  class="hover:bg-green-600"
+
                 />
               </div>
             </form>

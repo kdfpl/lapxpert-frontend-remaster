@@ -353,17 +353,19 @@
         </template>
       </Column>
 
-      <Column header="Hành động" style="min-width: 10rem">
+      <Column header="Hành động" style="min-width: 6rem">
         <template #body="{ data }">
           <div class="flex gap-2">
             <Button
               icon="pi pi-pencil"
-              class="p-button-rounded p-button-success"
+              outlined
+              class="p-button-rounded"
               @click="$emit('edit', data)"
             />
             <Button
               v-if="data.trangThai"
               icon="pi pi-trash"
+              outlined
               class="p-button-rounded p-button-danger"
               @click="$emit('delete', data)"
             />
@@ -371,6 +373,7 @@
               v-else
               icon="pi pi-replay"
               class="p-button-rounded p-button-info"
+              outlined
               @click="$emit('restore', data)"
             />
           </div>
