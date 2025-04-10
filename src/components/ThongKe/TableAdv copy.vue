@@ -1,5 +1,6 @@
 <template>
   <div class="card">
+
     <DataTable
       v-model:filters="filters"
       :value="hoaDons"
@@ -10,14 +11,25 @@
       filterDisplay="menu"
       :loading="loading"
       :globalFilterFields="[
-      'maHoaDon',
-        'khachHangId',
-        'loaiDonHang',
+      'global',
+        'tenSanPham',
         'ngayTao',
-        'tongTien',
+        'giaBan',
         'trangThaiGiaoHang',
       ]"
     >
+    <template #filter="{ filterModel }">
+          <Select
+            v-model="filterModel.value"
+            :options="statuses"
+            placeholder="Chọn trạng thái"
+            showClear
+          >
+            <template #option="slotProps">
+              <Tag :value="slotProps.option" :severity="getSeverity(slotProps.option)" />
+            </template>
+          </Select>
+        </template>
       <template #header>
         <div class="flex justify-between">
           <Button
@@ -49,32 +61,14 @@
         filterField="thuongHieus"
         :showFilterMatchModes="false"
         :filterMenuStyle="{ width: '5 rem' }"
-        style="min-width: 12rem"
+        style="min-width: 15rem"
       >
         <template #body="{ data }">
           <div class="flex items-center gap-2">
-            <span>{{ data.maHoaDon }}</span>
+            <span>{{ data.tenSanPham }}</span>
           </div>
         </template>
-        <template #filter="{ filterModel }">
-          <MultiSelect
-            v-model="filterModel.value"
-            :options="thuongHieus"
-            optionLabel="name"
-            placeholder="Chọn thương hiệu"
-          >
-            <template #option="slotProps">
-              <div class="flex items-center gap-2">
-                <img
-                  :alt="slotProps.option.name"
-                  :src="`https://primefaces.org/cdn/primevue/images/avatar/${slotProps.option.image}`"
-                  style="width: 32px"
-                />
-                <span>{{ slotProps.option.name }}</span>
-              </div>
-            </template>
-          </MultiSelect>
-        </template>
+
       </Column>
 
 
@@ -83,9 +77,7 @@
         <template #body="{ data }">
           {{ formatDate(data.ngayTao) }}
         </template>
-        <template #filter="{ filterModel }">
-          <DatePicker v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" />
-        </template>
+
       </Column>
       <Column
         header="Giá tiền"
@@ -94,15 +86,7 @@
         style="min-width: 4rem"
       >
         <template #body="{ data }">
-          {{ formatCurrency(data.tongThanhToan) }}
-        </template>
-        <template #filter="{ filterModel }">
-          <!-- <Slider v-model="filterModel.value" range class="m-4"></Slider>
-                  <div class="flex items-center justify-between px-2">
-                      <span>{{ filterModel.value ? filterModel.value[0] : 0 }}</span>
-                      <span>{{ filterModel.value ? filterModel.value[1] : 1000000000 }}</span>
-                  </div> -->
-          <InputNumber v-model="filterModel.value" mode="currency" currency="VND" locale="vi-VN" />
+          {{ formatCurrency(data.giaBan) }}
         </template>
       </Column>
       <Column
@@ -116,18 +100,7 @@
             :value="getStatusLabel(data.trangThaiGiaoHang)"
             :severity="getSeverity(data.trangThaiGiaoHang)"
           />        </template>
-        <template #filter="{ filterModel }">
-          <Select
-            v-model="filterModel.value"
-            :options="statuses"
-            placeholder="Chọn trạng thái"
-            showClear
-          >
-            <template #option="slotProps">
-              <Tag :value="slotProps.option" :severity="getSeverity(slotProps.option)" />
-            </template>
-          </Select>
-        </template>
+
       </Column>
 
     </DataTable>
@@ -136,19 +109,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import HoaDonService from '@/service/HoaDonService'
+import ThongKeService from '@/service/ThongKeService'
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 const hoaDons = ref()
 const filters = ref()
-const thuongHieus = ref([
-  { name: 'MSI', image: 'amyelsner.png' },
-  { name: 'ASUS', image: 'annafali.png' },
-  { name: 'Dell', image: 'asiyajavayant.png' },
-  { name: 'Apple', image: 'bernardodominic.png' },
-  { name: 'Lenovo', image: 'elwinsharvill.png' },
-  { name: 'HP', image: 'ionibowcher.png' },
-  { name: 'Acer', image: 'ivanmagalhaes.png' },
-])
+
 const statuses = ref([
   'Đang xử lý',
   'Chờ xác nhận',
@@ -164,7 +129,7 @@ const statuses = ref([
 const loading = ref(true)
 
 onMounted(() => {
-  HoaDonService.getAllHoaDons()
+  ThongKeService.getAllHoaDons()
     .then((response) => {
       hoaDons.value = response.data
       loading.value = false
@@ -177,10 +142,9 @@ onMounted(() => {
 const initFilters = () => {
   filters.value = {
       global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-      maHoaDon: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-      thuongHieus: { value: null, matchMode: FilterMatchMode.IN },
+      tenSanPham: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
       ngayTao: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-      tongThanhToan: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+      giaBan: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
       trangThaiGiaoHang: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
   };
  };
