@@ -45,7 +45,7 @@ const initialFilters = {
     operator: FilterOperator.AND,
     constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
   },
-  phanTramGiam: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN }, // Assuming range slider or similar
+  phanTramGiam: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
   ngayBatDau: {
     operator: FilterOperator.AND,
     constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
@@ -496,6 +496,81 @@ function collapseAll() {
       </template>
     </Toolbar>
 
+    <!-- Add filter components before DataTable -->
+    <div class="mb-4 grid grid-cols-3 gap-4">
+      <div>
+        <label class="block mb-2">Mã đợt giảm giá</label>
+        <InputText
+          v-model="filters['maDotGiamGia'].constraints[0].value"
+          type="text"
+          placeholder="Lọc mã"
+          class="w-full"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-2">Tên đợt giảm giá</label>
+        <InputText
+          v-model="filters['tenDotGiamGia'].constraints[0].value"
+          type="text"
+          placeholder="Lọc tên"
+          class="w-full"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-2">Phần trăm giảm</label>
+        <Slider v-model="filters['phanTramGiam'].value" range class="mb-2" />
+        <div class="flex items-center justify-between px-2">
+          <span>{{ filters['phanTramGiam'].value ? filters['phanTramGiam'].value[0] : 0 }}</span>
+          <span>{{ filters['phanTramGiam'].value ? filters['phanTramGiam'].value[1] : 100 }}</span>
+        </div>
+      </div>
+
+      <div>
+        <label class="block mb-2">Ngày bắt đầu</label>
+        <DatePicker
+          v-model="filters['ngayBatDau'].constraints[0].value"
+          dateFormat="mm/dd/yy"
+          placeholder="mm/dd/yyyy"
+          showButtonBar
+          class="w-full"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-2">Ngày kết thúc</label>
+        <DatePicker
+          v-model="filters['ngayKetThuc'].constraints[0].value"
+          dateFormat="mm/dd/yy"
+          placeholder="mm/dd/yyyy"
+          showButtonBar
+          class="w-full"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-2">Trạng thái</label>
+        <Select
+          v-model="filters['trangThai'].value"
+          :options="[
+            { label: 'Chưa hoạt động', value: 'CHUA_DIEN_RA' },
+            { label: 'Đang hoạt động', value: 'DA_DIEN_RA' },
+            { label: 'Ngưng hoạt động', value: 'KET_THUC' },
+          ]"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Chọn trạng thái"
+          showClear
+          class="w-full"
+        >
+          <template #option="{ option }">
+            <Tag :value="getTrangThaiLabel(option.value)" :severity="getSeverity(option.value)" />
+          </template>
+        </Select>
+      </div>
+    </div>
+
     <DataTable
       v-model:selection="selectedDiscounts"
       :value="discounts"
@@ -503,7 +578,6 @@ function collapseAll() {
       :paginator="true"
       :rows="10"
       v-model:filters="filters"
-      :filters="filters"
       filterDisplay="menu"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
       :rowsPerPageOptions="[5, 10, 25]"
@@ -513,13 +587,6 @@ function collapseAll() {
     >
       <template #header>
         <div class="flex justify-between">
-          <Button
-            type="button"
-            icon="pi pi-filter-slash"
-            label="Clear"
-            outlined
-            @click="clearFilter()"
-          />
           <div class="flex">
             <IconField>
               <InputIcon>
@@ -531,6 +598,7 @@ function collapseAll() {
         </div>
       </template>
 
+      <!-- Keep the columns but remove the filter templates -->
       <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
       <Column header="STT">
         <template #body="{ index }">
@@ -542,29 +610,16 @@ function collapseAll() {
         <template #body="{ data }">
           {{ data.maDotGiamGia }}
         </template>
-        <template #filter="{ filterModel }">
-          <InputText v-model="filterModel.value" type="text" placeholder="Lọc mã" />
-        </template>
       </Column>
 
       <Column field="tenDotGiamGia" header="Tên đợt giảm giá">
         <template #body="{ data }">
           {{ data.tenDotGiamGia }}
         </template>
-        <template #filter="{ filterModel }">
-          <InputText v-model="filterModel.value" type="text" placeholder="Lọc tên" />
-        </template>
       </Column>
 
       <Column field="phanTramGiam" header="Phần trăm giảm" sortable :showFilterMatchModes="false">
         <template #body="{ data }"> {{ data.phanTramGiam }}% </template>
-        <template #filter="{ filterModel }">
-          <Slider v-model="filterModel.value" range class="m-4"></Slider>
-          <div class="flex items-center justify-between px-2">
-            <span>{{ filterModel.value ? filterModel.value[0] : 0 }}</span>
-            <span>{{ filterModel.value ? filterModel.value[1] : 100 }}</span>
-          </div>
-        </template>
       </Column>
 
       <Column
@@ -576,14 +631,6 @@ function collapseAll() {
       >
         <template #body="{ data }">
           {{ formatDateTime(data.ngayBatDau) }}
-        </template>
-        <template #filter="{ filterModel }">
-          <DatePicker
-            v-model="filterModel.value"
-            dateFormat="mm/dd/yy"
-            placeholder="mm/dd/yyyy"
-            showButtonBar
-          />
         </template>
       </Column>
 
@@ -597,14 +644,6 @@ function collapseAll() {
         <template #body="{ data }">
           {{ formatDateTime(data.ngayKetThuc) }}
         </template>
-        <template #filter="{ filterModel }">
-          <DatePicker
-            v-model="filterModel.value"
-            dateFormat="mm/dd/yy"
-            placeholder="mm/dd/yyyy"
-            showButtonBar
-          />
-        </template>
       </Column>
 
       <Column
@@ -616,24 +655,6 @@ function collapseAll() {
       >
         <template #body="{ data }">
           <Tag :value="getTrangThaiLabel(data.trangThai)" :severity="getSeverity(data.trangThai)" />
-        </template>
-        <template #filter="{ filterModel }">
-          <Select
-            v-model="filterModel.value"
-            :options="[
-              { label: 'Chưa hoạt động', value: 'CHUA_DIEN_RA' },
-              { label: 'Đang hoạt động', value: 'DA_DIEN_RA' },
-              { label: 'Ngưng hoạt động', value: 'KET_THUC' },
-            ]"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Chọn trạng thái"
-            showClear
-          >
-            <template #option="{ option }">
-              <Tag :value="getTrangThaiLabel(option.value)" :severity="getSeverity(option.value)" />
-            </template>
-          </Select>
         </template>
       </Column>
 
