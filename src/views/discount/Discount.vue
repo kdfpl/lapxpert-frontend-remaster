@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onBeforeMount, watch } from 'vue'
+import { ref, computed, onBeforeMount } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 import { format, parseISO } from 'date-fns'
@@ -75,11 +75,10 @@ const normalizeDateToStartOfDay = (dateInput) => {
 const filteredDiscounts = computed(() => {
   console.log('--- Computing filteredDiscounts ---')
   let data = [...discounts.value]
-  // Lấy tất cả giá trị filter hiện tại
   const globalFilter = filters.value.global.value?.toLowerCase()
   const maFilter = filters.value.maDotGiamGia.constraints[0].value?.toLowerCase()
   const tenFilter = filters.value.tenDotGiamGia.constraints[0].value?.toLowerCase()
-  const phanTramFilter = filters.value.phanTramGiam.value // Mảng [min, max]
+  const phanTramFilter = filters.value.phanTramGiam.value
   const trangThaiFilter = filters.value.trangThai.value
   const ngayBatDauFilter = normalizeDateToStartOfDay(filters.value.ngayBatDau.constraints[0].value)
   const ngayKetThucFilter = normalizeDateToStartOfDay(
@@ -96,7 +95,6 @@ const filteredDiscounts = computed(() => {
     ngayKetThucFilter,
   })
 
-  // Áp dụng từng filter một
   if (globalFilter) {
     data = data.filter((item) =>
       Object.values(item).some((val) => String(val).toLowerCase().includes(globalFilter)),
