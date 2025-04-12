@@ -73,7 +73,6 @@ const normalizeDateToStartOfDay = (dateInput) => {
 }
 
 const filteredDiscounts = computed(() => {
-  console.log('--- Computing filteredDiscounts ---')
   let data = [...discounts.value]
   const globalFilter = filters.value.global.value?.toLowerCase()
   const maFilter = filters.value.maDotGiamGia.constraints[0].value?.toLowerCase()
@@ -84,16 +83,6 @@ const filteredDiscounts = computed(() => {
   const ngayKetThucFilter = normalizeDateToStartOfDay(
     filters.value.ngayKetThuc.constraints[0].value,
   )
-
-  console.log('Current Filters Applied:', {
-    globalFilter,
-    maFilter,
-    tenFilter,
-    phanTramFilter,
-    trangThaiFilter,
-    ngayBatDauFilter,
-    ngayKetThucFilter,
-  })
 
   if (globalFilter) {
     data = data.filter((item) =>
@@ -126,14 +115,27 @@ const filteredDiscounts = computed(() => {
       return itemDate && itemDate.getTime() === ngayKetThucFilter.getTime()
     })
   }
-
-  console.log(`Filtered Data Count: ${data.length}`)
   return data
 })
 
 // Function to reset filters to their initial state
 function clearFilter() {
   filters.value = JSON.parse(JSON.stringify(initialFilters))
+}
+
+function clearSpecificFilter(fieldName) {
+  console.log(`Clearing filter for: ${fieldName}`)
+  if (fieldName === 'global') {
+    filters.value.global.value = null
+  } else if (fieldName === 'phanTramGiam') {
+    filters.value.phanTramGiam.value = [0, 100]
+  } else if (filters.value[fieldName]?.constraints) {
+    filters.value[fieldName].constraints[0].value = null
+  } else if (fieldName === 'trangThai') {
+    filters.value.trangThai.value = null
+  } else {
+    console.warn(`Unknown filter field name to clear: ${fieldName}`)
+  }
 }
 
 // --- 4. Computed Properties ---
@@ -552,96 +554,152 @@ function collapseAll() {
           label="Thêm"
           icon="pi pi-plus"
           class="mr-2"
-          severity="secondary"
+          outlined
           @click="newDiscount"
         />
-        <Button label="In" icon="pi pi-print" class="mr-2" severity="secondary" />
-        <Button label="Xuất" icon="pi pi-upload" class="mr-2" severity="secondary" />
+        <Button label="In" icon="pi pi-print" class="mr-2" outlined />
+        <Button label="Xuất" icon="pi pi-upload" class="mr-2" outlined />
         <Button
           label="Xoá"
           icon="pi pi-trash"
-          severity="secondary"
+          severity="danger"
+          outlined
           @click="confirmDeleteDiscounts"
           :disabled="!selectedDiscounts || !selectedDiscounts.length"
         />
       </template>
     </Toolbar>
 
-    <!-- Add filter components before DataTable -->
-    <div class="mb-4 grid grid-cols-3 gap-4">
+    <div class="font-semibold text-xl mb-4">Bộ lọc</div>
+
+    <Button
+      type="button"
+      icon="pi pi-filter-slash"
+      label="Xoá toàn bộ bộ lọc"
+      outlined
+      class="mb-4"
+      @click="clearFilter()"
+    />
+
+    <div class="mb-6 grid grid-cols-3 gap-4 border p-4 rounded-lg">
       <div>
         <label class="block mb-2">Mã đợt giảm giá</label>
-        <InputText
-          v-model="filters['maDotGiamGia'].constraints[0].value"
-          type="text"
-          placeholder="Lọc mã"
-          class="w-full"
-        />
+        <InputGroup>
+          <Button
+            v-if="filters['maDotGiamGia'].constraints[0].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('maDotGiamGia')"
+          />
+          <InputText
+            v-model="filters['maDotGiamGia'].constraints[0].value"
+            type="text"
+            placeholder="Lọc mã"
+            fluid
+          />
+        </InputGroup>
       </div>
 
       <div>
         <label class="block mb-2">Tên đợt giảm giá</label>
-        <InputText
-          v-model="filters['tenDotGiamGia'].constraints[0].value"
-          type="text"
-          placeholder="Lọc tên"
-          class="w-full"
-        />
+        <InputGroup>
+          <Button
+            v-if="filters['tenDotGiamGia'].constraints[0].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('tenDotGiamGia')"
+          />
+          <InputText
+            v-model="filters['tenDotGiamGia'].constraints[0].value"
+            type="text"
+            placeholder="Lọc tên"
+            fluid
+          />
+        </InputGroup>
       </div>
 
       <div>
-        <label class="block mb-2">Phần trăm giảm</label>
-        <Slider v-model="filters['phanTramGiam'].value" range class="mb-2" />
-        <div class="flex items-center justify-between px-2">
-          <span>{{ filters['phanTramGiam'].value ? filters['phanTramGiam'].value[0] : 0 }}</span>
-          <span>{{ filters['phanTramGiam'].value ? filters['phanTramGiam'].value[1] : 100 }}</span>
+        <label class="block mb-4">Phần trăm giảm</label>
+        <div class="px-3">
+          <Slider v-model="filters['phanTramGiam'].value" range class="mb-2" fluid />
+          <div class="flex items-center justify-between px-2">
+            <span>{{ filters['phanTramGiam'].value ? filters['phanTramGiam'].value[0] : 0 }}</span>
+            <span>{{
+              filters['phanTramGiam'].value ? filters['phanTramGiam'].value[1] : 100
+            }}</span>
+          </div>
         </div>
       </div>
 
       <div>
         <label class="block mb-2">Ngày bắt đầu</label>
-        <DatePicker
-          v-model="filters['ngayBatDau'].constraints[0].value"
-          dateFormat="dd/mm/yy"
-          placeholder="dd/mm/yyyy"
-          showButtonBar
-          class="w-full"
-          showIcon
-        />
+        <InputGroup>
+          <Button
+            v-if="filters['ngayBatDau'].constraints[0].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('ngayBatDau')"
+          />
+          <DatePicker
+            v-model="filters['ngayBatDau'].constraints[0].value"
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/yyyy"
+            showButtonBar
+            showIcon
+            fluid
+            iconDisplay="input"
+          />
+        </InputGroup>
       </div>
 
       <div>
         <label class="block mb-2">Ngày kết thúc</label>
-        <DatePicker
-          v-model="filters['ngayKetThuc'].constraints[0].value"
-          dateFormat="dd/mm/yy"
-          placeholder="dd/mm/yyyy"
-          showButtonBar
-          class="w-full"
-          showIcon
-          :minDate="filters['ngayBatDau'].constraints[0].value"
-        />
+        <InputGroup>
+          <Button
+            v-if="filters['ngayKetThuc'].constraints[0].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('ngayKetThuc')"
+          />
+          <DatePicker
+            v-model="filters['ngayKetThuc'].constraints[0].value"
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/yyyy"
+            showButtonBar
+            showIcon
+            fluid
+            iconDisplay="input"
+            :minDate="filters['ngayBatDau'].constraints[0].value"
+          />
+        </InputGroup>
       </div>
 
       <div>
         <label class="block mb-2">Trạng thái</label>
-        <Select
-          v-model="filters['trangThai'].value"
-          :options="[
-            { label: 'Chưa hoạt động', value: 'CHUA_DIEN_RA' },
-            { label: 'Đang hoạt động', value: 'DA_DIEN_RA' },
-            { label: 'Ngưng hoạt động', value: 'KET_THUC' },
-          ]"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Chọn trạng thái"
-          showClear
-          class="w-full"
-        >
-          <template #option="{ option }">
-            <Tag :value="getTrangThaiLabel(option.value)" :severity="getSeverity(option.value)" />
-          </template>
-        </Select>
+        <InputGroup>
+          <Button
+            v-if="filters['trangThai'].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('trangThai')"
+          />
+          <Select
+            v-model="filters['trangThai'].value"
+            :options="[
+              { label: 'Chưa hoạt động', value: 'CHUA_DIEN_RA' },
+              { label: 'Đang hoạt động', value: 'DA_DIEN_RA' },
+              { label: 'Ngưng hoạt động', value: 'KET_THUC' },
+            ]"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Chọn trạng thái"
+            fluid
+          >
+            <template #option="{ option }">
+              <Tag :value="getTrangThaiLabel(option.value)" :severity="getSeverity(option.value)" />
+            </template>
+          </Select>
+        </InputGroup>
       </div>
     </div>
 
