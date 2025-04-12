@@ -775,7 +775,7 @@ function collapseAll() {
         </template>
       </Column>
 
-      <template #empty> Không tìm thấy đợt giảm giá phù hợp với tiêu chí lọc. </template>
+      <template #empty>Không tìm thấy đợt giảm giá phù hợp với tiêu chí lọc.</template>
     </DataTable>
   </div>
 
