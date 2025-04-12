@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onBeforeMount } from 'vue'
+import { ref, computed, onBeforeMount, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 import { format, parseISO } from 'date-fns'
@@ -39,26 +39,99 @@ const initialFilters = {
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   maDotGiamGia: {
     operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }],
   },
   tenDotGiamGia: {
     operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }],
   },
   phanTramGiam: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
   ngayBatDau: {
     operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    constraints: [{ value: null, matchMode: FilterMatchMode.CUSTOM }],
   },
   ngayKetThuc: {
     operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    constraints: [{ value: null, matchMode: FilterMatchMode.CUSTOM }],
   },
   trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
 }
 
-// Reactive reference for current filters, initialized with a deep copy
 const filters = ref(JSON.parse(JSON.stringify(initialFilters)))
+
+const normalizeDateToStartOfDay = (dateInput) => {
+  if (!dateInput) return null
+  try {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput)
+    if (isNaN(date.getTime())) return null
+    const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    return normalized
+  } catch (e) {
+    console.error('Error normalizing date:', dateInput, e)
+    return null
+  }
+}
+
+const filteredDiscounts = computed(() => {
+  console.log('--- Computing filteredDiscounts ---')
+  let data = [...discounts.value]
+  // Lấy tất cả giá trị filter hiện tại
+  const globalFilter = filters.value.global.value?.toLowerCase()
+  const maFilter = filters.value.maDotGiamGia.constraints[0].value?.toLowerCase()
+  const tenFilter = filters.value.tenDotGiamGia.constraints[0].value?.toLowerCase()
+  const phanTramFilter = filters.value.phanTramGiam.value // Mảng [min, max]
+  const trangThaiFilter = filters.value.trangThai.value
+  const ngayBatDauFilter = normalizeDateToStartOfDay(filters.value.ngayBatDau.constraints[0].value)
+  const ngayKetThucFilter = normalizeDateToStartOfDay(
+    filters.value.ngayKetThuc.constraints[0].value,
+  )
+
+  console.log('Current Filters Applied:', {
+    globalFilter,
+    maFilter,
+    tenFilter,
+    phanTramFilter,
+    trangThaiFilter,
+    ngayBatDauFilter,
+    ngayKetThucFilter,
+  })
+
+  // Áp dụng từng filter một
+  if (globalFilter) {
+    data = data.filter((item) =>
+      Object.values(item).some((val) => String(val).toLowerCase().includes(globalFilter)),
+    )
+  }
+  if (maFilter) {
+    data = data.filter((item) => item.maDotGiamGia?.toLowerCase().includes(maFilter))
+  }
+  if (tenFilter) {
+    data = data.filter((item) => item.tenDotGiamGia?.toLowerCase().includes(tenFilter))
+  }
+  if (phanTramFilter && phanTramFilter.length === 2) {
+    data = data.filter(
+      (item) => item.phanTramGiam >= phanTramFilter[0] && item.phanTramGiam <= phanTramFilter[1],
+    )
+  }
+  if (trangThaiFilter) {
+    data = data.filter((item) => item.trangThai === trangThaiFilter)
+  }
+  if (ngayBatDauFilter) {
+    data = data.filter((item) => {
+      const itemDate = normalizeDateToStartOfDay(item.ngayBatDau)
+      return itemDate && itemDate.getTime() === ngayBatDauFilter.getTime()
+    })
+  }
+  if (ngayKetThucFilter) {
+    data = data.filter((item) => {
+      const itemDate = normalizeDateToStartOfDay(item.ngayKetThuc)
+      return itemDate && itemDate.getTime() === ngayKetThucFilter.getTime()
+    })
+  }
+
+  console.log(`Filtered Data Count: ${data.length}`)
+  return data
+})
 
 // Function to reset filters to their initial state
 function clearFilter() {
@@ -531,10 +604,11 @@ function collapseAll() {
         <label class="block mb-2">Ngày bắt đầu</label>
         <DatePicker
           v-model="filters['ngayBatDau'].constraints[0].value"
-          dateFormat="mm/dd/yy"
-          placeholder="mm/dd/yyyy"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/yyyy"
           showButtonBar
           class="w-full"
+          showIcon
         />
       </div>
 
@@ -542,10 +616,12 @@ function collapseAll() {
         <label class="block mb-2">Ngày kết thúc</label>
         <DatePicker
           v-model="filters['ngayKetThuc'].constraints[0].value"
-          dateFormat="mm/dd/yy"
-          placeholder="mm/dd/yyyy"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/yyyy"
           showButtonBar
           class="w-full"
+          showIcon
+          :minDate="filters['ngayBatDau'].constraints[0].value"
         />
       </div>
 
@@ -573,11 +649,11 @@ function collapseAll() {
 
     <DataTable
       v-model:selection="selectedDiscounts"
-      :value="discounts"
+      :value="filteredDiscounts"
       dataKey="id"
       :paginator="true"
       :rows="10"
-      v-model:filters="filters"
+      :globalFilterFields="['maDotGiamGia', 'tenDotGiamGia']"
       filterDisplay="menu"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
       :rowsPerPageOptions="[5, 10, 25]"
@@ -598,30 +674,15 @@ function collapseAll() {
         </div>
       </template>
 
-      <!-- Keep the columns but remove the filter templates -->
       <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
       <Column header="STT">
-        <template #body="{ index }">
-          {{ index + 1 }}
-        </template>
+        <template #body="{ index }"> {{ index + 1 }} </template>
       </Column>
-
-      <Column field="maDotGiamGia" header="Mã đợt giảm giá" sortable>
-        <template #body="{ data }">
-          {{ data.maDotGiamGia }}
-        </template>
-      </Column>
-
-      <Column field="tenDotGiamGia" header="Tên đợt giảm giá">
-        <template #body="{ data }">
-          {{ data.tenDotGiamGia }}
-        </template>
-      </Column>
-
-      <Column field="phanTramGiam" header="Phần trăm giảm" sortable :showFilterMatchModes="false">
+      <Column field="maDotGiamGia" header="Mã đợt giảm giá" sortable></Column>
+      <Column field="tenDotGiamGia" header="Tên đợt giảm giá" sortable></Column>
+      <Column field="phanTramGiam" header="Phần trăm giảm" sortable>
         <template #body="{ data }"> {{ data.phanTramGiam }}% </template>
       </Column>
-
       <Column
         field="ngayBatDau"
         header="Ngày bắt đầu"
@@ -629,11 +690,8 @@ function collapseAll() {
         sortable
         style="min-width: 12rem"
       >
-        <template #body="{ data }">
-          {{ formatDateTime(data.ngayBatDau) }}
-        </template>
+        <template #body="{ data }"> {{ formatDateTime(data.ngayBatDau) }} </template>
       </Column>
-
       <Column
         field="ngayKetThuc"
         header="Ngày kết thúc"
@@ -641,23 +699,13 @@ function collapseAll() {
         sortable
         style="min-width: 12rem"
       >
-        <template #body="{ data }">
-          {{ formatDateTime(data.ngayKetThuc) }}
-        </template>
+        <template #body="{ data }"> {{ formatDateTime(data.ngayKetThuc) }} </template>
       </Column>
-
-      <Column
-        field="trangThai"
-        header="Trạng thái"
-        sortable
-        style="min-width: 12rem"
-        :showFilterMatchModes="false"
-      >
+      <Column field="trangThai" header="Trạng thái" sortable style="min-width: 12rem">
         <template #body="{ data }">
           <Tag :value="getTrangThaiLabel(data.trangThai)" :severity="getSeverity(data.trangThai)" />
         </template>
       </Column>
-
       <Column :exportable="false" style="min-width: 12rem">
         <template #body="{ data }">
           <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editDiscount(data)" />
@@ -670,6 +718,8 @@ function collapseAll() {
           />
         </template>
       </Column>
+
+      <template #empty> Không tìm thấy đợt giảm giá phù hợp với tiêu chí lọc. </template>
     </DataTable>
   </div>
 
