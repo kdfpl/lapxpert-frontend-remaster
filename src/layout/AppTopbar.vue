@@ -1,7 +1,14 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout'
 import AppConfigurator from './AppConfigurator.vue'
+import AuthService from '@/apis/authhApi'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
+const handleLogout = () => {
+  AuthService.logout()
+  router.push('/login')
+}
 const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout()
 </script>
 
@@ -207,6 +214,14 @@ c-320 15 -693 83 -1053 192 -277 84 -693 270 -945 423 -80 48 -95 62 -101 88
           <button type="button" class="layout-topbar-action">
             <i class="pi pi-inbox"></i>
             <span>Messages</span>
+          </button>
+          <button
+            type="button"
+            class="layout-topbar-action text-red-500 hover:text-red-600"
+            @click="handleLogout"
+          >
+            <i class="pi pi-sign-out"></i>
+            <span>Logout</span>
           </button>
           <button type="button" class="layout-topbar-action">
             <i class="pi pi-user"></i>
