@@ -8,5 +8,14 @@ export default {
     },
     getDoanhSo(){
       return axios.get(`${API_URL}/doanh-so`);
+    },
+    getDoanhThu(){
+      return axios.get(`${API_URL}/doanh-thu`);
+    },
+    getDonHang(){
+      return axios.get(`${API_URL}/don-hang`);
+    },
+    getBinhLuan(){
+      return axios.get(`${API_URL}/binh-luan`);
     }
 };

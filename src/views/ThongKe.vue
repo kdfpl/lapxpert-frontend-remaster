@@ -34,7 +34,7 @@ export default {
   },
 
   setup() {
-    const selectedDoanhThu = ref(Year);
+    const selectedDoanhThu = ref(Month);
     const selectedTop = ref(TopNgay);
     const hoaDons = ref([]);
     const donHangs = ref([]);

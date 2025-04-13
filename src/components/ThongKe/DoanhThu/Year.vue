@@ -60,7 +60,7 @@ export default {
   methods: {
     async fetchData() {
       try {
-        const response = await axios.get("http://localhost:8080/thong-ke/year");
+        const response = await axios.get("http://localhost:8080/thong-ke/this-year");
         this.chartData = response.data;
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu từ API:", error);

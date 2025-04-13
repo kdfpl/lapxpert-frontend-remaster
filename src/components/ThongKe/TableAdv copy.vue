@@ -1,6 +1,6 @@
 <template>
   <div class="card">
-
+ 
     <DataTable
       v-model:filters="filters"
       :value="hoaDons"

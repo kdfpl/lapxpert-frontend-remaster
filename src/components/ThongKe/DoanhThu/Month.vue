@@ -21,7 +21,7 @@ export default {
   },
   data() {
     return {
-      chartData: { labels: [], datasets: [] },
+        chartData: { labels: [], datasets: [] },
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false, // Cho phép biểu đồ thay đổi kích thước
@@ -62,7 +62,7 @@ export default {
   methods: {
     async fetchData() {
       try {
-        const response = await axios.get("http://localhost:8080/thong-ke/month");
+        const response = await axios.get("http://localhost:8080/thong-ke/this-month");
         this.chartData = response.data;
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu từ API:", error);
