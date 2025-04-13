@@ -671,27 +671,27 @@
                 <template #expansion="{ data }">
                   <div class="p-4 surface-hover border-round">
                     <div class="mb-3">
-                      <h5 class="mb-3">Danh sách SKU cho phiên bản</h5>
+                      <h5 class="mb-3">Danh sách seri cho phiên bản</h5>
                       <div class="flex justify-between gap-2">
                         <FileUpload
                           mode="basic"
                           name="skuFile"
                           accept=".txt,.csv"
                           :maxFileSize="1000000"
-                          chooseLabel="Tải lên file SKU"
+                          chooseLabel="Tải lên file seri"
                           @uploader="handleSkuFileUpload($event, data)"
                           class="p-button-sm"
                         />
                         <div class="flex gap-2">
                           <Button
-                            label="Thêm SKU"
+                            label="Thêm seri"
                             icon="pi pi-plus"
                             size="small"
                             class="p-button-success"
                             @click="addSkuToVariant(data)"
                           />
                           <Button
-                            label="Nhập nhiều SKU"
+                            label="Nhập nhiều seri"
                             icon="pi pi-pencil"
                             size="small"
                             class="p-button-info"
@@ -817,7 +817,7 @@
   >
     <div class="field">
       <label class="font-medium mb-2 block"
-        >Nhập danh sách SKU (mỗi SKU trên một dòng hoặc cách nhau bằng dấu phẩy)</label
+        >Nhập danh sách seri (mỗi seri trên một dòng hoặc cách nhau bằng dấu phẩy)</label
       >
       <Textarea v-model="bulkSkuInput" rows="10" autoResize class="w-full" />
     </div>
