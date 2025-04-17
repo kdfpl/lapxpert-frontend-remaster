@@ -85,7 +85,8 @@ export default {
 <template>
   <div ref="chartContainer"
        class="transition-all duration-300 w-full h-[50vh] p-4"
-       :class="isSidebarOpen ? 'md:w-3/4' : 'md:w-full'">
+       :class="isSidebarOpen ? 'md:w-3/4' : 'md:w-full'"> <div style="text-align: center;"><h6 >Bảng theo tuần
+      </h6></div>
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>

@@ -1,12 +1,16 @@
 <script>
 import axios from "axios";
-import { Doughnut } from "vue-chartjs";
+import { Doughnut } from "vue-chartjs"; // Chuyển từ Pie sang Doughnut
 import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, } from "chart.js";
 
 ChartJS.register(Title, Tooltip, Legend, ArcElement);
 
 export default {
-  components: { Doughnut },
+  components: { Doughnut }, // Sử dụng Doughnut thay vì Pie
+  props: {
+    start_dateTop: { type: String, required: true }, // Đảm bảo nhận giá trị dưới dạng String
+    end_dateTop: { type: String, required: true }
+  },
   data() {
     return {
       chartData: {
@@ -28,15 +32,15 @@ export default {
       },
       chartOptions: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: false, // Quan trọng để biểu đồ co giãn đúng cách
         plugins: {
           legend: {
             position: "bottom",
           },
         },
-        cutout: "55%",
+        cutout: "55%", // Tạo hiệu ứng Doughnut (lỗ giữa)
       },
-      windowWidth: window.innerWidth,
+      windowWidth: window.innerWidth, // Theo dõi kích thước cửa sổ
     };
   },
 
@@ -51,8 +55,23 @@ export default {
 
   methods: {
     async fetchChartData() {
+      this.isLoading = true;
+      if (!this.start_dateTop || !this.end_dateTop) {
+      console.error("Vui lòng chọn đầy đủ ngày bắt đầu và kết thúc");
+      return; // Dừng phương thức nếu dữ liệu không hợp lệ
+    }
+    if(this.start_dateTop  > this.end_dateTop){
+console.error("Thời gian kết thúc không được quá ngày bắt đầu");
+return
+    }
       try {
-        const response = await axios.get("http://localhost:8080/thong-ke/top-month");
+        const response = await axios.get("http://localhost:8080/thong-ke/top-custom", {
+          params: {
+            start_dateTop: this.start_dateTop,  // Truyền trực tiếp giá trị start_date và end_date
+            end_dateTop: this.end_dateTop,
+      }
+        });
+
         const { labels, data } = response.data;
         this.updateChartData(labels, data);
       } catch (error) {
@@ -91,7 +110,7 @@ export default {
 
 <template>
   <div class="transition-all duration-300 w-full h-[400px]">
-    <div style="text-align: center;"><h6 >Theo Tháng
+    <div style="text-align: center;"><h6 >Theo thời gian đã chọn
     </h6></div>
     <Doughnut :data="chartData" :options="chartOptions" />
   </div>

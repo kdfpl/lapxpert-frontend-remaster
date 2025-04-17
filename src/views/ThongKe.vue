@@ -13,6 +13,8 @@ import TableAdv1 from "../components/ThongKe/TableAdv copy.vue";
 import NotificationsWidget from "@/components/ThongKe/dashboard/NotificationsWidget.vue";
 import BestSellingWidget from "@/components/ThongKe/dashboard/BestSellingWidget.vue";
 import StatsWidget from "@/components/ThongKe/dashboard/StatsWidget.vue";
+import DTCustom from "@/components/ThongKe/DoanhThu/DTCustom.vue";
+import TopCustom from "@/components/ThongKe/Top/TopCustom.vue";
 
 ;
 
@@ -25,11 +27,13 @@ export default {
     Year,
     Month,
     Week,
+    DTCustom,
     TableAdv,
     TableAdv1,
     TopThang,
     TopTuan,
     TopNgay,
+    TopCustom,
     TTKH,
   },
 
@@ -39,7 +43,10 @@ export default {
     const hoaDons = ref([]);
     const donHangs = ref([]);
     const ThanhViens = ref([]);
-
+    const startDate = ref('');
+    const endDate = ref('');
+    const startDateTop = ref('');
+    const endDateTop = ref('');
 
     return {
       selectedDoanhThu,
@@ -47,7 +54,10 @@ export default {
       hoaDons,
       donHangs,
       ThanhViens,
-
+      startDate,
+      endDate,
+      startDateTop,
+      endDateTop
     };
   },
 };
@@ -77,8 +87,15 @@ export default {
       :class="isScrollbarVisible ? 'basis-2/3' : 'basis-1/3'">
       <!-- <BestSellingWidget/> -->
 
-        <h5 class="mb-12">Top Sản phẩm bán chạy hiện nay
+        <h5 class="mb-3">Top Sản phẩm bán chạy hiện nay
           </h5>
+          <div class="mb-2 flex justify-end">
+          <input type="date" v-model="startDateTop"  class=" h-7 w-32 px-2 py-1 rounded-lg bg-gray-500 text-[#FFFFFF]"/> _
+          <input type="date" v-model="endDateTop" class="h-7 w-32 px-2 py-1 rounded-lg bg-gray-500 text-[#FFFFFF] "/>
+  </div>
+  <button @click="selectedTop = 'TopCustom'"  class=" h-7 w-19 px-3 py-2 rounded-lg bg-gray-400 text-[#FFFFFF]">Tùy chỉnh</button>
+  <br>
+
           <div class="flex justify-center mb-6 text-[#FFFFFF]">
           <button @click="selectedTop = 'TopNgay' " class="px-3 py-2 rounded-l-lg bg-gray-400">
             Day
@@ -90,7 +107,7 @@ export default {
             Month
           </button>
         </div>
-        <component  :is="selectedTop" />
+        <component  :is="selectedTop" :start_dateTop="startDateTop" :end_dateTop="endDateTop" />
       </div>
     </div>
 
@@ -104,6 +121,12 @@ export default {
       :class="isScrollbarVisible ? 'basis-3/4' : 'basis-2/3'">
 
         <h4 class="mb-12">Biểu đồ doanh thu</h4>
+
+        <div class="mb-4 flex justify-end">
+          <input type="date" v-model="startDate" placeholder="Ngày bắt đầu" class="px-3 py-2 rounded-lg bg-gray-500 text-[#FFFFFF]"/> _
+          <input type="date" v-model="endDate" placeholder="Ngày kết thúc" class="px-3 py-2 rounded-lg bg-gray-500 text-[#FFFFFF] mr-2"/>
+          <button @click="selectedDoanhThu = 'DTCustom'"  class="px-3 py-2 rounded-lg bg-gray-400 text-[#FFFFFF]">Tùy chỉnh</button>
+  </div>
         <div class="flex justify-center text-[#FFFFFF]">
           <button @click="selectedDoanhThu = 'Year' " class="px-3 py-2 rounded-l-lg bg-gray-400">
             Year
@@ -116,7 +139,8 @@ export default {
           </button>
         </div>
         <div class="mb-5 basis-2/3 ">
-          <component  :is="selectedDoanhThu" />
+          <component :is="selectedDoanhThu" :start_date="startDate" :end_date="endDate" />
+
         </div>
       </div>
 

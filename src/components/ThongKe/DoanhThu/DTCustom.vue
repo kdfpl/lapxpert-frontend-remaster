@@ -13,13 +13,16 @@ import {
 } from "chart.js";
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale);
-
 export default {
+
   components: { Line },
   props: {
     isSidebarOpen: Boolean, // Nhận trạng thái mở/tắt sidebar từ component cha
+    start_date: { type: String, required: true }, // Đảm bảo nhận giá trị dưới dạng String
+    end_date: { type: String, required: true }
   },
   data() {
+
     return {
         chartData: { labels: [], datasets: [] },
       chartOptions: {
@@ -61,8 +64,22 @@ export default {
 
   methods: {
     async fetchData() {
+      if (!this.start_date || !this.end_date) {
+      console.error("Vui lòng chọn đầy đủ ngày bắt đầu và kết thúc");
+      return; // Dừng phương thức nếu dữ liệu không hợp lệ
+    }
+    if(this.start_date  > this.end_date){
+console.error("Thời gian kết thúc không được quá ngày bắt đầu");
+return
+    }
       try {
-        const response = await axios.get("http://localhost:8080/thong-ke/this-month");
+        const response = await axios.get("http://localhost:8080/thong-ke/custom-data", {
+          params: {
+            start_date: this.start_date,  // Truyền trực tiếp giá trị start_date và end_date
+            end_date: this.end_date,
+      }
+        });
+
         this.chartData = response.data;
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu từ API:", error);
@@ -84,7 +101,7 @@ export default {
 
 <template>
   <div ref="chartContainer" class="transition-all duration-300 w-full h-[50vh] p-4">
-    <div style="text-align: center;"><h6 >Bảng theo tháng
+    <div style="text-align: center;"><h6 >Bảng theo ngày tùy chỉnh
     </h6></div>
     <Line :data="chartData" :options="chartOptions" />
   </div>
