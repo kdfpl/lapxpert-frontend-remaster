@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import AppMenuItem from './AppMenuItem.vue'
 
 // Lấy vai trò từ localStorage
-const role = localStorage.getItem('role')
+const role = localStorage.getItem('vaiTro')
 
 // Mẫu menu cho Admin
 const adminModel = ref([

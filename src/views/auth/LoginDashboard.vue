@@ -1,9 +1,10 @@
 <script setup>
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthService from '@/apis/authhApi'
 import { useToast } from 'primevue/usetoast'
+import Toast from 'primevue/toast'
 
 const router = useRouter()
 const toast = useToast()
@@ -13,12 +14,46 @@ const password = ref('')
 const checked = ref(false)
 const isLoading = ref(false)
 
+onMounted(() => {
+  // toast.add({
+  //   severity: 'info',
+  //   summary: 'Khởi tạo',
+  //   detail: 'Component đã được khởi tạo',
+  //   life: 3000,
+  // })
+})
+
+const isValidEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return re.test(email)
+}
+
 const handleLogin = async () => {
   if (!email.value || !password.value) {
     toast.add({
       severity: 'warn',
       summary: 'Cảnh báo',
-      detail: 'Vui lòng nhập email và mật khẩu',
+      detail: 'Vui lòng nhập đầy đủ email và mật khẩu',
+      life: 3000,
+    })
+    return
+  }
+
+  if (!isValidEmail(email.value)) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: 'Email không đúng định dạng',
+      life: 3000,
+    })
+    return
+  }
+
+  if (password.value.length < 6) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: 'Mật khẩu phải có ít nhất 6 ký tự',
       life: 3000,
     })
     return
@@ -28,6 +63,7 @@ const handleLogin = async () => {
     isLoading.value = true
     await AuthService.login(email.value, password.value)
 
+    // Hiển thị thông báo thành công
     toast.add({
       severity: 'success',
       summary: 'Thành công',
@@ -35,15 +71,19 @@ const handleLogin = async () => {
       life: 3000,
     })
 
-    // Chuyển hướng sau khi đăng nhập thành công
     router.push('/')
   } catch (error) {
     console.error('Login error:', error)
+    console.error('Error response:', error.response)
 
+    const errorMessage =
+      error.response?.data?.message || 'Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.'
+
+    // Hiển thị thông báo lỗi
     toast.add({
       severity: 'error',
-      summary: 'Lỗi',
-      detail: error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.',
+      summary: 'Lỗi đăng nhập',
+      detail: errorMessage,
       life: 3000,
     })
   } finally {
@@ -53,6 +93,8 @@ const handleLogin = async () => {
 </script>
 
 <template>
+  <Toast />
+
   <FloatingConfigurator />
   <div
     class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden"
@@ -199,11 +241,15 @@ c-320 15 -693 83 -1053 192 -277 84 -693 270 -945 423 -80 48 -95 62 -101 88
             >
             <InputText
               id="email1"
-              type="text"
+              type="email"
               placeholder="Email address"
               class="w-full md:w-[30rem] mb-8"
               v-model="email"
+              :class="{ 'p-invalid': email && !isValidEmail(email) }"
             />
+            <small v-if="email && !isValidEmail(email)" class="p-error block mb-4"
+              >Email không hợp lệ</small
+            >
 
             <label
               for="password1"
@@ -218,7 +264,11 @@ c-320 15 -693 83 -1053 192 -277 84 -693 270 -945 423 -80 48 -95 62 -101 88
               class="mb-4"
               fluid
               :feedback="false"
+              :class="{ 'p-invalid': password && password.length < 6 }"
             ></Password>
+            <small v-if="password && password.length < 6" class="p-error block mb-4"
+              >Mật khẩu phải có ít nhất 6 ký tự</small
+            >
 
             <div class="flex items-center justify-between mt-2 mb-8 gap-8">
               <div class="flex items-center">
