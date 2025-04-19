@@ -66,11 +66,11 @@ const router = createRouter({
           component: () => import('@/views/coupons/Coupons.vue')
         },
         {
-          path: '/discounts/couponsCRUD',
+          path: '/discounts/couponsCRUD/:id?',
           name: 'couponsCRUD',
           component: () => import('@/views/coupons/CrudCoupons.vue'),
-          props: route => ({ id: route.query.id })
-        },
+          props: route => ({ id: route.params.id }) 
+        }
       ],
     },
   ],

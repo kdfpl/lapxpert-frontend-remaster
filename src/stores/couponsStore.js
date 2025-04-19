@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
-import couponService from '@/apis/coupons'
+import { defineStore } from 'pinia';
+import couponService from '@/apis/coupons';
 
 export const usePhieuGiamGiaStore = defineStore('phieuGiamGia', {
   state: () => ({
@@ -7,118 +7,138 @@ export const usePhieuGiamGiaStore = defineStore('phieuGiamGia', {
     currentPhieu: null,
     loading: false,
     error: null,
+    search: '',
+    statusFilter: 'all',
+    startDate: '',
+    endDate: '',
+    showSuggestions: false,
+    searchSuggestions: [],
   }),
 
   actions: {
-    // Lấy tất cả phiếu giảm giá
     async fetchPhieuGiamGia() {
-      this.loading = true
-      try {
-        const response = await couponService.getAllCoupons()
-        this.phieuGiamGiaList = response || []
-      } catch (error) {
-        this.error = error.response?.data?.message || error.message
-      } finally {
-        this.loading = false
-      }
-    },
-
-    // Lấy phiếu giảm giá theo ID
-    async fetchPhieuById(id) {
-      this.loading = true
-      try {
-        const response = await couponService.getCouponById(id)
-        this.currentPhieu = response
-      } catch (error) {
-        this.error = error.response?.data?.message || error.message
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    // Tạo phiếu giảm giá mới
-    async createPhieu(phieuData, nguoiDungIds) {
-      this.loading = true
-      try {
-        const response = await couponService.createCoupon(phieuData, nguoiDungIds)
-        this.phieuGiamGiaList.push(response)
-        return response
-      } catch (error) {
-        this.error = error.response?.data?.message || error.message
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    // Cập nhật phiếu giảm giá
-    async updatePhieu(id, phieuData, nguoiDungIds) {
-      this.loading = true
-      try {
-        const response = await couponService.updateCoupon(id, phieuData, nguoiDungIds)
-        const index = this.phieuGiamGiaList.findIndex((p) => p.id === id)
-        if (index !== -1) {
-          this.phieuGiamGiaList[index] = response
-        }
-        return response
-      } catch (error) {
-        this.error = error.response?.data?.message || error.message
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    // Kết thúc phiếu giảm giá (thay vì xóa)
-    async endPhieu(id) {
       this.loading = true;
       try {
-        const response = await couponService.endCoupon(id);  // Gọi API để kết thúc phiếu giảm giá
-        const index = this.phieuGiamGiaList.findIndex((p) => p.id === id);
-        if (index !== -1) {
-          this.phieuGiamGiaList[index].trangThai = 'KET_THUC';  // Cập nhật trạng thái của phiếu giảm giá thành "Kết thúc"
-        }
+        const response = await couponService.getAllCoupons();
+        this.phieuGiamGiaList = response || [];
+      } catch (error) {
+        this.error = error.response?.data?.message || error.message;
+        alert(this.error);
+      } finally {
+        this.loading = false;
+      }
+    },
+    async fetchPhieuById(id) {
+      this.loading = true;
+      this.error = '';
+      try {
+        const response = await couponService.getCouponById(id);
+        this.currentPhieu = response;
         return response;
       } catch (error) {
         this.error = error.response?.data?.message || error.message;
+        console.error("Lỗi khi lấy phiếu giảm giá theo ID:", error);
         throw error;
       } finally {
         this.loading = false;
       }
-    },    
-
-    // Khôi phục phiếu giảm giá (nếu có API)
-    async restorePhieu(id) {
-      this.loading = true
+    },
+    
+    async createPhieu(phieuData, nguoiDungIds) {
+      this.loading = true;
+      this.error = '';
       try {
-        await couponService.restoreCoupon(id) // Bạn cần phải tạo API này ở backend nếu cần
-        const index = this.phieuGiamGiaList.findIndex((p) => p.id === id)
-        if (index !== -1) {
-          this.phieuGiamGiaList[index].trangThai = 'DA_DIEN_RA'  // Điều chỉnh trạng thái nếu cần
-        }
+        const response = await couponService.addCoupon(phieuData, nguoiDungIds);
+        this.phieuGiamGiaList.push(response);
+        return response;
       } catch (error) {
-        this.error = error.response?.data?.message || error.message
-        throw error
+        this.error = error.response?.data?.message || error.message;
+        console.error('Lỗi khi tạo phiếu giảm giá:', error);
+        throw error;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
+    // Cập nhật phiếu giảm giá
+    async updatePhieu(id, phieuData, nguoiDungIds) {
+      this.loading = true;
+      this.error = '';
+      try {
+        const response = await couponService.updateCoupon(id, phieuData, nguoiDungIds);
+        
+        // Cập nhật phiếu giảm giá trong phieuGiamGiaList
+        const updatedCouponIndex = this.phieuGiamGiaList.findIndex(coupon => coupon.id === id);
+        if (updatedCouponIndex !== -1) {
+          this.phieuGiamGiaList[updatedCouponIndex] = { ...this.phieuGiamGiaList[updatedCouponIndex], ...response };
+        }
+        
+        return response;
+      } catch (error) {
+        this.error = error.response?.data?.message || error.message;
+        console.error("Lỗi khi cập nhật phiếu giảm giá:", error);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+    // Thêm hành động đóng phiếu giảm giá
+    async closePhieu(id) {
+      this.loading = true;
+      this.error = '';
+      try {
+        // Gọi service để đóng phiếu
+        const response = await couponService.closeCoupon(id);
+
+        // Cập nhật lại trạng thái trong phieuGiamGiaList
+        const updatedCoupon = this.phieuGiamGiaList.find(coupon => coupon.id === id);
+        if (updatedCoupon) {
+          updatedCoupon.trangThai = "KET_THUC"; // Đặt trạng thái là "Kết thúc"
+          updatedCoupon.ngayKetThuc = new Date().toISOString(); // Hoặc sử dụng OffsetDateTime nếu cần
+        }
+        return response;
+      } catch (error) {
+        this.error = error.response?.data?.message || error.message;
+        console.error("Lỗi khi đóng phiếu giảm giá:", error);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+  
+  setStatusFilter(status) {
+    this.statusFilter = status;
   },
+
+  setStartDate(date) {
+    this.startDate = date;
+  },
+
+  setEndDate(date) {
+    this.endDate = date;
+  },
+
+  filterCoupons() {
+    return this.phieuGiamGiaList.filter((coupon) => {
+      const matchesSearch =
+        !this.search ||
+        (coupon.maPhieuGiamGia && coupon.maPhieuGiamGia.toLowerCase().includes(this.search.toLowerCase())) ||
+        (coupon.giaTriGiam && coupon.giaTriGiam.toString().includes(this.search)) ||
+        (coupon.giaTriDonHangToiThieu && coupon.giaTriDonHangToiThieu.toString().includes(this.search));
+
+      const matchesStatus =
+        this.statusFilter === 'all' || coupon.trangThai === this.statusFilter;
+
+      const matchesDateRange =
+        (!this.startDate || new Date(coupon.ngayBatDau) >= new Date(this.startDate)) &&
+        (!this.endDate || new Date(coupon.ngayKetThuc) <= new Date(this.endDate));
+
+      return matchesSearch && matchesStatus && matchesDateRange;
+    });
+  },
+},
 
   getters: {
-    // Lọc phiếu giảm giá đang hoạt động
-    activePhieu: (state) => {
-      return Array.isArray(state.phieuGiamGiaList)
-        ? state.phieuGiamGiaList.filter((p) => p.trangThai === 'DA_DIEN_RA')
-        : []
-    },
-
-    // Lọc phiếu giảm giá đã hết hạn (hoặc đã bị xóa)
-    inactivePhieu: (state) => {
-      return Array.isArray(state.phieuGiamGiaList)
-        ? state.phieuGiamGiaList.filter((p) => p.trangThai === 'KET_THUC')
-        : []
-    },
-  },
-})
+  filteredCoupons: (state) => state.filterCoupons(),
+},
+});

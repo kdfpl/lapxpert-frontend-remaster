@@ -2,80 +2,93 @@
   <div class="phieu-giam-gia-list">
     <Toolbar class="mb-4">
       <template #start>
-        <Button label="Thêm phiếu giảm giá" icon="pi pi-plus" class="p-button-success mr-2" @click="goToAdd" />
+        <Button label="Thêm phiếu giảm giá" icon="pi pi-plus" class="p-button-success mr-2" @click="goToAdd(false)" />
       </template>
     </Toolbar>
 
+    <!-- Search & Filter -->
+    <section class="mb-5 flex w-full items-center justify-end gap-8">
+      <div class="relative w-full">
+        <div class="flex items-center gap-8">
+          <!-- Ô tìm kiếm -->
+          <label class="input input-ghost bg-base-200 focus-within:bg-base-200 flex-grow focus-within:outline-none flex items-center gap-2 px-2 py-2 rounded-md">
+            <Icon icon="streamline:search-visual-solid" class="size-5 text-primary" />
+            <input v-model="search" @input="handleSearchInput" type="search" placeholder="Tìm kiếm phiếu..." class="w-full bg-transparent outline-none" />
+          </label>
+
+          <!-- Bộ lọc trạng thái -->
+          <label class="flex items-center gap-2">
+            <span class="text-primary font-medium">Trạng thái:</span>
+            <select v-model="store.statusFilter" @change="store.setStatusFilter(store.statusFilter)" class="input custom-input w-48 px-3 py-2 rounded-md border">
+              <option value="all">Tất cả</option>
+              <option value="CHUA_DIEN_RA">Chưa hoạt động</option>
+              <option value="DA_DIEN_RA">Đang hoạt động</option>
+              <option value="KET_THUC">Ngưng hoạt động</option>
+            </select>
+          </label>
+
+          <!-- Ngày bắt đầu -->
+          <label class="flex items-center gap-2">
+            <span class="text-primary font-medium">Từ ngày:</span>
+            <input type="date" v-model="store.startDate" @change="store.setStartDate(store.startDate)" class="input custom-input w-40 px-3 py-2 rounded-md border" />
+          </label>
+
+          <!-- Ngày kết thúc -->
+          <label class="flex items-center gap-2">
+            <span class="text-primary font-medium">Đến ngày:</span>
+            <input type="date" v-model="store.endDate" @change="store.setEndDate(store.endDate)" class="input custom-input w-40 px-3 py-2 rounded-md border" />
+          </label>
+
+          <!-- Nút xóa bộ lọc -->
+          <button class="btn btn-soft btn-primary border-none" @click="resetFilters">
+            <Icon icon="line-md:filter-remove" class="size-5" />
+          </button>
+        </div>
+
+        <!-- Danh sách gợi ý -->
+        <ul v-if="showSuggestions && searchSuggestions.length" class="mt-1 z-10 bg-base-300 shadow-md w-full rounded-md border absolute top-full left-0" @click.outside="hideSuggestions">
+          <li v-for="(suggestion, index) in searchSuggestions" :key="index" @click="selectSuggestion(suggestion)" class="p-2 cursor-pointer hover:bg-base-200">
+            {{ suggestion }}
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Danh sách phiếu -->
     <div class="card">
-      <DataTable :value="filteredPhieuGiamGias" :loading="loading" responsiveLayout="scroll" paginator :rows="10"
-        currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} phiếu">
+      <DataTable :value="filteredPhieuGiamGias" :loading="loading" responsiveLayout="scroll" paginator :rows="10" currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} phiếu">
         <template #header>
           <div class="table-header">
             <h3 class="m-0">Danh sách phiếu giảm giá</h3>
           </div>
+          <ConfirmDialog />
         </template>
 
-        <!-- Cột mã phiếu giảm giá -->
-        <Column field="maPhieuGiamGia" header="Mã phiếu giảm giá" :filter="true" filterPlaceholder="Tìm theo mã" />
+        <Column field="maPhieuGiamGia" header="Mã phiếu" />
+        <Column field="loaiPhieuGiamGia" header="Loại">
+          <template #body="{ data }">{{ getTLoai(data.loaiPhieuGiamGia) }}</template>
+        </Column>
+        <Column field="giaTriGiam" header="Giảm" />
+        <Column field="giaTriDonHangToiThieu" header="Đơn tối thiểu" />
+        <Column field="soLuongBanDau" header="Số lượng" />
 
-        <!-- Cột loại phiếu giảm giá -->
-        <Column field="loaiPhieuGiamGia" header="Loại" :showFilterMatchModes="false">
-          <template #body="{ data }">
-            {{ getTLoai(data.loaiPhieuGiamGia) }}
-          </template>
+        <Column field="ngayBatDau" header="Bắt đầu">
+          <template #body="{ data }">{{ formatDateTime(data.ngayBatDau) }}</template>
+        </Column>
+        <Column field="ngayKetThuc" header="Kết thúc">
+          <template #body="{ data }">{{ formatDateTime(data.ngayKetThuc) }}</template>
         </Column>
 
-        <!-- Cột giá trị giảm -->
-        <Column field="giaTriGiam" header="Giá trị giảm" :filter="true" filterPlaceholder="Tìm theo giá trị" />
-
-        <!-- Cột điều kiện -->
-        <Column field="giaTriDonHangToiThieu" header="Điều kiện" :filter="true"
-          filterPlaceholder="Tìm theo điều kiện" />
-
-        <!-- Cột số lượng ban đầu -->
-        <Column field="soLuongBanDau" header="Số lượng" :filter="true" filterPlaceholder="Tìm theo số lượng" />
-
-        <!-- Cột ngày bắt đầu -->
-        <Column field="ngayBatDau" header="Ngày bắt đầu" dataType="date" sortable style="min-width: 12rem">
-          <template #body="{ data }">
-            {{ formatDateTime(data.ngayBatDau) }}
-          </template>
-          <template #filter="{ filterModel }">
-            <DatePicker v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" showButtonBar />
-          </template>
-        </Column>
-
-        <!-- Cột ngày kết thúc -->
-        <Column field="ngayKetThuc" header="Ngày kết thúc" dataType="date" sortable>
-          <template #body="{ data }">
-            {{ formatDateTime(data.ngayKetThuc) }}
-          </template>
-          <template #filter="{ filterModel }">
-            <DatePicker v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" showButtonBar />
-          </template>
-        </Column>
-        <Column field="trangThai" header="Trạng thái" sortable style="min-width: 12rem" :showFilterMatchModes="false">
+        <Column field="trangThai" header="Trạng thái">
           <template #body="{ data }">
             <Tag :value="getTrangThaiLabel(data.trangThai)" :severity="getSeverity(data.trangThai)" />
           </template>
-          <template #filter="{ filterModel }">
-            <Select v-model="filters.value.trangThai.value" :options="[
-              { label: 'Chưa hoạt động', value: 'CHUA_DIEN_RA' },
-              { label: 'Đang hoạt động', value: 'DA_DIEN_RA' },
-              { label: 'Ngưng hoạt động', value: 'KET_THUC' },
-            ]" optionLabel="label" optionValue="value" placeholder="Chọn trạng thái" showClear>
-              <template #option="{ option }">
-                <Tag :value="getTrangThaiLabel(option.value)" :severity="getSeverity(option.value)" />
-              </template>
-            </Select>
-          </template>
         </Column>
 
-        <!-- Cột hành động -->
-        <Column header="Hành động" :exportable="false" style="min-width: 12rem">
+        <Column header="Hành động">
           <template #body="{ data }">
-            <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editDiscount(data)" />
-            <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDelete(data)" />
+            <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="goToAdd(true, data.id)" />
+            <Button icon="pi pi-trash" outlined rounded severity="danger" @click="deletePhieuGiamGia(data)" />
           </template>
         </Column>
       </DataTable>
@@ -87,172 +100,112 @@
 import { ref, computed, onMounted } from 'vue';
 import { usePhieuGiamGiaStore } from '@/stores/couponsStore';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast'
+import { useToast } from 'primevue/usetoast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns';
+import { storeToRefs } from 'pinia';
 
 const loading = ref(false);
-const showInactive = ref(false);
-const phieuGiamGiaStore = usePhieuGiamGiaStore();
+const store = usePhieuGiamGiaStore();
 const router = useRouter();
 const confirm = useConfirm();
 const toast = useToast();
-const statuses = ['DA_DIEN_RA', 'qualified', 'new']; // Thêm danh sách trạng thái
-const filterModel = ref({
-  trangThai: null,
-  loaiPhieuGiamGia: null,
-}); // Mô hình lọc trạng thái và loại phiếu giảm giá
 
-// Lọc phiếu giảm giá
+const {
+  search,
+  searchSuggestions,
+  showSuggestions,
+  statusFilter,
+  startDate,
+  endDate
+} = storeToRefs(store);
+
 const filteredPhieuGiamGias = computed(() => {
-  let filteredData = phieuGiamGiaStore.phieuGiamGiaList;  // Lấy tất cả phiếu giảm giá thay vì chỉ active
+  let filtered = store.phieuGiamGiaList;
 
-  // Lọc theo trạng thái
-  if (filterModel.value.trangThai) {
-    filteredData = filteredData.filter((item) => item.trangThai === filterModel.value.trangThai);
+  if (search.value) {
+    const searchText = search.value.toLowerCase();
+    filtered = filtered.filter((item) => item.maPhieuGiamGia.toLowerCase().includes(searchText));
   }
 
-  // Lọc theo loại phiếu giảm giá
-  if (filterModel.value.loaiPhieuGiamGia) {
-    filteredData = filteredData.filter((item) => item.loaiPhieuGiamGia === filterModel.value.loaiPhieuGiamGia);
+  if (statusFilter.value !== 'all') {
+    filtered = filtered.filter((item) => item.trangThai === statusFilter.value);
   }
 
-  return filteredData;
+  if (startDate.value) {
+    filtered = filtered.filter((item) => new Date(item.ngayBatDau) >= new Date(startDate.value));
+  }
+
+  if (endDate.value) {
+    filtered = filtered.filter((item) => new Date(item.ngayKetThuc) <= new Date(endDate.value));
+  }
+
+  // Sắp xếp theo trạng thái (Đang hoạt động, Chưa hoạt động, Ngưng hoạt động)
+  return filtered.sort((a, b) => {
+    const order = {
+      DA_DIEN_RA: 1,   // Đang hoạt động
+      CHUA_DIEN_RA: 2, // Chưa hoạt động
+      KET_THUC: 3      // Ngưng hoạt động
+    };
+    return order[a.trangThai] - order[b.trangThai];
+  });
 });
 
-// Hàm định dạng ngày
-const dateTemplate = (rowData) => {
-  return new Date(rowData.ngayBatDau).toLocaleDateString('vi-VN');
-};
 
 function getTrangThaiLabel(trangThai) {
-  const labelMap = {
+  return {
     CHUA_DIEN_RA: 'Chưa hoạt động',
     DA_DIEN_RA: 'Đang hoạt động',
-    KET_THUC: 'Ngưng hoạt động',
-  }
-  return labelMap[trangThai] || 'Không xác định'
+    KET_THUC: 'Ngưng hoạt động'
+  }[trangThai] || 'Không xác định';
 }
+
 function getTLoai(loaiPhieuGiamGia) {
   return loaiPhieuGiamGia ? 'Phần trăm' : 'Tiền';
 }
 
 function getSeverity(trangThai) {
-  const severityMap = {
+  return {
     CHUA_DIEN_RA: 'warn',
     DA_DIEN_RA: 'success',
-    KET_THUC: 'danger',
-  }
-  return severityMap[trangThai] || null
+    KET_THUC: 'danger'
+  }[trangThai];
 }
-const goToAdd = () => {
-  router.push({ name: 'couponsCRUD' });
-};
 
-const initialFilters = {
-  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  maDotGiamGia: {
-    operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
-  },
-  tenDotGiamGia: {
-    operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
-  },
-  phanTramGiam: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN }, // Assuming range slider or similar
-  ngayBatDau: {
-    operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
-  },
-  ngayKetThuc: {
-    operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
-  },
-  trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
+function formatDateTime(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? '' : format(date, 'yyyy-MM-dd');
 }
-const filters = ref(JSON.parse(JSON.stringify(initialFilters)))
 
-// Function to reset filters to their initial state
-function clearFilter() {
-  filters.value = JSON.parse(JSON.stringify(initialFilters))
+function goToAdd(isEdit = false, couponId = null) {
+  router.push({ name: 'couponsCRUD', params: isEdit ? { id: couponId } : {} });
 }
-// Cập nhật trạng thái khi trang bị thay đổi
-const toggleShowInactive = () => {
-  showInactive.value = !showInactive.value;
-};
-/**
- * Formats an ISO date string into a locale-specific date and time string.
- * @param {string} dateString - The ISO date string (UTC).
- * @param {string} [locale=navigator.language] - The locale to use for formatting.
- * @returns {string} Formatted date-time string or empty string if input is invalid.
- */
-const formatDateTime = (dateString, locale = navigator.language) => {
-  if (!dateString) return ''
-  try {
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return '' // Check for invalid date
-    const options = {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }
-    return new Intl.DateTimeFormat(locale, options).format(date)
-  } catch (error) {
-    console.error('Error formatting date-time:', error)
-    return '' // Return empty on error
-  }
-}
-const confirmDelete = (phieuGiamGia) => {
-  console.log('Phieu Giam Gia:', phieuGiamGia);  // Kiểm tra xem đối tượng có đúng không
-  const phieuGiamGiaName = phieuGiamGia.ten || `Phiếu giảm giá ID: ${phieuGiamGia.id}`;
+
+async function deletePhieuGiamGia(data) {
   confirm.require({
-    message: `Bạn có chắc chắn muốn vô hiệu hóa phiếu giảm giá "${phieuGiamGiaName}"?`,
-    header: 'Xác nhận',
+    message: 'Bạn có chắc chắn muốn đóng phiếu giảm giá này?',
+    header: 'Xác nhận đóng phiếu',
     icon: 'pi pi-exclamation-triangle',
-    accept: () => {
-      console.log('Chấp nhận xóa phiếu giảm giá');  // Kiểm tra nếu confirm được chấp nhận
-      endPhieuGiamGia(phieuGiamGia);  // Truyền đối tượng phieuGiamGia thay vì chỉ id
+    accept: async () => {
+      try {
+        await store.closePhieu(data.id);
+        toast.add({ severity: 'success', summary: 'Thành công', detail: 'Phiếu đã được đóng', life: 3000 });
+      } catch {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Xảy ra lỗi khi đóng phiếu', life: 3000 });
+      }
     },
+    reject: () => {
+      toast.add({ severity: 'info', summary: 'Đã hủy', detail: 'Không có thay đổi', life: 3000 });
+    }
   });
-};
+}
 
-const endPhieuGiamGia = async (phieuGiamGia) => {
-  try {
-    console.log(phieuGiamGia);  // In ra để kiểm tra đối tượng
-    const id = phieuGiamGia.id;  // Lấy id từ Proxy object
-    await phieuGiamGiaStore.endPhieu(id);  // Gọi hàm endPhieu với id
-    toast.add({
-      severity: 'success',
-      summary: 'Thành công',
-      detail: `Phiếu giảm giá "${phieuGiamGia.maPhieuGiamGia}" đã được vô hiệu hóa`,
-      life: 3000
-    });
-  } catch (error) {
-    console.error(error);
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: error.message || 'Không thể vô hiệu hóa phiếu giảm giá',
-      life: 3000
-    });
-  }
-};
-
-// Lấy phiếu giảm giá từ store
 onMounted(async () => {
-  loading.value = true;
-  try {
-    await phieuGiamGiaStore.fetchPhieuGiamGia();
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: error.message || 'Không thể tải danh sách phiếu giảm giá',
-      life: 3000
-    });
-  } finally {
+  if (!store.phieuGiamGiaList.length) {
+    loading.value = true;
+    await store.fetchPhieuGiamGia();
     loading.value = false;
   }
 });
