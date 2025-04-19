@@ -726,19 +726,6 @@
                         </template>
                       </Column>
 
-                      <Column field="giaKhuyenMai" header="Giá khuyến mãi" style="min-width: 12rem">
-                        <template #body="{ data: skuData }">
-                          <InputNumber
-                            v-model="skuData.giaKhuyenMai"
-                            mode="currency"
-                            currency="VND"
-                            locale="vi-VN"
-                            :min="0"
-                            class="w-full"
-                          />
-                        </template>
-                      </Column>
-
                       <Column header="Hình ảnh" style="min-width: 12rem">
                         <template #body="{ data: skuData }">
                           <FileUpload
@@ -1127,7 +1114,7 @@ const addSkuToVariant = (variant) => {
   const skuNumber = variant.skus.length + 1
 
   variant.skus.push({
-    sku: `${baseSku}-${skuNumber}`,
+    sku: ``,
     giaBan: variant.giaBan || 0,
     giaKhuyenMai: variant.giaKhuyenMai || 0,
     hinhAnh: [],
