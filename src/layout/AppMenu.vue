@@ -12,6 +12,11 @@ const model = ref([
     to: '/pos',
     items: [
       {
+        label: 'Bán Hàng',
+        icon: 'icon-[hugeicons--delivery-truck-02] size-5',
+        to: '/pos',
+      },
+      {
         label: 'Đơn hàng',
         icon: 'icon-[hugeicons--delivery-truck-02] size-5',
         to: '/pos/orders',
