@@ -1,922 +1,757 @@
 <template>
-  <div class="card p-0 w-full">
-    <h2 class="p-0 m-0">Thêm sản phẩm</h2>
-    <div class="flex flex-column">
-      <form @submit.prevent="submitForm" class="p-4 w-full">
-        <!-- Thông tin cơ bản -->
-        <div class="mb-5 w-full">
-          <div class="flex align-items-center mb-3">
-            <i class="pi pi-info-circle mr-2"></i>
-            <h3 class="text-lg font-medium m-0">Thông tin cơ bản</h3>
-          </div>
-          <div class="p-card p-4 w-full">
-            <div class="grid w-full">
-              <!-- Tên sản phẩm và thương hiệu cùng hàng -->
-              <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-6">
-                  <div class="field w-full">
-                    <label for="tenSanPham" class="font-medium">
-                      Tên sản phẩm <span class="text-pink-500">*</span>
-                    </label>
-                    <InputText
-                      id="tenSanPham"
-                      v-model="sanPham.tenSanPham"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !sanPham.tenSanPham }"
-                    />
-                    <small class="p-error" v-if="submitted && !sanPham.tenSanPham">
-                      Tên sản phẩm là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <div class="col-span-6">
-                  <div class="field w-full">
-                    <label for="thuongHieu" class="font-medium">
-                      Thương hiệu <span class="text-pink-500">*</span>
-                    </label>
-                    <Dropdown
-                      id="thuongHieu"
-                      v-model="sanPham.thuongHieu"
-                      :options="brand"
-                      optionLabel="moTaThuongHieu"
-                      optionValue="id"
-                      placeholder="Chọn thương hiệu"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !sanPham.thuongHieu }"
-                      filter
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !sanPham.thuongHieu">
-                      Thương hiệu là bắt buộc
-                    </small>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Mô tả kéo dãn ra bằng độ dài màn hình -->
-              <div class="col-12">
-                <div class="field w-full">
-                  <label for="moTa" class="font-medium">Mô tả sản phẩm</label>
-                  <Textarea
-                    id="moTa"
-                    v-model="sanPham.moTa"
-                    rows="5"
-                    :class="{ 'p-invalid': submitted && !sanPham.moTa }"
-                    autoResize
-                    class="w-full"
-                  />
-                  <small class="p-error" v-if="submitted && !sanPham.moTa">
-                    Nhập mô tả là bắt buộc
-                  </small>
-                </div>
-              </div>
-
-              <!-- Ngày ra mắt và danh mục 1 hàng -->
-              <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-6">
-                  <div class="field w-full">
-                    <label for="ngayRaMat" class="font-medium">Ngày ra mắt</label>
-                    <Calendar
-                      id="ngayRaMat"
-                      v-model="sanPham.ngayRaMat"
-                      :class="{ 'p-invalid': submitted && !sanPham.ngayRaMat }"
-                      dateFormat="dd/mm/yy"
-                      showIcon
-                      class="w-full"
-                    />
-                    <small class="p-error" v-if="submitted && !sanPham.moTa">
-                      Chọn ngày nhập là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <div class="col-span-6">
-                  <div class="field w-full">
-                    <label for="danhMucs" class="font-medium">
-                      Danh mục <span class="text-pink-500">*</span>
-                    </label>
-                    <MultiSelect
-                      id="danhMucs"
-                      v-model="sanPham.danhMucs"
-                      :options="category"
-                      optionLabel="tenDanhMuc"
-                      optionValue="id"
-                      placeholder="Chọn danh mục"
-                      class="w-full"
-                      :class="{
-                        'p-invalid':
-                          submitted && (!sanPham.danhMucs || sanPham.danhMucs.length === 0),
-                      }"
-                      display="chip"
-                      filter
-                    />
-                    <small
-                      class="p-error"
-                      v-if="submitted && (!sanPham.danhMucs || sanPham.danhMucs.length === 0)"
-                    >
-                      Ít nhất một danh mục là bắt buộc
-                    </small>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Thông số kỹ thuật - 2 cái mỗi hàng -->
-        <div class="mb-5 w-full">
-          <div class="flex align-items-center mb-3">
-            <i class="pi pi-cog mr-2"></i>
-            <h3 class="text-lg font-medium m-0">Thông số kỹ thuật</h3>
-          </div>
-          <div class="p-card p-4 w-full">
-            <div class="grid w-full">
-              <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-3">
-                  <div class="field w-full">
-                    <label for="oCung" class="font-medium">Ổ cứng</label>
-                    <Dropdown
-                      id="ocung"
-                      v-model="selectedOCung"
-                      :options="storage"
-                      optionLabel="moTaOCung"
-                      optionValue="id"
-                      placeholder="Chọn ổ cứng"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !selectedOCung }"
-                      filter
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !selectedOCung">
-                      Ít nhất một ổ cứng là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <!-- Hệ điều hành -->
-                <div class="col-span-3">
-                  <div class="field w-full">
-                    <label for="heDieuHanh" class="font-medium">Hệ điều hành</label>
-                    <Dropdown
-                      id="heDieuHanh"
-                      v-model="selectedHeDieuHanh"
-                      :options="os"
-                      optionLabel="moTaHeDieuHanh"
-                      optionValue="id"
-                      placeholder="Chọn hệ điều hành"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !selectedHeDieuHanh }"
-                      filter
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !selectedHeDieuHanh">
-                      Hệ điều hành là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <!-- Mạng -->
-                <div class="col-span-3">
-                  <div class="field w-full">
-                    <label for="mang" class="font-medium">Kết nối mạng</label>
-                    <Dropdown
-                      id="ketNoiMang"
-                      v-model="selectedMang"
-                      :options="network"
-                      optionLabel="moTaKetNoi"
-                      optionValue="id"
-                      placeholder="Chọn kết nối mạng"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !selectedMang }"
-                      filter
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !selectedMang">
-                      Kết nối mạng là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <div class="col-span-3">
-                  <div class="field w-full">
-                    <label for="gpu" class="font-medium">GPU</label>
-                    <Dropdown
-                      id="gpu"
-                      v-model="selectedGpu"
-                      :options="gpu"
-                      optionLabel="moTaGpu"
-                      optionValue="id"
-                      placeholder="Chọn GPU"
-                      class="w-full"
-                      filter
-                      :class="{ 'p-invalid': submitted && !selectedGpu }"
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !selectedGpu">
-                      Ít nhất một GPU là bắt buộc
-                    </small>
-                  </div>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-12 gap-4">
-                <!-- Pin -->
-                <div class="col-span-3">
-                  <div class="field w-full">
-                    <label for="pin" class="font-medium">Pin</label>
-                    <Dropdown
-                      id="pin"
-                      v-model="selectedPin"
-                      :options="battery"
-                      optionLabel="moTaPin"
-                      optionValue="id"
-                      placeholder="Chọn thông số pin"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !selectedPin }"
-                      filter
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !selectedPin">
-                      Thông tin pin là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <!-- Giao diện -->
-                <div class="col-span-3">
-                  <div class="field w-full">
-                    <label for="congGiaoTiep" class="font-medium">Cổng kết nối</label>
-                    <Dropdown
-                      id="congGiaoTiep"
-                      v-model="selectedCong"
-                      :options="inter"
-                      optionLabel="moTaCong"
-                      optionValue="id"
-                      placeholder="Chọn cổng kết nối"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !selectedCong }"
-                      filter
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !selectedCong">
-                      Cổng kết nối là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <div class="col-span-3">
-                  <div class="field w-full">
-                    <label for="banPhim" class="font-medium">Bàn phím</label>
-                    <Dropdown
-                      id="banPhim"
-                      v-model="selectedBanPhim"
-                      :options="keyboard"
-                      optionLabel="moTaBanPhim"
-                      optionValue="id"
-                      placeholder="Chọn bàn phím"
-                      class="w-full"
-                      filter
-                      showClear
-                      :class="{ 'p-invalid': submitted && !selectedBanPhim }"
-                    />
-                    <small class="p-error" v-if="submitted && !selectedBanPhim">
-                      Ít nhất một bàn phím là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <div class="col-span-3">
-                  <div class="field w-full">
-                    <label for="amThanh" class="font-medium">Âm thanh</label>
-                    <Dropdown
-                      id="amThanh"
-                      v-model="selectedAmThanh"
-                      :options="audio"
-                      optionLabel="moTaAmThanh"
-                      optionValue="id"
-                      placeholder="Chọn âm thanh"
-                      class="w-full"
-                      filter
-                      showClear
-                      :class="{ 'p-invalid': submitted && !selectedAmThanh }"
-                    />
-                    <small class="p-error" v-if="submitted && !selectedAmThanh">
-                      Ít nhất một âm thanh là bắt buộc
-                    </small>
-                  </div>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-12 gap-4">
-                <!-- Bảo mật -->
-                <div class="col-span-4">
-                  <div class="field w-full">
-                    <label for="baoMat" class="font-medium">Bảo mật</label>
-                    <Dropdown
-                      id="baoMat"
-                      v-model="selectedBaoMat"
-                      :options="security"
-                      optionLabel="moTaBaoMat"
-                      optionValue="id"
-                      placeholder="Chọn tính năng bảo mật"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !selectedBaoMat }"
-                      filter
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !selectedBaoMat">
-                      Tính năng bảo mật là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <!-- Thiết kế -->
-                <div class="col-span-4">
-                  <div class="field w-full">
-                    <label for="thietKe" class="font-medium">Thiết kế</label>
-                    <Dropdown
-                      id="thietKe"
-                      v-model="selectedThietKe"
-                      :options="design"
-                      optionLabel="moTaThietKe"
-                      optionValue="id"
-                      placeholder="Chọn thông số thiết kế"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !selectedThietKe }"
-                      filter
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !selectedThietKe">
-                      Thông tin thiết kế là bắt buộc
-                    </small>
-                  </div>
-                </div>
-
-                <!-- Webcam -->
-                <div class="col-span-4">
-                  <div class="field w-full">
-                    <label for="webcam" class="font-medium">Webcam</label>
-                    <Dropdown
-                      id="webcam"
-                      v-model="selectedWebcam"
-                      :options="webcam"
-                      optionLabel="moTaWc"
-                      optionValue="id"
-                      placeholder="Chọn thông số webcam"
-                      class="w-full"
-                      :class="{ 'p-invalid': submitted && !selectedWebcam }"
-                      filter
-                      showClear
-                    />
-                    <small class="p-error" v-if="submitted && !selectedWebcam">
-                      Thông tin webcam là bắt buộc
-                    </small>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hình ảnh sản phẩm - độ dài co dãn -->
-        <div class="mb-5 w-full">
-          <div class="flex align-items-center mb-3">
-            <i class="pi pi-image mr-2"></i>
-            <h3 class="text-lg font-medium m-0">Hình ảnh sản phẩm</h3>
-          </div>
-          <div class="p-card p-4 w-full">
-            <div class="field w-full">
-              <FileUpload
-                name="demo[]"
-                url="./upload.php"
-                @upload="onUpload"
-                :multiple="true"
-                accept="image/*"
-                :maxFileSize="1000000"
-                chooseLabel="Chọn ảnh"
-                uploadLabel="Tải lên"
-                cancelLabel="Hủy"
-                class="w-full"
-              >
-                <template #empty>
-                  <div
-                    class="flex flex-column align-items-center p-5 border-dashed surface-border border-round"
-                  >
-                    <i class="pi pi-cloud-upload text-5xl mb-3"></i>
-                    <p class="m-0">Kéo thả ảnh vào đây hoặc click để chọn</p>
-                  </div>
-                </template>
-              </FileUpload>
-              <div
-                v-if="sanPham.hinhAnh && sanPham.hinhAnh.length > 0"
-                class="mt-3 flex flex-wrap gap-2"
-              >
-                <Chip
-                  v-for="(img, idx) in sanPham.hinhAnh"
-                  :key="idx"
-                  :label="img"
-                  removable
-                  @remove="removeMainImage(idx)"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Phiên bản sản phẩm - mỗi cái 1 hàng -->
-        <div class="mb-5 w-full">
-          <div class="flex align-items-center justify-content-between mb-3">
-            <div class="flex align-items-center">
-              <i class="pi pi-tag mr-2"></i>
-              <h3 class="text-lg font-medium m-0">Phiên bản sản phẩm</h3>
-            </div>
-          </div>
-          <div class="p-card p-4 w-full">
-            <div class="w-full">
-              <div class="field w-full mb-3">
-                <label for="ram" class="font-medium">
-                  RAM <span class="text-pink-500">*</span>
-                </label>
-                <MultiSelect
-                  id="ram"
-                  v-model="selectedRam"
-                  :options="ram"
-                  optionLabel="moTaRam"
-                  optionValue="id"
-                  placeholder="Chọn RAM"
-                  class="w-full"
-                  :class="{ 'p-invalid': submitted && (!selectedRam || selectedRam.length === 0) }"
-                  display="chip"
-                  filter
-                />
-                <small
-                  class="p-error"
-                  v-if="submitted && (!selectedRam || selectedRam.length === 0)"
-                >
-                  Ít nhất một RAM là bắt buộc
-                </small>
-              </div>
-
-              <div class="field w-full mb-3">
-                <label for="cpu" class="font-medium">
-                  CPU <span class="text-pink-500">*</span>
-                </label>
-                <MultiSelect
-                  id="cpu"
-                  v-model="selectedCpu"
-                  :options="cpu"
-                  optionLabel="moTaCpu"
-                  optionValue="id"
-                  placeholder="Chọn CPU"
-                  class="w-full"
-                  :class="{ 'p-invalid': submitted && (!selectedCpu || selectedCpu.length === 0) }"
-                  display="chip"
-                  filter
-                />
-                <small
-                  class="p-error"
-                  v-if="submitted && (!selectedCpu || selectedCpu.length === 0)"
-                >
-                  Ít nhất một CPU là bắt buộc
-                </small>
-              </div>
-
-              <div class="field w-full mb-3">
-                <label for="manHinh" class="font-medium">
-                  Màn hình <span class="text-pink-500">*</span>
-                </label>
-                <MultiSelect
-                  id="manHinh"
-                  v-model="selectedManHinh"
-                  :options="screen"
-                  optionLabel="moTaManHinh"
-                  optionValue="id"
-                  placeholder="Chọn màn hình"
-                  class="w-full"
-                  :class="{
-                    'p-invalid': submitted && (!selectedManHinh || selectedManHinh.length === 0),
-                  }"
-                  display="chip"
-                  filter
-                />
-                <small
-                  class="p-error"
-                  v-if="submitted && (!selectedManHinh || selectedManHinh.length === 0)"
-                >
-                  Ít nhất một màn hình là bắt buộc
-                </small>
-              </div>
-
-              <div class="field w-full">
-                <label for="mauSac" class="font-medium">
-                  Màu sắc <span class="text-pink-500">*</span>
-                </label>
-                <MultiSelect
-                  id="mauSac"
-                  v-model="selectedMauSac"
-                  :options="colors"
-                  optionLabel="name"
-                  optionValue="code"
-                  placeholder="Chọn màu sắc"
-                  class="w-full"
-                  :class="{
-                    'p-invalid': submitted && (!selectedMauSac || selectedMauSac.length === 0),
-                  }"
-                  display="chip"
-                  filter
-                />
-                <small
-                  class="p-error"
-                  v-if="submitted && (!selectedMauSac || selectedMauSac.length === 0)"
-                >
-                  Ít nhất một màu sắc là bắt buộc
-                </small>
-              </div>
-            </div>
-          </div>
-          <Button
-            label="Tạo phiên bản"
-            icon="pi pi-plus"
-            class="p-button-outlined"
-            @click="generateVariants"
-          />
-        </div>
-
-        <!-- Các phiên bản sản phẩm -->
-        <div v-if="variantGroups.length > 0" class="mb-5 w-full">
-          <div class="flex align-items-center mb-3">
-            <i class="pi pi-list mr-2"></i>
-            <h3 class="text-lg font-medium m-0">Các phiên bản sản phẩm</h3>
-          </div>
-
-          <div
-            v-for="(group, groupIndex) in variantGroups"
-            :key="groupIndex"
-            class="mb-5 p-card w-full"
-          >
-            <div
-              class="p-card-header flex align-items-center justify-between p-3 border-bottom-1 surface-border"
-            >
-              <h4 class="m-0">Phiên bản RAM: {{ getAttributeName(ram, group.ram, 'moTaRam') }}</h4>
-              <div class="flex gap-2">
+  <div class="card">
+    <Toolbar class="mb-4">
+      <template #start>
+        <Button label="Thêm sản phẩm" icon="pi pi-plus" class="mr-2" @click="goToAdd" />
+        <Button label="In" icon="pi pi-print" class="mr-2" severity="secondary" />
+        <Button label="Xuất" icon="pi pi-upload" class="mr-2" severity="secondary" />
+      </template>
+    </Toolbar>
+    <Tabs value="0">
+      <TabList>
+        <Tab value="0">Sản Phẩm</Tab>
+        <Tab value="1">Các Phiên Bản Sản Phẩm</Tab>
+      </TabList>
+      <TabPanels>
+        <TabPanel value="0">
+          <div class="card">
+            <Toolbar class="mb-6">
+              <template #start>
                 <Button
-                  label="Đặt giá chung"
-                  icon="pi pi-tag"
-                  size="small"
-                  class="p-button-success"
-                  @click="showBulkPriceDialog(group)"
+                  label="Thêm Nhanh"
+                  icon="pi pi-plus"
+                  severity="secondary"
+                  class="mr-2"
+                  @click="openNew"
                 />
                 <Button
-                  label="Tải ảnh chung"
-                  icon="pi pi-image"
-                  size="small"
-                  class="p-button-info"
-                  @click="showBulkImageDialog(group)"
-                />
-                <Button
+                  label="Xóa"
                   icon="pi pi-trash"
-                  label="Xóa cụm"
-                  class="p-button-danger p-button-sm"
-                  @click="removeVariantGroup(groupIndex)"
+                  severity="secondary"
+                  @click="confirmDeleteSelected"
+                  :disabled="!selectedProducts || !selectedProducts.length"
                 />
-              </div>
-            </div>
+              </template>
 
-            <div class="p-3 mb-3">
-              <DataTable
-                v-model:expandedRows="expandedRows"
-                :value="group.variants"
-                dataKey="id"
-                responsiveLayout="scroll"
-                tableStyle="min-width: 100%"
-                :filters="filters"
-                class="p-datatable-sm"
-                stripedRows
+              <template #end>
+                <Button
+                  label="Export"
+                  icon="pi pi-upload"
+                  severity="secondary"
+                  @click="exportCSV($event)"
+                />
+              </template>
+            </Toolbar>
+            <DataTable
+              v-model:filters="filtersSanPham"
+              :value="products"
+              paginator
+              showGridlines
+              removableSort
+              :rows="10"
+              :rowsPerPageOptions="[5, 10, 20, 50]"
+              dataKey="id"
+              filterDisplay="menu"
+              :loading="loadingSanPham"
+              :globalFilterFields="[
+                'maSanPham',
+                'tenSanPham',
+                'thuongHieu.moTaThuongHieu',
+                'ngayRaMat',
+                'trangThai',
+              ]"
+            >
+              <template #header>
+                <div class="flex justify-between">
+                  <Button
+                    type="button"
+                    icon="pi pi-filter-slash"
+                    label="Clear"
+                    outlined
+                    @click="clearFilterSanPham()"
+                  />
+                  <IconField>
+                    <InputIcon>
+                      <i class="pi pi-search" />
+                    </InputIcon>
+                    <InputText
+                      v-model="filtersSanPham['global'].value"
+                      placeholder="Từ khóa tìm kiếm..."
+                    />
+                  </IconField>
+                </div>
+              </template>
+
+              <template #empty> No products found. </template>
+
+              <template #loading> Loading product data. Please wait. </template>
+              <!-- Mã sản phẩm -->
+              <Column field="maSanPham" sortable header="Mã sản phẩm" style="min-width: 12rem">
+                <template #body="{ data }">
+                  {{ data.maSanPham }}
+                </template>
+                <!-- <template #filter="{ filterModel }">
+                  <InputText v-model="filterModel.value" type="text" placeholder="Search by code" />
+                </template> -->
+              </Column>
+
+              <!-- Tên sản phẩm -->
+              <Column field="tenSanPham" sortable header="Tên sản phẩm" style="min-width: 12rem">
+                <template #body="{ data }">
+                  {{ data.tenSanPham }}
+                </template>
+                <!-- <template #filter="{ filterModel }">
+                  <InputText v-model="filterModel.value" type="text" placeholder="Search by name" />
+                </template> -->
+              </Column>
+
+              <!-- Thương hiệu -->
+              <Column
+                field="thuongHieu.moTaThuongHieu"
+                sortable
+                header="Thương hiệu"
+                style="min-width: 12rem"
               >
-                <!-- Table content remains unchanged -->
-                <template #header>
-                  <div class="flex flex-wrap justify-between gap-2">
-                    <div class="flex gap-2">
-                      <Button
-                        icon="pi pi-plus"
-                        label="Mở rộng tất cả"
-                        class="p-button-text p-button-sm"
-                        @click="expandAll(group.variants)"
-                      />
-                      <Button
-                        icon="pi pi-minus"
-                        label="Thu gọn tất cả"
-                        class="p-button-text p-button-sm"
-                        @click="collapseAll"
-                      />
-                    </div>
-                  </div>
+                <template #body="{ data }">
+                  {{ data.thuongHieu?.moTaThuongHieu || 'No brand' }}
                 </template>
+                <!-- <template #filter="{ filterModel }">
+                  <InputText
+                    v-model="filterModel.value"
+                    type="text"
+                    placeholder="Search by brand"
+                  />
+                </template> -->
+              </Column>
 
-                <Column expander style="width: 3rem" />
-
-                <Column field="cpu" header="CPU" style="min-width: 12rem">
-                  <template #body="{ data }">
-                    {{ getAttributeName(cpu, data.cpu, 'moTaCpu') }}
-                  </template>
-                </Column>
-
-                <Column field="manHinh" header="Màn hình" style="min-width: 12rem">
-                  <template #body="{ data }">
-                    {{ getAttributeName(screen, data.manHinh, 'moTaManHinh') }}
-                  </template>
-                </Column>
-
-                <Column field="mauSac" header="Màu sắc" style="min-width: 10rem">
-                  <template #body="{ data }">
-                    {{ getColorName(data.mauSac) }}
-                  </template>
-                </Column>
-
-                <Column field="soLuong" header="Số lượng" style="min-width: 8rem">
-                  <template #body="{ data }">
-                    {{ data.skus ? data.skus.length : 0 }}
-                  </template>
-                </Column>
-
-                <Column field="giaBan" header="Giá bán" style="min-width: 12rem">
-                  <template #body="{ data }">
-                    <InputNumber
-                      v-model="data.giaBan"
-                      mode="currency"
-                      currency="VND"
-                      locale="vi-VN"
-                      :min="0"
-                    />
-                  </template>
-                </Column>
-
-                <Column header="Trạng thái" style="min-width: 8rem">
-                  <template #body="{ data }">
-                    <InputSwitch v-model="data.trangThai" />
-                  </template>
-                </Column>
-
-                <Column header="Thao tác" style="min-width: 8rem">
-                  <template #body="{ data, index }">
-                    <Button
-                      icon="pi pi-trash"
-                      class="p-button-rounded p-button-danger p-button-text"
-                      @click="removeVariant(groupIndex, index)"
-                    />
-                  </template>
-                </Column>
-
-                <template #expansion="{ data }">
-                  <div class="p-4 surface-hover border-round">
-                    <div class="mb-3">
-                      <h5 class="mb-3">Danh sách seri cho phiên bản</h5>
-                      <div class="flex justify-between gap-2">
-                        <FileUpload
-                          mode="basic"
-                          name="skuFile"
-                          accept=".txt,.csv"
-                          :maxFileSize="1000000"
-                          chooseLabel="Tải lên file seri"
-                          @uploader="handleSkuFileUpload($event, data)"
-                          class="p-button-sm"
-                        />
-                        <div class="flex gap-2">
-                          <Button
-                            label="Thêm seri"
-                            icon="pi pi-plus"
-                            size="small"
-                            class="p-button-success"
-                            @click="addSkuToVariant(data)"
-                          />
-                          <Button
-                            label="Nhập nhiều seri"
-                            icon="pi pi-pencil"
-                            size="small"
-                            class="p-button-info"
-                            @click="showBulkSkuInputDialog(data)"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <DataTable
-                      :value="data.skus"
-                      responsiveLayout="scroll"
-                      class="p-datatable-sm"
-                      stripedRows
-                    >
-                      <Column field="sku" header="SKU" style="min-width: 15rem">
-                        <template #body="{ data: skuData }">
-                          <InputText v-model="skuData.sku" class="w-full" />
-                        </template>
-                      </Column>
-
-                      <Column field="giaBan" header="Giá bán" style="min-width: 12rem">
-                        <template #body="{ data: skuData }">
-                          <InputNumber
-                            v-model="skuData.giaBan"
-                            mode="currency"
-                            currency="VND"
-                            locale="vi-VN"
-                            :min="0"
-                            class="w-full"
-                          />
-                        </template>
-                      </Column>
-
-                      <Column header="Hình ảnh" style="min-width: 12rem">
-                        <template #body="{ data: skuData }">
-                          <FileUpload
-                            mode="basic"
-                            name="variantImages[]"
-                            url="./upload.php"
-                            @upload="onVariantUpload($event, skuData)"
-                            :multiple="true"
-                            accept="image/*"
-                            :maxFileSize="1000000"
-                            chooseLabel="Chọn ảnh"
-                          />
-                          <div
-                            v-if="skuData.hinhAnh && skuData.hinhAnh.length > 0"
-                            class="mt-2 flex flex-wrap gap-2"
-                          >
-                            <Chip
-                              v-for="(img, idx) in skuData.hinhAnh"
-                              :key="idx"
-                              :label="img"
-                              removable
-                              @remove="removeImage(skuData, idx)"
-                            />
-                          </div>
-                        </template>
-                      </Column>
-
-                      <Column header="Thao tác" style="width: 6rem">
-                        <template #body="{ data: skuData, index }">
-                          <Button
-                            icon="pi pi-trash"
-                            class="p-button-rounded p-button-danger p-button-text"
-                            @click="removeSku(data, index)"
-                          />
-                        </template>
-                      </Column>
-                    </DataTable>
-                  </div>
+              <!-- Ngày ra mắt -->
+              <Column field="ngayRaMat" sortable header="Ngày ra mắt" style="min-width: 10rem">
+                <template #body="{ data }">
+                  {{ formatDate(data.ngayRaMat) }}
                 </template>
-              </DataTable>
+                <!-- <template #filter="{ filterModel }">
+                  <DatePicker
+                    v-model="filterModel.value"
+                    dateFormat="dd/mm/yy"
+                    placeholder="dd/mm/yyyy"
+                  />
+                </template> -->
+              </Column>
+
+              <!-- Hành động -->
+              <Column header="Hành động">
+                <template #body="{ data }">
+                  <Button
+                    icon="pi pi-pencil"
+                    class="p-button-text p-button-warning"
+                    @click="editProduct(data)"
+                  />
+                  <Button
+                    icon="pi pi-trash"
+                    class="p-button-text p-button-danger"
+                    @click="confirmDeleteProduct(data.id)"
+                  />
+                </template>
+              </Column>
+            </DataTable>
+          </div>
+        </TabPanel>
+        <TabPanel value="1">
+          <div class="card">
+            <div>
+              <label class="text-lg">Sản Phẩm</label>
+              <MultiSelect
+                id="sanPham"
+                v-model="selectedProducts"
+                :options="product"
+                optionLabel="tenSanPham"
+                optionValue="tenSanPham"
+                placeholder="Chọn sản phẩm"
+                class="w-full"
+                display="chip"
+                filter
+              />
+              <br />
+              <div class="flex border rounded p-2 mb-5 mt-5">
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Màu Sắc</label>
+                  <MultiSelect
+                    id="mauSac"
+                    v-model="selectedMauSac"
+                    :options="colors"
+                    optionLabel="name"
+                    optionValue="code"
+                    placeholder="Chọn màu sắc"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Giá Bán</label>
+                  <Slider
+                    v-model="productDetail.giaBan"
+                    range
+                    class="m-4"
+                    :min="0"
+                    :max="100000000"
+                    :step="500000"
+                  ></Slider>
+                  <div class="flex items-center justify-between px-2">
+                    <span>{{ formatCurrency(productDetail.giaBan ? productDetail.giaBan[0] : 0) }}</span>
+                    <span>{{ formatCurrency(productDetail.giaBan ? productDetail.giaBan[1] : 10000000) }}</span>
+                  </div>
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Thiết Kế</label>
+                  <MultiSelect
+                    id="thietKe"
+                    v-model="selectedThietKe"
+                    :options="design"
+                    optionLabel="moTaThietKe"
+                    optionValue="moTaThietKe"
+                    placeholder="Chọn thiết kế"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Âm Thanh</label>
+                  <MultiSelect
+                    id="amThanh"
+                    v-model="selectedAmThanh"
+                    :options="audio"
+                    optionLabel="moTaAmThanh"
+                    optionValue="moTaAmThanh"
+                    placeholder="Chọn âm thanh"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+              </div>
+              <div class="flex border rounded p-2 mb-5 mt-5">
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">CPU</label>
+                  <MultiSelect
+                    id="cpu"
+                    v-model="selectedCpu"
+                    :options="cpu"
+                    optionLabel="moTaCpu"
+                    optionValue="moTaCpu"
+                    placeholder="Chọn CPU"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">GPU</label>
+                  <MultiSelect
+                    id="gpu"
+                    v-model="selectedGpu"
+                    :options="gpu"
+                    optionLabel="moTaGpu"
+                    optionValue="moTaGpu"
+                    placeholder="Chọn GPU"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">RAM</label>
+                  <MultiSelect
+                    id="ram"
+                    v-model="selectedRam"
+                    :options="ram"
+                    optionLabel="moTaRam"
+                    optionValue="moTaRam"
+                    placeholder="Chọn RAM"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Ổ Cứng</label>
+                  <MultiSelect
+                    id="ocung"
+                    v-model="selectedOCung"
+                    :options="storage"
+                    optionLabel="moTaOCung"
+                    optionValue="moTaOCung"
+                    placeholder="Chọn ổ cứng"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+              </div>
+              <div class="flex border rounded p-2 mb-5 mt-5">
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Màn Hình</label>
+                  <MultiSelect
+                    id="manHinh"
+                    v-model="selectedManHinh"
+                    :options="screen"
+                    optionLabel="moTaManHinh"
+                    optionValue="moTaManHinh"
+                    placeholder="Chọn màn hình"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Bàn Phím</label>
+                  <MultiSelect
+                    id="banPhim"
+                    v-model="selectedBanPhim"
+                    :options="keyboard"
+                    optionLabel="moTaBanPhim"
+                    optionValue="moTaBanPhim"
+                    placeholder="Chọn bàn phím"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Cổng</label>
+                  <MultiSelect
+                    id="congGiaoTiep"
+                    v-model="selectedCong"
+                    :options="inter"
+                    optionLabel="moTaCong"
+                    optionValue="moTaCong"
+                    placeholder="Chọn cổng"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Camera</label>
+                  <MultiSelect
+                    id="webcam"
+                    v-model="selectedWebcam"
+                    :options="webcam"
+                    optionLabel="moTaWc"
+                    optionValue="moTaWc"
+                    placeholder="Chọn camera"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+              </div>
+              <div class="flex border rounded p-2 mb-5 mt-5">
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Wifi</label>
+                  <MultiSelect
+                    id="ketNoiMang"
+                    v-model="selectedKetNoi"
+                    :options="network"
+                    optionLabel="moTaKetNoi"
+                    optionValue="moTaKetNoi"
+                    placeholder="Chọn wifi"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Bảo Mật</label>
+                  <MultiSelect
+                    id="baoMat"
+                    v-model="selectedBaoMat"
+                    :options="security"
+                    optionLabel="moTaBaoMat"
+                    optionValue="moTaBaoMat"
+                    placeholder="Chọn bảo mật"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Pin</label>
+                  <MultiSelect
+                    id="pin"
+                    v-model="selectedPin"
+                    :options="battery"
+                    optionLabel="moTaPin"
+                    optionValue="moTaPin"
+                    placeholder="Chọn pin"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+                <div class="flex-auto mr-5">
+                  <label class="text-lg">Hệ Điều Hành</label>
+                  <MultiSelect
+                    id="heDieuHanh"
+                    v-model="selectedHeDieuHanh"
+                    :options="os"
+                    optionLabel="moTaHeDieuHanh"
+                    optionValue="moTaHeDieuHanh"
+                    placeholder="Chọn hệ điều hành"
+                    class="w-full"
+                    display="chip"
+                    filter
+                  />
+                </div>
+              </div>
+              <button class="border text-white bg-gray-400 rounded-lg p-3 mb-5" @click="applyFilters">Tìm Kiếm</button>
             </div>
-          </div>
-        </div>
+            <DataTable
+              v-model:filters="filtersSanPhamChiTiet"
+              :value="productsDetails"
+              paginator
+              removableSort
+              :expandedRows="expandedRowsSanPhamChiTiet"
+              @rowToggle="onRowToggle"
+              showGridlines
+              :rows="10"
+              :rowsPerPageOptions="[5, 10, 20, 50]"
+              dataKey="id"
+              filterDisplay="menu"
+              :loading="loadingSanPhamChiTiet"
+              :globalFilterFields="[
+                'tenSanPham',
+                'sku',
+                'mauSac',
+                'soLuongTonKho',
+                'giaBan',
+                'cpu.moTaCpu',
+                'ram.moTaRam',
+                'ocung.moTaOCung',
+                'gpu.moTaGpu',
+                'manHinh.moTaManHinh',
+                'congGiaoTiep.moTaCong',
+                'banPhim.moTaBanPhim',
+                'ketNoiMang.moTaKetNoi',
+                'amThanh.moTaAmThanh',
+                'webcam.moTaWc',
+                'baoMat.moTaBaoMat',
+                'heDieuHanh.moTaHeDieuHanh',
+                'pin.moTaPin',
+                'thietKe.moTaThietKe',
+              ]"
+            >
+              <template #header>
+                <div class="flex justify-between">
+                  <Button
+                    type="button"
+                    icon="pi pi-filter-slash"
+                    label="Clear"
+                    outlined
+                    @click="clearFilterSanPhamChiTiet"
+                  />
+                  <IconField>
+                    <InputIcon>
+                      <i class="pi pi-search" />
+                    </InputIcon>
+                    <InputText
+                      v-model="filtersSanPhamChiTiet['global'].value"
+                      placeholder="Từ khóa tìm kiếm..."
+                    />
+                  </IconField>
+                </div>
+              </template>
 
-        <div class="flex flex-col md:flex-row gap-3 mt-6 pt-4 border-t border-gray-200">
-          <Button
-            label="Hủy bỏ"
-            icon="pi pi-times"
-            severity="secondary"
-            outlined
-            @click="goBack"
-            class="hover:bg-gray-100"
+              <template #empty> No products found. </template>
+
+              <template #loading> Loading product data. Please wait. </template>
+              <Column>
+                <template #body="{ data }">
+                  <Button
+                    icon="pi pi-eye"
+                    class="p-button-text p-button-warning"
+                    @click="showProductDetail(data)"
+                  />
+                </template>
+              </Column>
+              <!-- Sản phẩm -->
+              <Column field="tenSanPham" sortable header="Sản Phẩm" style="min-width: 12rem">
+                <template #body="{ data }">
+                  {{ data.tenSanPham || 'No product' }}
+                </template>
+              </Column>
+
+              <!-- Màu Sắc -->
+              <Column field="mauSac" sortable header="Màu Sắc" style="min-width: 12rem">
+                <template #body="{ data }">
+                  {{ data.mauSac }}
+                </template>
+              </Column>
+
+              <!-- Số Lượng Tồn Kho -->
+              <Column field="soLuongTonKho" sortable header="Kho" style="min-width: 12rem">
+                <template #body="{ data }">
+                  {{ data.soLuongTonKho }}
+                </template>
+              </Column>
+
+              <!-- Giá Bán -->
+              <Column field="giaBan" sortable header="Giá Bán" style="min-width: 12rem">
+                <template #body="{ data }">
+                  {{ formatCurrency(data.giaBan) }}
+                </template>
+              </Column>
+
+              <!-- Ngày ra mắt -->
+              <Column field="ngayRaMat" sortable header="Ngày ra mắt" style="min-width: 10rem">
+                <template #body="{ data }">
+                  {{ formatDate(data.ngayRaMat) }}
+                </template>
+              </Column>
+              <template #expansion="{ data }">
+                <div class="p-3">
+                  <h5>Chi tiết cấu hình: {{ data.tenSanPham }} - {{ data.sku }}</h5>
+                  <DataTable
+                    :value="formatExpansionData(data)"
+                    class="p-datatable-sm"
+                    responsiveLayout="scroll"
+                    :showGridlines="false"
+                    :rows="1"
+                    dataKey="id"
+                  >
+                    <!-- Định nghĩa MỖI THUỘC TÍNH là một CỘT -->
+                    <Column field="cpu" header="CPU" style="min-width: 15rem"></Column>
+                    <Column field="ram" header="RAM" style="min-width: 12rem"></Column>
+                    <Column field="oCung" header="Ổ cứng" style="min-width: 12rem"></Column>
+                    <Column field="gpu" header="GPU" style="min-width: 15rem"></Column>
+                    <Column field="manHinh" header="Màn hình" style="min-width: 15rem"></Column>
+                    <Column
+                      field="congGiaoTiep"
+                      header="Cổng giao tiếp"
+                      style="min-width: 18rem"
+                    ></Column>
+                    <Column field="banPhim" header="Bàn phím" style="min-width: 15rem"></Column>
+                    <Column
+                      field="ketNoiMang"
+                      header="Kết nối mạng"
+                      style="min-width: 15rem"
+                    ></Column>
+                    <Column field="amThanh" header="Âm thanh" style="min-width: 12rem"></Column>
+                    <Column field="webcam" header="Webcam" style="min-width: 10rem"></Column>
+                    <Column field="baoMat" header="Bảo mật" style="min-width: 12rem"></Column>
+                    <Column
+                      field="heDieuHanh"
+                      header="Hệ điều hành"
+                      style="min-width: 15rem"
+                    ></Column>
+                    <Column field="pin" header="Pin" style="min-width: 12rem"></Column>
+                    <Column field="thietKe" header="Thiết kế" style="min-width: 15rem"></Column>
+
+                    <!-- Bạn cũng có thể thêm các cột cơ bản nếu muốn -->
+                    <!--
+                 <Column field="sku" header="SKU" style="min-width: 10rem;"></Column>
+                 <Column field="mauSac" header="Màu sắc" style="min-width: 8rem;"></Column>
+                 <Column field="soLuongTonKho" header="Tồn kho" style="min-width: 8rem;"></Column>
+                 <Column field="giaBan" header="Giá bán" style="min-width: 10rem;"></Column>
+                 -->
+                  </DataTable>
+                </div>
+              </template>
+
+              <!-- Hành động -->
+              <Column header="Hành động">
+                <template #body="{ data }">
+                  <Button
+                    icon="pi pi-pencil"
+                    class="p-button-text p-button-warning"
+                    @click="suaSanPhamChiTiet(data)"
+                  />
+                  <Button
+                    icon="pi pi-trash"
+                    class="p-button-text p-button-danger"
+                    @click="xoaSanPhamChiTiet(data.id)"
+                  />
+                </template>
+              </Column>
+            </DataTable>
+          </div>
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
+
+    <!-- Add Dialog Components -->
+    <Dialog
+      v-model:visible="productDialog"
+      :style="{ width: '450px' }"
+      header="Product Details"
+      :modal="true"
+    >
+      <div class="flex flex-col gap-6">
+        <div>
+          <label for="maSanPham" class="block font-bold mb-3">Mã Sản Phẩm</label>
+          <InputText
+            id="maSanPham"
+            v-model.trim="product.maSanPham"
+            required="true"
+            autofocus
+            :invalid="submitted && !product.maSanPham"
+            fluid
           />
-          <!-- Nút submit -->
-          <div class="flex justify-content-end">
-            <Button
-              label="Lưu sản phẩm"
-              icon="pi pi-save"
-              type="submit"
-              :loading="loading"
-              class="p-button-lg"
+          <small v-if="submitted && !product.maSanPham" class="text-red-500"
+            >Code is required.</small
+          >
+        </div>
+        <div>
+          <label for="tenSanPham" class="block font-bold mb-3">Tên Sản Phẩm</label>
+          <InputText
+            id="tenSanPham"
+            v-model.trim="product.tenSanPham"
+            required="true"
+            autofocus
+            :invalid="submitted && !product.tenSanPham"
+            fluid
+          />
+          <small v-if="submitted && !product.tenSanPham" class="text-red-500"
+            >Name is required.</small
+          >
+        </div>
+        <div>
+          <label for="thuongHieu" class="block font-bold mb-3">Thương Hiệu</label>
+          <Select
+            id="thuongHieuId"
+            v-model="product.thuongHieu"
+            :options="thuongHieus"
+            optionLabel="moTaThuongHieu"
+            placeholder="Select a Brand"
+            class="w-full"
+            dataKey="id"
+            :invalid="submitted && !product.thuongHieu"
+          ></Select>
+          <small v-if="submitted && !product.thuongHieu" class="text-red-500">
+            Brand is required.
+            <!-- Hoặc thông báo phù hợp -->
+          </small>
+        </div>
+        <div>
+          <label for="moTa" class="block font-bold mb-3">Mô Tả</label>
+          <Textarea id="moTa" v-model="product.moTa" required="true" rows="3" cols="20" fluid />
+        </div>
+        <div class="block font-bold mb-3">
+          <div class="col-span-6">
+            <label for="ngayRaMat" class="block font-bold mb-3">Ngày Ra Mắt</label>
+            <DatePicker
+              id="ngayRaMat"
+              v-model="product.ngayRaMat"
+              required="true"
+              :invalid="submitted && !product.ngayRaMat"
+              dateFormat="dd/mm/yy"
+              fluid
             />
+            <small v-if="submitted && !product.ngayRaMat" class="text-red-500"
+              >Release Date is required.</small
+            >
           </div>
         </div>
-      </form>
-    </div>
+      </div>
+
+      <template #footer>
+        <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
+        <Button label="Save" icon="pi pi-check" @click="saveProduct" />
+      </template>
+    </Dialog>
+    <Dialog
+      v-model:visible="productDetailDialog"
+      :style="{ width: '800px' }"
+      header="Product Details"
+      :modal="true"
+    >
+      <div class="flex text-lg">
+        <div class="flex-none mr-20">
+          <b>CPU: </b> <br />
+          <b>GPU: </b> <br />
+          <b>RAM: </b> <br />
+          <b>Ổ Cứng: </b> <br />
+          <b>Màn Hình: </b> <br />
+          <b>Cổng Giao Tiếp: </b> <br />
+          <b>Bàn Phím: </b> <br />
+          <b>Kết Nối Mạng: </b> <br />
+          <b>Âm Thanh: </b> <br />
+          <b>Webcam: </b> <br />
+          <b>Bảo Mật: </b> <br />
+          <b>Hệ Điều Hành: </b> <br />
+          <b>Pin: </b> <br />
+          <b>Thiết Kế: </b> <br />
+        </div>
+        <div class="flex-1">
+          {{ productDetail.cpu.moTaCpu }} <br />
+          {{ productDetail.gpu.moTaGpu }} <br />
+          {{ productDetail.ram.moTaRam }} <br />
+          {{ productDetail.ocung.moTaOCung }} <br />
+          {{ productDetail.manHinh.moTaManHinh }} <br />
+          {{ productDetail.congGiaoTiep.moTaCong }} <br />
+          {{ productDetail.banPhim.moTaBanPhim }} <br />
+          {{ productDetail.ketNoiMang.moTaKetNoi }} <br />
+          {{ productDetail.amThanh.moTaAmThanh }} <br />
+          {{ productDetail.webcam.moTaWc }} <br />
+          {{ productDetail.baoMat.moTaBaoMat }} <br />
+          {{ productDetail.heDieuHanh.moTaHeDieuHanh }} <br />
+          {{ productDetail.pin.moTaPin }} <br />
+          {{ productDetail.thietKe.moTaThietKe }} <br />
+        </div>
+      </div>
+
+      <template #footer>
+        <Button label="Close" icon="pi pi-times" text @click="hideDialogSpct" />
+      </template>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="deleteProductDialog"
+      :style="{ width: '450px' }"
+      header="Confirm"
+      :modal="true"
+    >
+      <div class="flex align-items-center justify-content-center">
+        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
+        <span>Are you sure you want to delete the selected product?</span>
+      </div>
+      <template #footer>
+        <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
+        <Button label="Yes" icon="pi pi-check" text @click="deleteProduct" />
+      </template>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="deleteProductsDialog"
+      :style="{ width: '450px' }"
+      header="Confirm"
+      :modal="true"
+    >
+      <div class="flex align-items-center justify-content-center">
+        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
+        <span>Are you sure you want to delete the selected products?</span>
+      </div>
+      <template #footer>
+        <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
+        <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" />
+      </template>
+    </Dialog>
   </div>
-
-  <!-- Dialog nhập nhiều SKU -->
-  <Dialog
-    v-model:visible="showBulkSkuInput"
-    header="Nhập nhiều SKU"
-    :modal="true"
-    :style="{ width: '50vw' }"
-    :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
-  >
-    <div class="field">
-      <label class="font-medium mb-2 block"
-      >Nhập danh sách seri (mỗi seri trên một dòng hoặc cách nhau bằng dấu phẩy)</label
-      >
-      <Textarea v-model="bulkSkuInput" rows="10" autoResize class="w-full" />
-    </div>
-    <template #footer>
-      <Button
-        label="Hủy"
-        icon="pi pi-times"
-        @click="showBulkSkuInput = false"
-        class="p-button-text"
-      />
-      <Button label="Thêm SKU" icon="pi pi-check" @click="addBulkSkus" class="p-button-success" />
-    </template>
-  </Dialog>
-
-  <!-- Dialog đặt giá chung -->
-  <Dialog
-    v-model:visible="showBulkPrice"
-    header="Đặt giá chung"
-    :modal="true"
-    :style="{ width: '30vw' }"
-    :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
-  >
-    <div class="grid">
-      <div class="col-12">
-        <div class="field">
-          <label class="font-medium mb-2 block">Giá bán</label>
-          <InputNumber
-            v-model="bulkPrice.giaBan"
-            mode="currency"
-            currency="VND"
-            locale="vi-VN"
-            :min="0"
-            class="w-full"
-          />
-        </div>
-      </div>
-      <div class="col-12">
-        <div class="field">
-          <label class="font-medium mb-2 block">Giá khuyến mãi</label>
-          <InputNumber
-            v-model="bulkPrice.giaKhuyenMai"
-            mode="currency"
-            currency="VND"
-            locale="vi-VN"
-            :min="0"
-            class="w-full"
-          />
-        </div>
-      </div>
-    </div>
-    <template #footer>
-      <Button label="Hủy" icon="pi pi-times" @click="showBulkPrice = false" class="p-button-text" />
-      <Button label="Áp dụng" icon="pi pi-check" @click="applyBulkPrice" class="p-button-success" />
-    </template>
-  </Dialog>
-
-  <!-- Dialog tải ảnh chung -->
-  <Dialog
-    v-model:visible="showBulkImage"
-    header="Tải ảnh chung"
-    :modal="true"
-    :style="{ width: '30vw' }"
-    :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
-  >
-    <div class="field">
-      <label class="font-medium mb-2 block">Tải lên ảnh chung cho tất cả phiên bản</label>
-      <FileUpload
-        mode="basic"
-        name="bulkImages[]"
-        url="./upload.php"
-        @upload="onBulkImageUpload"
-        :multiple="true"
-        accept="image/*"
-        :maxFileSize="1000000"
-        chooseLabel="Chọn ảnh"
-        class="w-full"
-      />
-    </div>
-    <template #footer>
-      <Button
-        label="Đóng"
-        icon="pi pi-times"
-        @click="showBulkImage = false"
-        class="p-button-text"
-      />
-    </template>
-  </Dialog>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useAttributeStore } from '@/stores/attributesstore'
+import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { FilterMatchMode } from '@primevue/core/api'
+import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
+import { useProductStore } from '@/stores/productstore'
+import { useAttributeStore } from '@/stores/attributesstore'
 import productService from '@/apis/product'
+import productDetailService from '@/apis/productdetail'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const toast = useToast()
-const attributeStore = useAttributeStore()
-
-onMounted(async () => {
-  await attributeStore.fetchAllAttributes()
-  initFilters()
-})
-
-const goBack = () => {
-  router.push({ name: 'products' })
-}
-
-const brand = computed(() => attributeStore.brand)
-const category = computed(() => attributeStore.category)
+//Search
 const ram = computed(() => attributeStore.ram)
 const cpu = computed(() => attributeStore.cpu)
 const screen = computed(() => attributeStore.screen)
@@ -931,19 +766,17 @@ const inter = computed(() => attributeStore.interface)
 const security = computed(() => attributeStore.security)
 const design = computed(() => attributeStore.design)
 const webcam = computed(() => attributeStore.webcam)
+const colors = ref([
+  { name: 'Đen', code: 'black' },
+  { name: 'Trắng', code: 'white' },
+  { name: 'Xám', code: 'gray' },
+  { name: 'Xanh dương', code: 'blue' },
+  { name: 'Xanh lá', code: 'green' },
+  { name: 'Đỏ', code: 'red' },
+  { name: 'Vàng', code: 'yellow' },
+  { name: 'Bạc', code: 'silver' },
+])
 
-// Form data
-const sanPham = ref({
-  tenSanPham: '',
-  thuongHieu: null,
-  moTa: '',
-  ngayRaMat: null,
-  danhMucs: [],
-  hinhAnh: [],
-  sanPhamChiTiets: [],
-})
-
-// Selected attributes
 const selectedRam = ref([])
 const selectedCpu = ref([])
 const selectedManHinh = ref([])
@@ -959,531 +792,502 @@ const selectedCong = ref(null)
 const selectedBaoMat = ref(null)
 const selectedThietKe = ref(null)
 const selectedWebcam = ref(null)
+const selectedKetNoi = ref(null)
+// Stores
+const productStore = useProductStore()
+const attributeStore = useAttributeStore()
+const toast = useToast()
 
-// Colors
-const colors = ref([
-  { name: 'Đen', code: 'black' },
-  { name: 'Trắng', code: 'white' },
-  { name: 'Xám', code: 'gray' },
-  { name: 'Xanh dương', code: 'blue' },
-  { name: 'Xanh lá', code: 'green' },
-  { name: 'Đỏ', code: 'red' },
-  { name: 'Vàng', code: 'yellow' },
-  { name: 'Bạc', code: 'silver' },
-])
-
-// Variants
-const variantGroups = ref([])
-const expandedRows = ref([])
+// State Management
+const productDialog = ref(false)
+const productDetailDialog = ref(false)
+const deleteProductDialog = ref(false)
+const deleteProductsDialog = ref(false)
+const product = ref({})
+const productDetail = ref({})
+const selectedProducts = ref()
 const submitted = ref(false)
-const loading = ref(false)
+const expandedRowsSanPhamChiTiet = ref([])
+const loadingSanPham = ref(true)
+const loadingSanPhamChiTiet = ref(true)
 
-// Bulk operations
-const showBulkSkuInput = ref(false)
-const bulkSkuInput = ref('')
-const selectedVariantForBulkSku = ref(null)
-
-const showBulkPrice = ref(false)
-const bulkPrice = ref({
-  giaBan: 0,
-  giaKhuyenMai: 0,
+// Computed Properties
+const products = computed(() => productStore.activeProducts)
+const productsDetails = computed(() => {
+  // flatMap iterates through each product, then maps its sanPhamChiTiets,
+  // adding parent product info, and flattens the result into a single array.
+  return products.value.flatMap((product) =>
+    product.sanPhamChiTiets.map((detail) => ({
+      ...detail, // Spread all properties of SanPhamChiTietDto
+      // Explicitly add properties from the parent SanPhamDto needed in the detailed table/expansion
+      tenSanPham: product.tenSanPham,
+      ngayRaMat: product.ngayRaMat, // Example, add others if needed by columns/filters
+      // idSanPham: product.id // Could be useful
+    })),
+  )
 })
-const selectedGroupForBulkPrice = ref(null)
+const thuongHieus = computed(() => attributeStore.brand)
 
-const showBulkImage = ref(false)
-const selectedGroupForBulkImage = ref(null)
+const formatExpansionData = (detailData) => {
+  if (!detailData) return [] // Trả về mảng rỗng nếu không có dữ liệu
 
-// Filters
-const filters = ref()
+  // Tạo một object duy nhất chứa tất cả các thuộc tính mong muốn
+  const formattedObject = {
+    id: detailData.id, // Giữ lại id nếu cần làm dataKey cho bảng (mặc dù chỉ có 1 hàng)
+    sku: detailData.sku || 'N/A',
+    mauSac: detailData.mauSac || 'N/A',
+    soLuongTonKho: detailData.soLuongTonKho?.toString() ?? 'N/A',
+    giaBan: formatCurrency(detailData.giaBan) || 'N/A',
 
-const initFilters = () => {
-  filters.value = {
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  }
-}
-
-const clearFilter = () => {
-  initFilters()
-}
-
-// Helper function to get attribute name
-const getAttributeName = (attributes, id, propertyName) => {
-  const item = attributes.find((a) => a.id === id)
-  return item ? item[propertyName] : ''
-}
-
-const getColorName = (code) => {
-  const item = colors.value.find((c) => c.code === code)
-  return item ? item.name : ''
-}
-
-// Expand/Collapse functions
-const expandAll = (variants) => {
-  expandedRows.value = variants.reduce((acc, p) => (acc[p.id] = true) && acc, {})
-}
-
-const collapseAll = () => {
-  expandedRows.value = []
-}
-
-// Generate product variants
-const generateVariants = () => {
-  if (
-    !selectedRam.value ||
-    selectedRam.value.length === 0 ||
-    !selectedCpu.value ||
-    selectedCpu.value.length === 0 ||
-    !selectedManHinh.value ||
-    selectedManHinh.value.length === 0 ||
-    !selectedMauSac.value ||
-    selectedMauSac.value.length === 0
-  ) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cảnh báo',
-      detail: 'Vui lòng chọn ít nhất một tùy chọn cho RAM, CPU, Màn hình và Màu sắc',
-      life: 3000,
-    })
-    return
+    // Các thuộc tính chi tiết - key sẽ là 'field' cho các Column
+    cpu: detailData.cpu?.moTaCpu ?? 'Không có',
+    ram: detailData.ram?.moTaRam ?? 'Không có',
+    oCung: detailData.ocung?.moTaOCung ?? 'Không có', // Giữ tên key giống dữ liệu gốc nếu tiện
+    gpu: detailData.gpu?.moTaGpu ?? 'Không có',
+    manHinh: detailData.manHinh?.moTaManHinh ?? 'Không có',
+    congGiaoTiep: detailData.congGiaoTiep?.moTaCong ?? 'Không có',
+    banPhim: detailData.banPhim?.moTaBanPhim ?? 'Không có',
+    ketNoiMang: detailData.ketNoiMang?.moTaKetNoi ?? 'Không có',
+    amThanh: detailData.amThanh?.moTaAmThanh ?? 'Không có',
+    webcam: detailData.webcam?.moTaWc ?? 'Không có',
+    baoMat: detailData.baoMat?.moTaBaoMat ?? 'Không có',
+    heDieuHanh: detailData.heDieuHanh?.moTaHeDieuHanh ?? 'Không có',
+    pin: detailData.pin?.moTaPin ?? 'Không có',
+    thietKe: detailData.thietKe?.moTaThietKe ?? 'Không có',
   }
 
-  // Clear existing variants
-  variantGroups.value = []
-
-  // Generate all possible combinations grouped by RAM
-  selectedRam.value.forEach((ramId) => {
-    const group = {
-      ram: ramId,
-      variants: [],
-    }
-
-    selectedCpu.value.forEach((cpuId) => {
-      selectedManHinh.value.forEach((manHinhId) => {
-        selectedMauSac.value.forEach((mauSac) => {
-          const variant = {
-            id: generateVariantId(ramId, cpuId, manHinhId, mauSac),
-            ram: ramId,
-            cpu: cpuId,
-            manHinh: manHinhId,
-            mauSac: mauSac,
-            ocung: selectedOCung.value,
-            gpu: selectedGpu.value,
-            banPhim: selectedBanPhim.value,
-            amThanh: selectedAmThanh.value,
-            ketNoiMang: selectedMang.value,
-            webcam: selectedWebcam.value,
-            baoMat: selectedBaoMat.value,
-            heDieuHanh: selectedHeDieuHanh.value,
-            thietKe: selectedThietKe.value,
-            congGiaoTiep: selectedCong.value,
-            pin: selectedPin.value,
-            giaBan: 0,
-            giaKhuyenMai: 0,
-            trangThai: true,
-            skus: [],
-            soLuong: 0,
-          }
-
-          group.variants.push(variant)
-        })
-      })
-    })
-
-    variantGroups.value.push(group)
-  })
-
-  toast.add({
-    severity: 'success',
-    summary: 'Thành công',
-    detail: `Đã tạo ${variantGroups.value.reduce((acc, group) => acc + group.variants.length, 0)} phiên bản sản phẩm`,
-    life: 3000,
-  })
+  // Trả về một mảng chứa object duy nhất đó
+  return [formattedObject]
 }
 
-const generateVariantId = (ramId, cpuId, manHinhId, mauSac) => {
-  return `${ramId}-${cpuId}-${manHinhId}-${mauSac}`
+// Initialize filters
+const filtersSanPham = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  maSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+  tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+  'thuongHieu.moTaThuongHieu': { value: null, matchMode: FilterMatchMode.EQUALS }, // Adjust match mode if needed (CONTAINS?)
+  trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
+  ngayRaMat: {
+    operator: FilterOperator.AND,
+    constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+  },
+})
+
+const filtersSanPhamChiTiet = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH }, // Matches the 'tenSanPham' added in computed
+  sku: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+  mauSac: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+  soLuongTonKho: { value: null, matchMode: FilterMatchMode.EQUALS }, // Or BETWEEN, >= etc.
+  giaBan: {
+    operator: FilterOperator.AND,
+    constraints: [{ value: null, matchMode: FilterMatchMode.GREATER_THAN_OR_EQUAL_TO },
+                 { value: null, matchMode: FilterMatchMode.LESS_THAN_OR_EQUAL_TO }]
+  },
+  'cpu.moTaCpu': { value: null, matchMode: FilterMatchMode.CONTAINS }, // Contains might be better
+  'ram.moTaRam': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'oCung.moTaOCung': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'gpu.moTaGpu': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'manHinh.moTaManHinh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'congGiaoTiep.moTaCongGiaoTiep': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'banPhim.moTaBanPhim': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'ketNoiMang.moTaKetNoiMang': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'amThanh.moTaAmThanh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'webcam.moTaWebcam': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'baoMat.moTaBaoMat': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'heDieuHanh.moTaHeDieuHanh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'pin.moTaPin': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'thietKe.moTaThietKe': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  ngayRaMat: {
+    operator: FilterOperator.AND,
+    constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+  }, // Matches ngayRaMat added in computed
+})
+
+// Dialog Management Functions
+function openNew() {
+  product.value = {}
+  submitted.value = false
+  productDialog.value = true
 }
 
-// SKU management
-const addSkuToVariant = (variant) => {
-  if (!variant.skus) {
-    variant.skus = []
-  }
-
-  const baseSku = generateBaseSku(variant.ram, variant.cpu, variant.manHinh, variant.mauSac)
-  const skuNumber = variant.skus.length + 1
-
-  variant.skus.push({
-    sku: ``,
-    giaBan: variant.giaBan || 0,
-    giaKhuyenMai: variant.giaKhuyenMai || 0,
-    hinhAnh: [],
-  })
-
-  variant.soLuong = variant.skus.length
-}
-
-const generateBaseSku = (ramId, cpuId, manHinhId, mauSac) => {
-  const ramCode =
-    getAttributeName(ram.value, ramId, 'moTaRam').substring(0, 3).toUpperCase() || 'RAM'
-  const cpuCode =
-    getAttributeName(cpu.value, cpuId, 'moTaCpu').substring(0, 3).toUpperCase() || 'CPU'
-  const manHinhCode =
-    getAttributeName(screen.value, manHinhId, 'moTaManHinh').substring(0, 3).toUpperCase() || 'SCR'
-  const mauSacCode = mauSac.substring(0, 3).toUpperCase()
-
-  return `${sanPham.value.tenSanPham.substring(0, 3).toUpperCase()}-${ramCode}-${cpuCode}-${manHinhCode}-${mauSacCode}`
-}
-
-const removeSku = (variant, index) => {
-  variant.skus.splice(index, 1)
-  variant.soLuong = variant.skus.length
-  toast.add({
-    severity: 'info',
-    summary: 'Thành công',
-    detail: 'Đã xóa SKU',
-    life: 3000,
-  })
-}
-
-const showBulkSkuInputDialog = (variant) => {
-  selectedVariantForBulkSku.value = variant
-  bulkSkuInput.value = ''
-  showBulkSkuInput.value = true
-}
-
-const handleSkuFileUpload = (event, variant) => {
-  const file = event.files[0]
-  const reader = new FileReader()
-
-  reader.onload = (e) => {
-    const content = e.target.result
-    addSkusToVariant(variant, content)
-  }
-
-  reader.readAsText(file)
-}
-
-const addBulkSkus = () => {
-  if (!bulkSkuInput.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cảnh báo',
-      detail: 'Vui lòng nhập danh sách SKU',
-      life: 3000,
-    })
-    return
-  }
-
-  addSkusToVariant(selectedVariantForBulkSku.value, bulkSkuInput.value)
-  showBulkSkuInput.value = false
-}
-
-const addSkusToVariant = (variant, skuInput) => {
-  if (!variant.skus) {
-    variant.skus = []
-  }
-
-  // Split by comma or new line
-  const skus = skuInput
-    .split(/[\n,]/)
-    .map((sku) => sku.trim())
-    .filter((sku) => sku)
-
-  skus.forEach((sku) => {
-    // Check if SKU already exists
-    if (!variant.skus.some((s) => s.sku === sku)) {
-      variant.skus.push({
-        sku: sku,
-        giaBan: variant.giaBan || 0,
-        giaKhuyenMai: variant.giaKhuyenMai || 0,
-        hinhAnh: [],
-      })
-    }
-  })
-
-  variant.soLuong = variant.skus.length
-
-  toast.add({
-    severity: 'success',
-    summary: 'Thành công',
-    detail: `Đã thêm ${skus.length} SKU vào phiên bản`,
-    life: 3000,
-  })
-}
-
-// Bulk price operations
-const showBulkPriceDialog = (group) => {
-  selectedGroupForBulkPrice.value = group
-  bulkPrice.value = {
-    giaBan: 0,
-    giaKhuyenMai: 0,
-  }
-  showBulkPrice.value = true
-}
-
-const applyBulkPrice = () => {
-  if (!selectedGroupForBulkPrice.value) return
-
-  selectedGroupForBulkPrice.value.variants.forEach((variant) => {
-    variant.giaBan = bulkPrice.value.giaBan
-    variant.giaKhuyenMai = bulkPrice.value.giaKhuyenMai
-
-    if (variant.skus && variant.skus.length > 0) {
-      variant.skus.forEach((sku) => {
-        sku.giaBan = bulkPrice.value.giaBan
-        sku.giaKhuyenMai = bulkPrice.value.giaKhuyenMai
-      })
-    }
-  })
-
-  toast.add({
-    severity: 'success',
-    summary: 'Thành công',
-    detail: 'Đã áp dụng giá chung cho tất cả phiên bản trong cụm',
-    life: 3000,
-  })
-
-  showBulkPrice.value = false
-}
-
-// Bulk image operations
-const showBulkImageDialog = (group) => {
-  selectedGroupForBulkImage.value = group
-  showBulkImage.value = true
-}
-
-const onBulkImageUpload = (event) => {
-  const files = event.files
-  const uploadedFiles = files.map((file) => file.name)
-
-  if (!selectedGroupForBulkImage.value) return
-
-  selectedGroupForBulkImage.value.variants.forEach((variant) => {
-    if (!variant.hinhAnh) {
-      variant.hinhAnh = []
-    }
-    variant.hinhAnh = [...variant.hinhAnh, ...uploadedFiles]
-
-    if (variant.skus && variant.skus.length > 0) {
-      variant.skus.forEach((sku) => {
-        if (!sku.hinhAnh) {
-          sku.hinhAnh = []
-        }
-        sku.hinhAnh = [...sku.hinhAnh, ...uploadedFiles]
-      })
-    }
-  })
-
-  toast.add({
-    severity: 'success',
-    summary: 'Thành công',
-    detail: `Đã tải lên ${uploadedFiles.length} ảnh cho tất cả phiên bản trong cụm`,
-    life: 3000,
-  })
-
-  showBulkImage.value = false
-}
-
-// Remove variants
-const removeVariant = (groupIndex, variantIndex) => {
-  variantGroups.value[groupIndex].variants.splice(variantIndex, 1)
-
-  if (variantGroups.value[groupIndex].variants.length === 0) {
-    variantGroups.value.splice(groupIndex, 1)
-  }
-
-  toast.add({
-    severity: 'info',
-    summary: 'Thành công',
-    detail: 'Đã xóa phiên bản',
-    life: 3000,
-  })
-}
-
-const removeVariantGroup = (groupIndex) => {
-  variantGroups.value.splice(groupIndex, 1)
-  toast.add({
-    severity: 'info',
-    summary: 'Thành công',
-    detail: 'Đã xóa cụm phiên bản',
-    life: 3000,
-  })
-}
-
-// Handle image upload for main product
-const onUpload = (event) => {
-  const files = event.files
-  const uploadedFiles = files.map((file) => file.name)
-  sanPham.value.hinhAnh = [...sanPham.value.hinhAnh, ...uploadedFiles]
-
-  toast.add({
-    severity: 'info',
-    summary: 'Thành công',
-    detail: 'Đã tải lên ' + files.length + ' ảnh',
-    life: 3000,
-  })
-}
-
-const removeMainImage = (index) => {
-  sanPham.value.hinhAnh.splice(index, 1)
-}
-
-// Handle image upload for variants
-const onVariantUpload = (event, skuData) => {
-  const files = event.files
-  const uploadedFiles = files.map((file) => file.name)
-  skuData.hinhAnh = [...skuData.hinhAnh, ...uploadedFiles]
-
-  toast.add({
-    severity: 'info',
-    summary: 'Thành công',
-    detail: 'Đã tải lên ' + files.length + ' ảnh cho SKU',
-    life: 3000,
-  })
-}
-
-// Remove image from variant
-const removeImage = (skuData, index) => {
-  skuData.hinhAnh.splice(index, 1)
-}
-
-// Submit form
-const submitForm = async () => {
-  submitted.value = true
-
-  // Validate required fields
-  if (
-    !sanPham.value.tenSanPham ||
-    !sanPham.value.thuongHieu ||
-    !sanPham.value.danhMucs ||
-    sanPham.value.danhMucs.length === 0 ||
-    variantGroups.value.length === 0
-  ) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Vui lòng điền đầy đủ thông tin bắt buộc và tạo ít nhất một phiên bản sản phẩm',
-      life: 5000,
-    })
-    return
-  }
-
-  // Prepare data for API
-  const productData = {
-    tenSanPham: sanPham.value.tenSanPham,
-    moTa: sanPham.value.moTa,
-    ngayRaMat: sanPham.value.ngayRaMat,
-    trangThai: true,
-    hinhAnh: sanPham.value.hinhAnh,
-    thuongHieu: { id: Number(sanPham.value.thuongHieu) },
-    danhMucs: sanPham.value.danhMucs.map((id) => ({ id: Number(id) })), // Chuyển đổi thành array of objects
-    sanPhamChiTiets: variantGroups.value.flatMap((group) => {
-      return group.variants.flatMap((variant) => {
-        return variant.skus.map((sku) => ({
-          sku: sku.sku,
-          giaBan: sku.giaBan,
-          giaKhuyenMai: sku.giaKhuyenMai || 0,
-          hinhAnh: sku.hinhAnh || [],
-          soLuongTonKho: 1,
-          ram: { id: Number(variant.ram) },
-          cpu: { id: Number(variant.cpu) },
-          manHinh: { id: Number(variant.manHinh) },
-          mauSac: variant.mauSac,
-          ocung: variant.ocung ? { id: Number(variant.ocung) } : null,
-          gpu: variant.gpu ? { id: Number(variant.gpu) } : null,
-          banPhim: variant.banPhim ? { id: Number(variant.banPhim) } : null,
-          amThanh: variant.amThanh ? { id: Number(variant.amThanh) } : null,
-          ketNoiMang: variant.ketNoiMang ? { id: Number(variant.ketNoiMang) } : null,
-          webcam: variant.webcam ? { id: Number(variant.webcam) } : null,
-          baoMat: variant.baoMat ? { id: Number(variant.baoMat) } : null,
-          heDieuHanh: variant.heDieuHanh ? { id: Number(variant.heDieuHanh) } : null,
-          pin: variant.pin ? { id: Number(variant.pin) } : null,
-          thietKe: variant.thietKe ? { id: Number(variant.thietKe) } : null,
-          congGiaoTiep: variant.congGiaoTiep ? { id: Number(variant.congGiaoTiep) } : null,
-          trangThai: variant.trangThai,
-        }))
-      })
-    }),
-  }
-
-  // Call API
-  try {
-    loading.value = true
-    const response = await productService.addMultipleProduct(productData)
-
-    toast.add({
-      severity: 'success',
-      summary: 'Thành công',
-      detail: 'Đã thêm sản phẩm thành công',
-      life: 5000,
-    })
-
-    // Reset form
-    resetForm()
-    router.push({ name: 'products' })
-  } catch (error) {
-    console.error('Error adding product:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail:
-        'Có lỗi xảy ra khi thêm sản phẩm: ' + (error.response?.data?.message || error.message),
-      life: 5000,
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-// Reset form
-const resetForm = () => {
-  sanPham.value = {
-    tenSanPham: '',
-    thuongHieu: null,
-    moTa: '',
-    ngayRaMat: null,
-    danhMucs: [],
-    hinhAnh: [],
-    sanPhamChiTiets: [],
-  }
-
-  selectedRam.value = []
-  selectedCpu.value = []
-  selectedManHinh.value = []
-  selectedMauSac.value = []
-  selectedOCung.value = null
-  selectedGpu.value = null
-  selectedBanPhim.value = null
-  selectedAmThanh.value = null
-
-  variantGroups.value = []
-  expandedRows.value = []
+function hideDialog() {
+  productDialog.value = false
   submitted.value = false
 }
+
+function hideDialogSpct() {
+  productDetailDialog.value = false
+  submitted.value = false
+}
+
+// CRUD Operations
+async function saveProduct() {
+  submitted.value = true
+
+  if (product?.value.maSanPham?.trim()) {
+    try {
+      if (product.value.id) {
+        await productService.updateProduct(product.value.id, product.value)
+        toast.add({
+          severity: 'success',
+          summary: 'Successful',
+          detail: 'Product Updated',
+          life: 3000,
+        })
+      } else {
+        await productService.addProduct(product.value)
+        toast.add({
+          severity: 'success',
+          summary: 'Successful',
+          detail: 'Product Created',
+          life: 3000,
+        })
+      }
+
+      // Refresh products list
+      await productStore.fetchActiveProducts()
+      productDialog.value = false
+      product.value = {}
+    } catch (error) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: `Failed to ${product.value.id ? 'update' : 'create'} product: ${error.message}`,
+        life: 3000,
+      })
+    }
+  }
+}
+
+function editProduct(prod) {
+  product.value = {
+    ...prod,
+    thuongHieu: prod.thuongHieu ? { ...prod.thuongHieu } : null,
+    ngayRaMat: prod.ngayRaMat ? new Date(prod.ngayRaMat) : null,
+  }
+  submitted.value = false
+  productDialog.value = true
+}
+function showProductDetail(prod) {
+  productDetail.value = {
+    ...prod,
+  }
+  submitted.value = false
+  productDetailDialog.value = true
+}
+
+function confirmDeleteProduct(id) {
+  product.value = { id }
+  deleteProductDialog.value = true
+}
+
+async function deleteProduct() {
+  try {
+    await productService.softDeleteProduct(product.value.id)
+    await productStore.fetchActiveProducts()
+    deleteProductDialog.value = false
+    product.value = {}
+    toast.add({
+      severity: 'success',
+      summary: 'Successful',
+      detail: 'Product Deleted',
+      life: 3000,
+    })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: `Failed to delete product: ${error.message}`,
+      life: 3000,
+    })
+  }
+}
+
+function confirmDeleteSelected() {
+  deleteProductsDialog.value = true
+}
+
+async function deleteSelectedProducts() {
+  try {
+    // Assuming we want to soft delete all selected products
+    await Promise.all(
+      selectedProducts.value.map((product) => productService.softDeleteProduct(product.id)),
+    )
+    await productStore.fetchActiveProducts()
+    deleteProductsDialog.value = false
+    selectedProducts.value = null
+    toast.add({
+      severity: 'success',
+      summary: 'Successful',
+      detail: 'Products Deleted',
+      life: 3000,
+    })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: `Failed to delete products: ${error.message}`,
+      life: 3000,
+    })
+  }
+}
+
+const goToAdd = () => {
+  router.push({ name: 'productAdd' })
+}
+
+// Utility Functions
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(dateString))
+}
+
+const formatCurrency = (value) => {
+  if (typeof value !== 'number') return ''
+  return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+}
+
+// Row Expansion
+const onRowToggle = (event) => {
+  expandedRowsSanPhamChiTiet.value = event.data
+}
+
+// Filter Management
+const clearFilterSanPham = () => {
+  filtersSanPham.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    maSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    'thuongHieu.moTaThuongHieu': { value: null, matchMode: FilterMatchMode.EQUALS }, // Adjust match mode if needed (CONTAINS?)
+    trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
+    ngayRaMat: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    },
+  }
+}
+
+const clearFilterSanPhamChiTiet = () => {
+  filtersSanPhamChiTiet.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    tenSanPham: { value: null, matchMode: FilterMatchMode.STARTS_WITH }, // Matches the 'tenSanPham' added in computed
+    sku: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    mauSac: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    soLuongTonKho: { value: null, matchMode: FilterMatchMode.EQUALS }, // Or BETWEEN, >= etc.
+    giaBan: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.GREATER_THAN_OR_EQUAL_TO },
+                   { value: null, matchMode: FilterMatchMode.LESS_THAN_OR_EQUAL_TO }]
+    },
+    'cpu.moTaCpu': { value: null, matchMode: FilterMatchMode.CONTAINS }, // Contains might be better
+    'ram.moTaRam': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'oCung.moTaOCung': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'gpu.moTaGpu': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'manHinh.moTaManHinh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'congGiaoTiep.moTaCongGiaoTiep': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'banPhim.moTaBanPhim': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'ketNoiMang.moTaKetNoiMang': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'amThanh.moTaAmThanh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'webcam.moTaWebcam': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'baoMat.moTaBaoMat': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'heDieuHanh.moTaHeDieuHanh': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'pin.moTaPin': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'thietKe.moTaThietKe': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    ngayRaMat: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    }, // Matches ngayRaMat added in computed
+  }
+
+  // Reset all selection values
+  selectedMauSac.value = [];
+  selectedThietKe.value = null;
+  selectedAmThanh.value = null;
+  selectedCpu.value = [];
+  selectedGpu.value = null;
+  selectedRam.value = [];
+  selectedOCung.value = null;
+  selectedManHinh.value = [];
+  selectedBanPhim.value = null;
+  selectedCong.value = null;
+  selectedWebcam.value = null;
+  selectedKetNoi.value = null;
+  selectedBaoMat.value = null;
+  selectedHeDieuHanh.value = null;
+  selectedPin.value = null;
+  selectedProducts.value = [];
+
+  // Reset price range to default
+  productDetail.value.giaBan = [0, 10000000];
+}
+
+// Add the applyFilters function
+const applyFilters = () => {
+  // Apply color filter
+  if (selectedMauSac.value && selectedMauSac.value.length > 0) {
+    filtersSanPhamChiTiet.value.mauSac.value = selectedMauSac.value;
+  } else {
+    filtersSanPhamChiTiet.value.mauSac.value = null;
+  }
+
+  // Apply price range filter
+  if (productDetail.value.giaBan && Array.isArray(productDetail.value.giaBan) && productDetail.value.giaBan.length === 2) {
+    filtersSanPhamChiTiet.value.giaBan.constraints[0].value = productDetail.value.giaBan[0];
+    filtersSanPhamChiTiet.value.giaBan.constraints[1].value = productDetail.value.giaBan[1];
+  } else {
+    // Default values if not set
+    filtersSanPhamChiTiet.value.giaBan.constraints[0].value = 0;
+    filtersSanPhamChiTiet.value.giaBan.constraints[1].value = 100000000;
+  }
+
+  // Apply design filter
+  if (selectedThietKe.value) {
+    filtersSanPhamChiTiet.value['thietKe.moTaThietKe'].value = selectedThietKe.value;
+  } else {
+    filtersSanPhamChiTiet.value['thietKe.moTaThietKe'].value = null;
+  }
+
+  // Apply audio filter
+  if (selectedAmThanh.value) {
+    filtersSanPhamChiTiet.value['amThanh.moTaAmThanh'].value = selectedAmThanh.value;
+  } else {
+    filtersSanPhamChiTiet.value['amThanh.moTaAmThanh'].value = null;
+  }
+
+  // Apply CPU filter
+  if (selectedCpu.value && selectedCpu.value.length > 0) {
+    filtersSanPhamChiTiet.value['cpu.moTaCpu'].value = selectedCpu.value;
+  } else {
+    filtersSanPhamChiTiet.value['cpu.moTaCpu'].value = null;
+  }
+
+  // Apply GPU filter
+  if (selectedGpu.value) {
+    filtersSanPhamChiTiet.value['gpu.moTaGpu'].value = selectedGpu.value;
+  } else {
+    filtersSanPhamChiTiet.value['gpu.moTaGpu'].value = null;
+  }
+
+  // Apply RAM filter
+  if (selectedRam.value && selectedRam.value.length > 0) {
+    filtersSanPhamChiTiet.value['ram.moTaRam'].value = selectedRam.value;
+  } else {
+    filtersSanPhamChiTiet.value['ram.moTaRam'].value = null;
+  }
+
+  // Apply storage filter
+  if (selectedOCung.value) {
+    filtersSanPhamChiTiet.value['oCung.moTaOCung'].value = selectedOCung.value;
+  } else {
+    filtersSanPhamChiTiet.value['oCung.moTaOCung'].value = null;
+  }
+
+  // Apply screen filter
+  if (selectedManHinh.value && selectedManHinh.value.length > 0) {
+    filtersSanPhamChiTiet.value['manHinh.moTaManHinh'].value = selectedManHinh.value;
+  } else {
+    filtersSanPhamChiTiet.value['manHinh.moTaManHinh'].value = null;
+  }
+
+  // Apply keyboard filter
+  if (selectedBanPhim.value) {
+    filtersSanPhamChiTiet.value['banPhim.moTaBanPhim'].value = selectedBanPhim.value;
+  } else {
+    filtersSanPhamChiTiet.value['banPhim.moTaBanPhim'].value = null;
+  }
+
+  // Apply port filter
+  if (selectedCong.value) {
+    filtersSanPhamChiTiet.value['congGiaoTiep.moTaCongGiaoTiep'].value = selectedCong.value;
+  } else {
+    filtersSanPhamChiTiet.value['congGiaoTiep.moTaCongGiaoTiep'].value = null;
+  }
+
+  // Apply webcam filter
+  if (selectedWebcam.value) {
+    filtersSanPhamChiTiet.value['webcam.moTaWebcam'].value = selectedWebcam.value;
+  } else {
+    filtersSanPhamChiTiet.value['webcam.moTaWebcam'].value = null;
+  }
+
+  // Apply network filter
+  if (selectedKetNoi.value) {
+    filtersSanPhamChiTiet.value['ketNoiMang.moTaKetNoiMang'].value = selectedKetNoi.value;
+  } else {
+    filtersSanPhamChiTiet.value['ketNoiMang.moTaKetNoiMang'].value = null;
+  }
+
+  // Apply security filter
+  if (selectedBaoMat.value) {
+    filtersSanPhamChiTiet.value['baoMat.moTaBaoMat'].value = selectedBaoMat.value;
+  } else {
+    filtersSanPhamChiTiet.value['baoMat.moTaBaoMat'].value = null;
+  }
+
+  // Apply OS filter
+  if (selectedHeDieuHanh.value) {
+    filtersSanPhamChiTiet.value['heDieuHanh.moTaHeDieuHanh'].value = selectedHeDieuHanh.value;
+  } else {
+    filtersSanPhamChiTiet.value['heDieuHanh.moTaHeDieuHanh'].value = null;
+  }
+
+  // Apply battery filter
+  if (selectedPin.value) {
+    filtersSanPhamChiTiet.value['pin.moTaPin'].value = selectedPin.value;
+  } else {
+    filtersSanPhamChiTiet.value['pin.moTaPin'].value = null;
+  }
+
+  // Apply product filter to filter by specific products
+  if (selectedProducts.value && selectedProducts.value.length > 0) {
+    // This depends on how your backend handles product filtering
+    // You might need to adjust this based on your API
+    filtersSanPhamChiTiet.value.tenSanPham.value = selectedProducts.value;
+  } else {
+    filtersSanPhamChiTiet.value.tenSanPham.value = null;
+  }
+
+  toast.add({
+    severity: 'success',
+    summary: 'Lọc sản phẩm',
+    detail: 'Đã áp dụng bộ lọc',
+    life: 3000,
+  });
+}
+
+// Lifecycle Hooks
+onMounted(async () => {
+  try {
+    // Fetch all necessary data in parallel
+    await Promise.all([
+      productStore.fetchActiveProducts(),
+      productStore.fetchActiveProductsDetailed(),
+      attributeStore.fetchBrand(),
+      attributeStore.fetchAllAttributes()
+    ])
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: `Failed to load data: ${error.message}`,
+      life: 3000,
+    })
+  } finally {
+    loadingSanPham.value = false
+    loadingSanPhamChiTiet.value = false
+  }
+})
 </script>
 
 <style scoped>
-.required {
-  color: red;
-}
-
-.field {
-  margin-bottom: 1.5rem;
-}
-
-.p-error {
-  color: #f44336;
-  font-size: 0.875rem;
-}
-
-.surface-100 {
-  background-color: var(--surface-100);
-}
-
-.expansion-content {
+.card {
   padding: 1rem;
-  border-radius: 4px;
-  margin-top: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 </style>
