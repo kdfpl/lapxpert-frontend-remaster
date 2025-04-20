@@ -1,11 +1,11 @@
-import api from "./axiosAPI";
+import {privateApi} from "./axiosAPI";
 
-const API_URL = "/products";
+const privateApi_URL = "/products";
 
 const productService = {
   async getAllProducts() {
     try {
-      const response = await api.get(`${API_URL}`);
+      const response = await privateApi.get(`${privateApi_URL}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching products:", error.response?.data || error.message);
@@ -15,7 +15,7 @@ const productService = {
 
   async getActiveProducts() {
     try {
-      const response = await api.get(`${API_URL}/list`);
+      const response = await privateApi.get(`${privateApi_URL}/list`);
       return response.data;
     } catch (error) {
       console.error("Error fetching active products:", error.response?.data || error.message);
@@ -25,7 +25,7 @@ const productService = {
 
   async addProduct(sanPham) {
     try {
-      const response = await api.post(`${API_URL}/add`, sanPham);
+      const response = await privateApi.post(`${privateApi_URL}/add`, sanPham);
       return response.data;
     } catch (error) {
       console.error("Error adding product:", error.response?.data || error.message);
@@ -35,7 +35,7 @@ const productService = {
 
   async addMultipleProduct(sanPham) {
     try {
-      const response = await api.post(`${API_URL}/addMultiple`, sanPham);
+      const response = await privateApi.post(`${privateApi_URL}/addMultiple`, sanPham);
       return response.data;
     } catch (error) {
       console.error("Error adding product:", error.response?.data || error.message);
@@ -45,7 +45,7 @@ const productService = {
 
   async updateProduct(id, sanPham) {
     try {
-      const response = await api.put(`${API_URL}/update/${id}`, sanPham);
+      const response = await privateApi.put(`${privateApi_URL}/update/${id}`, sanPham);
       return response.data;
     } catch (error) {
       console.error("Error updating product:", error.response?.data || error.message);
@@ -55,7 +55,7 @@ const productService = {
 
   async softDeleteProduct(id) {
     try {
-      const response = await api.delete(`${API_URL}/delete/${id}`);
+      const response = await privateApi.delete(`${privateApi_URL}/delete/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting product:", error.response?.data || error.message);

@@ -39,30 +39,103 @@ const initialFilters = {
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   maDotGiamGia: {
     operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }],
   },
   tenDotGiamGia: {
     operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }],
   },
-  phanTramGiam: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN }, // Assuming range slider or similar
+  phanTramGiam: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
   ngayBatDau: {
     operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    constraints: [{ value: null, matchMode: FilterMatchMode.CUSTOM }],
   },
   ngayKetThuc: {
     operator: FilterOperator.AND,
-    constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    constraints: [{ value: null, matchMode: FilterMatchMode.CUSTOM }],
   },
   trangThai: { value: null, matchMode: FilterMatchMode.EQUALS },
 }
 
-// Reactive reference for current filters, initialized with a deep copy
 const filters = ref(JSON.parse(JSON.stringify(initialFilters)))
+
+const normalizeDateToStartOfDay = (dateInput) => {
+  if (!dateInput) return null
+  try {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput)
+    if (isNaN(date.getTime())) return null
+    const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    return normalized
+  } catch (e) {
+    console.error('Error normalizing date:', dateInput, e)
+    return null
+  }
+}
+
+const filteredDiscounts = computed(() => {
+  let data = [...discounts.value]
+  const globalFilter = filters.value.global.value?.toLowerCase()
+  const maFilter = filters.value.maDotGiamGia.constraints[0].value?.toLowerCase()
+  const tenFilter = filters.value.tenDotGiamGia.constraints[0].value?.toLowerCase()
+  const phanTramFilter = filters.value.phanTramGiam.value
+  const trangThaiFilter = filters.value.trangThai.value
+  const ngayBatDauFilter = normalizeDateToStartOfDay(filters.value.ngayBatDau.constraints[0].value)
+  const ngayKetThucFilter = normalizeDateToStartOfDay(
+    filters.value.ngayKetThuc.constraints[0].value,
+  )
+
+  if (globalFilter) {
+    data = data.filter((item) =>
+      Object.values(item).some((val) => String(val).toLowerCase().includes(globalFilter)),
+    )
+  }
+  if (maFilter) {
+    data = data.filter((item) => item.maDotGiamGia?.toLowerCase().includes(maFilter))
+  }
+  if (tenFilter) {
+    data = data.filter((item) => item.tenDotGiamGia?.toLowerCase().includes(tenFilter))
+  }
+  if (phanTramFilter && phanTramFilter.length === 2) {
+    data = data.filter(
+      (item) => item.phanTramGiam >= phanTramFilter[0] && item.phanTramGiam <= phanTramFilter[1],
+    )
+  }
+  if (trangThaiFilter) {
+    data = data.filter((item) => item.trangThai === trangThaiFilter)
+  }
+  if (ngayBatDauFilter) {
+    data = data.filter((item) => {
+      const itemDate = normalizeDateToStartOfDay(item.ngayBatDau)
+      return itemDate && itemDate.getTime() === ngayBatDauFilter.getTime()
+    })
+  }
+  if (ngayKetThucFilter) {
+    data = data.filter((item) => {
+      const itemDate = normalizeDateToStartOfDay(item.ngayKetThuc)
+      return itemDate && itemDate.getTime() === ngayKetThucFilter.getTime()
+    })
+  }
+  return data
+})
 
 // Function to reset filters to their initial state
 function clearFilter() {
   filters.value = JSON.parse(JSON.stringify(initialFilters))
+}
+
+function clearSpecificFilter(fieldName) {
+  console.log(`Clearing filter for: ${fieldName}`)
+  if (fieldName === 'global') {
+    filters.value.global.value = null
+  } else if (fieldName === 'phanTramGiam') {
+    filters.value.phanTramGiam.value = [0, 100]
+  } else if (filters.value[fieldName]?.constraints) {
+    filters.value[fieldName].constraints[0].value = null
+  } else if (fieldName === 'trangThai') {
+    filters.value.trangThai.value = null
+  } else {
+    console.warn(`Unknown filter field name to clear: ${fieldName}`)
+  }
 }
 
 // --- 4. Computed Properties ---
@@ -481,29 +554,162 @@ function collapseAll() {
           label="Thêm"
           icon="pi pi-plus"
           class="mr-2"
-          severity="secondary"
+          outlined
           @click="newDiscount"
         />
-        <Button label="In" icon="pi pi-print" class="mr-2" severity="secondary" />
-        <Button label="Xuất" icon="pi pi-upload" class="mr-2" severity="secondary" />
+        <Button label="In" icon="pi pi-print" class="mr-2" outlined />
+        <Button label="Xuất" icon="pi pi-upload" class="mr-2" outlined />
         <Button
           label="Xoá"
           icon="pi pi-trash"
-          severity="secondary"
+          severity="danger"
+          outlined
           @click="confirmDeleteDiscounts"
           :disabled="!selectedDiscounts || !selectedDiscounts.length"
         />
       </template>
     </Toolbar>
 
+    <div class="font-semibold text-xl mb-4">Bộ lọc</div>
+
+    <Button
+      type="button"
+      icon="pi pi-filter-slash"
+      label="Xoá toàn bộ bộ lọc"
+      outlined
+      class="mb-4"
+      @click="clearFilter()"
+    />
+
+    <div class="mb-6 grid grid-cols-3 gap-4 border p-4 rounded-lg">
+      <div>
+        <label class="block mb-2">Mã đợt giảm giá</label>
+        <InputGroup>
+          <Button
+            v-if="filters['maDotGiamGia'].constraints[0].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('maDotGiamGia')"
+          />
+          <InputText
+            v-model="filters['maDotGiamGia'].constraints[0].value"
+            type="text"
+            placeholder="Lọc mã"
+            fluid
+          />
+        </InputGroup>
+      </div>
+
+      <div>
+        <label class="block mb-2">Tên đợt giảm giá</label>
+        <InputGroup>
+          <Button
+            v-if="filters['tenDotGiamGia'].constraints[0].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('tenDotGiamGia')"
+          />
+          <InputText
+            v-model="filters['tenDotGiamGia'].constraints[0].value"
+            type="text"
+            placeholder="Lọc tên"
+            fluid
+          />
+        </InputGroup>
+      </div>
+
+      <div>
+        <label class="block mb-4">Phần trăm giảm</label>
+        <div class="px-3">
+          <Slider v-model="filters['phanTramGiam'].value" range class="mb-2" fluid />
+          <div class="flex items-center justify-between px-2">
+            <span>{{ filters['phanTramGiam'].value ? filters['phanTramGiam'].value[0] : 0 }}</span>
+            <span>{{
+              filters['phanTramGiam'].value ? filters['phanTramGiam'].value[1] : 100
+            }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block mb-2">Ngày bắt đầu</label>
+        <InputGroup>
+          <Button
+            v-if="filters['ngayBatDau'].constraints[0].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('ngayBatDau')"
+          />
+          <DatePicker
+            v-model="filters['ngayBatDau'].constraints[0].value"
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/yyyy"
+            showButtonBar
+            showIcon
+            fluid
+            iconDisplay="input"
+          />
+        </InputGroup>
+      </div>
+
+      <div>
+        <label class="block mb-2">Ngày kết thúc</label>
+        <InputGroup>
+          <Button
+            v-if="filters['ngayKetThuc'].constraints[0].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('ngayKetThuc')"
+          />
+          <DatePicker
+            v-model="filters['ngayKetThuc'].constraints[0].value"
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/yyyy"
+            showButtonBar
+            showIcon
+            fluid
+            iconDisplay="input"
+            :minDate="filters['ngayBatDau'].constraints[0].value"
+          />
+        </InputGroup>
+      </div>
+
+      <div>
+        <label class="block mb-2">Trạng thái</label>
+        <InputGroup>
+          <Button
+            v-if="filters['trangThai'].value"
+            icon="pi pi-filter-slash"
+            outlined
+            @click="clearSpecificFilter('trangThai')"
+          />
+          <Select
+            v-model="filters['trangThai'].value"
+            :options="[
+              { label: 'Chưa hoạt động', value: 'CHUA_DIEN_RA' },
+              { label: 'Đang hoạt động', value: 'DA_DIEN_RA' },
+              { label: 'Ngưng hoạt động', value: 'KET_THUC' },
+            ]"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Chọn trạng thái"
+            fluid
+          >
+            <template #option="{ option }">
+              <Tag :value="getTrangThaiLabel(option.value)" :severity="getSeverity(option.value)" />
+            </template>
+          </Select>
+        </InputGroup>
+      </div>
+    </div>
+
     <DataTable
       v-model:selection="selectedDiscounts"
-      :value="discounts"
+      :value="filteredDiscounts"
       dataKey="id"
       :paginator="true"
       :rows="10"
-      v-model:filters="filters"
-      :filters="filters"
+      :globalFilterFields="['maDotGiamGia', 'tenDotGiamGia']"
       filterDisplay="menu"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
       :rowsPerPageOptions="[5, 10, 25]"
@@ -513,13 +719,6 @@ function collapseAll() {
     >
       <template #header>
         <div class="flex justify-between">
-          <Button
-            type="button"
-            icon="pi pi-filter-slash"
-            label="Clear"
-            outlined
-            @click="clearFilter()"
-          />
           <div class="flex">
             <IconField>
               <InputIcon>
@@ -533,40 +732,13 @@ function collapseAll() {
 
       <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
       <Column header="STT">
-        <template #body="{ index }">
-          {{ index + 1 }}
-        </template>
+        <template #body="{ index }"> {{ index + 1 }} </template>
       </Column>
-
-      <Column field="maDotGiamGia" header="Mã đợt giảm giá" sortable>
-        <template #body="{ data }">
-          {{ data.maDotGiamGia }}
-        </template>
-        <template #filter="{ filterModel }">
-          <InputText v-model="filterModel.value" type="text" placeholder="Lọc mã" />
-        </template>
-      </Column>
-
-      <Column field="tenDotGiamGia" header="Tên đợt giảm giá">
-        <template #body="{ data }">
-          {{ data.tenDotGiamGia }}
-        </template>
-        <template #filter="{ filterModel }">
-          <InputText v-model="filterModel.value" type="text" placeholder="Lọc tên" />
-        </template>
-      </Column>
-
-      <Column field="phanTramGiam" header="Phần trăm giảm" sortable :showFilterMatchModes="false">
+      <Column field="maDotGiamGia" header="Mã đợt giảm giá" sortable></Column>
+      <Column field="tenDotGiamGia" header="Tên đợt giảm giá" sortable></Column>
+      <Column field="phanTramGiam" header="Phần trăm giảm" sortable>
         <template #body="{ data }"> {{ data.phanTramGiam }}% </template>
-        <template #filter="{ filterModel }">
-          <Slider v-model="filterModel.value" range class="m-4"></Slider>
-          <div class="flex items-center justify-between px-2">
-            <span>{{ filterModel.value ? filterModel.value[0] : 0 }}</span>
-            <span>{{ filterModel.value ? filterModel.value[1] : 100 }}</span>
-          </div>
-        </template>
       </Column>
-
       <Column
         field="ngayBatDau"
         header="Ngày bắt đầu"
@@ -574,19 +746,8 @@ function collapseAll() {
         sortable
         style="min-width: 12rem"
       >
-        <template #body="{ data }">
-          {{ formatDateTime(data.ngayBatDau) }}
-        </template>
-        <template #filter="{ filterModel }">
-          <DatePicker
-            v-model="filterModel.value"
-            dateFormat="mm/dd/yy"
-            placeholder="mm/dd/yyyy"
-            showButtonBar
-          />
-        </template>
+        <template #body="{ data }"> {{ formatDateTime(data.ngayBatDau) }} </template>
       </Column>
-
       <Column
         field="ngayKetThuc"
         header="Ngày kết thúc"
@@ -594,49 +755,13 @@ function collapseAll() {
         sortable
         style="min-width: 12rem"
       >
-        <template #body="{ data }">
-          {{ formatDateTime(data.ngayKetThuc) }}
-        </template>
-        <template #filter="{ filterModel }">
-          <DatePicker
-            v-model="filterModel.value"
-            dateFormat="mm/dd/yy"
-            placeholder="mm/dd/yyyy"
-            showButtonBar
-          />
-        </template>
+        <template #body="{ data }"> {{ formatDateTime(data.ngayKetThuc) }} </template>
       </Column>
-
-      <Column
-        field="trangThai"
-        header="Trạng thái"
-        sortable
-        style="min-width: 12rem"
-        :showFilterMatchModes="false"
-      >
+      <Column field="trangThai" header="Trạng thái" sortable style="min-width: 12rem">
         <template #body="{ data }">
           <Tag :value="getTrangThaiLabel(data.trangThai)" :severity="getSeverity(data.trangThai)" />
         </template>
-        <template #filter="{ filterModel }">
-          <Select
-            v-model="filterModel.value"
-            :options="[
-              { label: 'Chưa hoạt động', value: 'CHUA_DIEN_RA' },
-              { label: 'Đang hoạt động', value: 'DA_DIEN_RA' },
-              { label: 'Ngưng hoạt động', value: 'KET_THUC' },
-            ]"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Chọn trạng thái"
-            showClear
-          >
-            <template #option="{ option }">
-              <Tag :value="getTrangThaiLabel(option.value)" :severity="getSeverity(option.value)" />
-            </template>
-          </Select>
-        </template>
       </Column>
-
       <Column :exportable="false" style="min-width: 12rem">
         <template #body="{ data }">
           <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editDiscount(data)" />
@@ -649,6 +774,8 @@ function collapseAll() {
           />
         </template>
       </Column>
+
+      <template #empty>Không tìm thấy đợt giảm giá phù hợp với tiêu chí lọc.</template>
     </DataTable>
   </div>
 

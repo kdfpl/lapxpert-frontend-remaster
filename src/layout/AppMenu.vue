@@ -1,8 +1,12 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import AppMenuItem from './AppMenuItem.vue'
 
-const model = ref([
+// Lấy vai trò từ localStorage
+const role = localStorage.getItem('vaiTro')
+
+// Mẫu menu cho Admin
+const adminModel = ref([
   {
     label: 'Home',
     items: [{ label: 'Thống kê', icon: 'icon-[line-md--speed-loop] size-5', to: '/' }],
@@ -12,6 +16,11 @@ const model = ref([
     to: '/pos',
     items: [
       {
+        label: 'Bán Hàng',
+        icon: 'icon-[hugeicons--delivery-truck-02] size-5',
+        to: '/pos',
+      },
+      {
         label: 'Đơn hàng',
         icon: 'icon-[hugeicons--delivery-truck-02] size-5',
         to: '/pos/orders',
@@ -19,7 +28,7 @@ const model = ref([
       {
         label: 'Hoá đơn',
         icon: 'icon-[hugeicons--invoice-02] size-5',
-        to: '/pos/invoices',
+        to: '/invoices',
       },
     ],
   },
@@ -72,12 +81,41 @@ const model = ref([
     ],
   },
 ])
+
+// Mẫu menu cho Staff
+const staffModel = ref([
+  {
+    label: 'Home',
+    items: [{ label: 'Thống kê', icon: 'icon-[line-md--speed-loop] size-5', to: '/' }],
+  },
+  {
+    label: 'Bán hàng',
+    to: '/pos',
+    items: [
+      {
+        label: 'Đơn hàng',
+        icon: 'icon-[hugeicons--delivery-truck-02] size-5',
+        to: '/pos/orders',
+      },
+      {
+        label: 'Hoá đơn',
+        icon: 'icon-[hugeicons--invoice-02] size-5',
+        to: '/pos/invoices',
+      },
+    ],
+  },
+])
+
+// Duyệt menu theo vai trò (nếu vai trò là STAFF, chỉ hiển thị menu Bán hàng)
+const filteredModel = computed(() => {
+  return role === 'ADMIN' ? adminModel.value : staffModel.value
+})
 </script>
 
 <template>
   <ul class="layout-menu">
-    <template v-for="(item, i) in model" :key="item">
-      <app-menu-item v-if="!item.separator" :item="item" :index="i"> </app-menu-item>
+    <template v-for="(item, i) in filteredModel" :key="i">
+      <app-menu-item v-if="!item.separator" :item="item" :index="i"></app-menu-item>
       <li v-if="item.separator" class="menu-separator"></li>
     </template>
   </ul>
