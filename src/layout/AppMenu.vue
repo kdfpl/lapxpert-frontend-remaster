@@ -24,7 +24,7 @@ const model = ref([
       {
         label: 'Hoá đơn',
         icon: 'icon-[hugeicons--invoice-02] size-5',
-        to: '/pos/invoices',
+        to: '/invoices',
       },
     ],
   },

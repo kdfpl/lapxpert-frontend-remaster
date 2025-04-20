@@ -76,11 +76,18 @@ const router = createRouter({
           component: () => import('@/views/coupons/CrudCoupons.vue'),
           props: route => ({ id: route.query.id })
         },
+
         {
-          path: '/pos',
-          name: 'pos',
-          component: () => import('@/views/pos/POS.vue'),
-        }
+          path: '/invoices',
+          name: 'invoices',
+          component: () => import('@/views/invoice/HoaDon.vue')
+        },
+
+        {
+          path: "/chi-tiet-hoa-don/:id",
+          name: "ChiTietHoaDon",
+          component: () => import('@/views/invoice/ChiTietHoaDon.vue')
+        },
       ],
     },
   ],
