@@ -39,7 +39,7 @@ export default {
 
   setup() {
     const selectedDoanhThu = ref(Month);
-    const selectedTop = ref(TopNgay);
+    const selectedTop = ref(TopTuan);
     const hoaDons = ref([]);
     const donHangs = ref([]);
     const ThanhViens = ref([]);
@@ -128,14 +128,14 @@ export default {
           <button @click="selectedDoanhThu = 'DTCustom'"  class="px-3 py-2 rounded-lg bg-gray-400 text-[#FFFFFF]">Tùy chỉnh</button>
   </div>
         <div class="flex justify-center text-[#FFFFFF]">
-          <button @click="selectedDoanhThu = 'Year' " class="px-3 py-2 rounded-l-lg bg-gray-400">
-            Year
+          <button @click="selectedDoanhThu = 'Week' " class="px-3 py-2 rounded-l-lg bg-gray-400">
+Week
           </button>
           <button @click="selectedDoanhThu = 'Month'" class="px-3 py-2 bg-gray-400">
             Month
           </button>
-          <button @click="selectedDoanhThu = 'Week'" class="px-3 py-2 rounded-r-lg bg-gray-400">
-            Week
+          <button @click="selectedDoanhThu = 'Year'" class="px-3 py-2 rounded-r-lg bg-gray-400">
+            Year
           </button>
         </div>
         <div class="mb-5 basis-2/3 ">
