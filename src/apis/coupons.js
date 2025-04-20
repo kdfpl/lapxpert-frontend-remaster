@@ -10,44 +10,51 @@ const couponService = {
       return response.data;  
     } catch (error) {
       console.error("Error fetching coupons:", error.response?.data || error.message);
-      return []; // Trả về mảng rỗng nếu có lỗi
+      throw new Error(error.response?.data?.message || "Không thể lấy danh sách phiếu giảm giá. Vui lòng thử lại sau.");
     }
-  },  
-
-  // Tạo phiếu giảm giá mới
-  async createCoupon(coupon, nguoiDungIds) {
+  },
+  async getCouponById(id) {
     try {
       // Tạo config để gửi danh sách nguoiDungIds
       const data = { ...coupon, nguoiDungIds };
       const response = await privateApi.post(`${privateApi_URL}`, data);
       return response.data;
     } catch (error) {
-      console.error("Error creating coupon:", error.response?.data || error.message);
-      throw error;
+      console.error("Error fetching coupon by ID:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Không thể lấy thông tin phiếu giảm giá. Vui lòng thử lại sau.");
     }
   },
-
-  // Cập nhật phiếu giảm giá
-  async updateCoupon(id, coupon, nguoiDungIds) {
+  // Thêm mới phiếu giảm giá
+  async addCoupon(phieuData, nguoiDungIds) {
     try {
       const data = { ...coupon, nguoiDungIds };
       const response = await privateApi.put(`${privateApi_URL}/${id}`, data);
       return response.data;
     } catch (error) {
-      console.error("Error updating coupon:", error.response?.data || error.message);
-      throw error;
+      console.error("Error adding coupon:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Không thể thêm phiếu giảm giá. Vui lòng thử lại sau.");
     }
-  },  
-// Lấy chi tiết phiếu giảm giá theo ID
-async getCouponById(id) {
+  },
+  // Cập nhật phiếu giảm giá
+async updateCoupon(phieuId, phieuData, nguoiDungIds) {
   try {
     const response = await privateApi.get(`${privateApi_URL}/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching coupon details:", error.response?.data || error.message);
-    throw error;
+    console.error("Error updating coupon:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Không thể cập nhật phiếu giảm giá. Vui lòng thử lại sau.");
   }
 },
+  // Đóng phiếu giảm giá (cập nhật trạng thái và ngày kết thúc)
+  async closeCoupon(id) {
+    try {
+      const response = await api.put(`${API_URL}/delete/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error closing coupon:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Không thể đóng phiếu giảm giá. Vui lòng thử lại sau.");
+    }
+  },
 
 // Kết thúc phiếu giảm giá theo ID (thay vì xóa)
 async endCoupon(id) {
