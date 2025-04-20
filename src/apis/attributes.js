@@ -1,9 +1,9 @@
-import api from "./axiosAPI";
+import {privateApi} from "./axiosAPI";
 
-const API_URL = "/products/attributes";
+const privateApi_URL = "/products/attributes";
 
 const handleError = (error) => {
-  console.error('API Error:', error);
+  console.error('privateApi Error:', error);
   throw error;
 };
 
@@ -11,35 +11,35 @@ const attributeService = {
   // Audio
   getAllAudio: async () => {
     try {
-      return await api.get(`${API_URL}/audio`);
+      return await privateApi.get(`${privateApi_URL}/audio`);
     } catch (error) {
       return handleError(error);
     }
   },
   createAudio: async (audio) => {
     try {
-      return await api.put(`${API_URL}/audio`, audio);
+      return await privateApi.put(`${privateApi_URL}/audio`, audio);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleAudio: async (audios) => {
     try {
-      return await api.put(`${API_URL}/audio/multiple`, audios);
+      return await privateApi.put(`${privateApi_URL}/audio/multiple`, audios);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteAudio: async (id) => {
     try {
-      return await api.delete(`${API_URL}/audio/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/audio/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleAudio: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/audio`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/audio`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -48,35 +48,35 @@ const attributeService = {
   // Keyboard
   getAllKeyboard: async () => {
     try {
-      return await api.get(`${API_URL}/keyboard`);
+      return await privateApi.get(`${privateApi_URL}/keyboard`);
     } catch (error) {
       return handleError(error);
     }
   },
   createKeyboard: async (keyboard) => {
     try {
-      return await api.put(`${API_URL}/keyboard`, keyboard);
+      return await privateApi.put(`${privateApi_URL}/keyboard`, keyboard);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleKeyboard: async (keyboards) => {
     try {
-      return await api.put(`${API_URL}/keyboard/multiple`, keyboards);
+      return await privateApi.put(`${privateApi_URL}/keyboard/multiple`, keyboards);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteKeyboard: async (id) => {
     try {
-      return await api.delete(`${API_URL}/keyboard/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/keyboard/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleKeyboard: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/keyboard`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/keyboard`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -85,35 +85,35 @@ const attributeService = {
   // Security
   getAllSecurity: async () => {
     try {
-      return await api.get(`${API_URL}/security`);
+      return await privateApi.get(`${privateApi_URL}/security`);
     } catch (error) {
       return handleError(error);
     }
   },
   createSecurity: async (security) => {
     try {
-      return await api.put(`${API_URL}/security`, security);
+      return await privateApi.put(`${privateApi_URL}/security`, security);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleSecurity: async (securities) => {
     try {
-      return await api.put(`${API_URL}/security/multiple`, securities);
+      return await privateApi.put(`${privateApi_URL}/security/multiple`, securities);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteSecurity: async (id) => {
     try {
-      return await api.delete(`${API_URL}/security/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/security/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleSecurity: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/security`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/security`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -122,35 +122,35 @@ const attributeService = {
   // Interface
   getAllInterface: async () => {
     try {
-      return await api.get(`${API_URL}/interface`);
+      return await privateApi.get(`${privateApi_URL}/interface`);
     } catch (error) {
       return handleError(error);
     }
   },
   createInterface: async (interface_) => {
     try {
-      return await api.put(`${API_URL}/interface`, interface_);
+      return await privateApi.put(`${privateApi_URL}/interface`, interface_);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleInterface: async (interfaces) => {
     try {
-      return await api.put(`${API_URL}/interface/multiple`, interfaces);
+      return await privateApi.put(`${privateApi_URL}/interface/multiple`, interfaces);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteInterface: async (id) => {
     try {
-      return await api.delete(`${API_URL}/interface/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/interface/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleInterface: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/interface`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/interface`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -159,35 +159,35 @@ const attributeService = {
   // CPU
   getAllCpu: async () => {
     try {
-      return await api.get(`${API_URL}/cpu`);
+      return await privateApi.get(`${privateApi_URL}/cpu`);
     } catch (error) {
       return handleError(error);
     }
   },
   createCpu: async (cpu) => {
     try {
-      return await api.put(`${API_URL}/cpu`, cpu);
+      return await privateApi.put(`${privateApi_URL}/cpu`, cpu);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleCpu: async (cpus) => {
     try {
-      return await api.put(`${API_URL}/cpu/multiple`, cpus);
+      return await privateApi.put(`${privateApi_URL}/cpu/multiple`, cpus);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteCpu: async (id) => {
     try {
-      return await api.delete(`${API_URL}/cpu/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/cpu/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleCpu: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/cpu`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/cpu`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -196,35 +196,35 @@ const attributeService = {
   // GPU
   getAllGpu: async () => {
     try {
-      return await api.get(`${API_URL}/gpu`);
+      return await privateApi.get(`${privateApi_URL}/gpu`);
     } catch (error) {
       return handleError(error);
     }
   },
   createGpu: async (gpu) => {
     try {
-      return await api.put(`${API_URL}/gpu`, gpu);
+      return await privateApi.put(`${privateApi_URL}/gpu`, gpu);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleGpu: async (gpus) => {
     try {
-      return await api.put(`${API_URL}/gpu/multiple`, gpus);
+      return await privateApi.put(`${privateApi_URL}/gpu/multiple`, gpus);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteGpu: async (id) => {
     try {
-      return await api.delete(`${API_URL}/gpu/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/gpu/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleGpu: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/gpu`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/gpu`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -233,35 +233,35 @@ const attributeService = {
   // Operating System
   getAllOs: async () => {
     try {
-      return await api.get(`${API_URL}/os`);
+      return await privateApi.get(`${privateApi_URL}/os`);
     } catch (error) {
       return handleError(error);
     }
   },
   createOs: async (os) => {
     try {
-      return await api.put(`${API_URL}/os`, os);
+      return await privateApi.put(`${privateApi_URL}/os`, os);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleOs: async (osList) => {
     try {
-      return await api.put(`${API_URL}/os/multiple`, osList);
+      return await privateApi.put(`${privateApi_URL}/os/multiple`, osList);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteOs: async (id) => {
     try {
-      return await api.delete(`${API_URL}/os/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/os/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleOs: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/os`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/os`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -270,35 +270,35 @@ const attributeService = {
   // Network
   getAllNetwork: async () => {
     try {
-      return await api.get(`${API_URL}/network`);
+      return await privateApi.get(`${privateApi_URL}/network`);
     } catch (error) {
       return handleError(error);
     }
   },
   createNetwork: async (network) => {
     try {
-      return await api.put(`${API_URL}/network`, network);
+      return await privateApi.put(`${privateApi_URL}/network`, network);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleNetwork: async (networks) => {
     try {
-      return await api.put(`${API_URL}/network/multiple`, networks);
+      return await privateApi.put(`${privateApi_URL}/network/multiple`, networks);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteNetwork: async (id) => {
     try {
-      return await api.delete(`${API_URL}/network/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/network/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleNetwork: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/network`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/network`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -307,35 +307,35 @@ const attributeService = {
   // Screen
   getAllScreen: async () => {
     try {
-      return await api.get(`${API_URL}/screen`);
+      return await privateApi.get(`${privateApi_URL}/screen`);
     } catch (error) {
       return handleError(error);
     }
   },
   createScreen: async (screen) => {
     try {
-      return await api.put(`${API_URL}/screen`, screen);
+      return await privateApi.put(`${privateApi_URL}/screen`, screen);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleScreen: async (screens) => {
     try {
-      return await api.put(`${API_URL}/screen/multiple`, screens);
+      return await privateApi.put(`${privateApi_URL}/screen/multiple`, screens);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteScreen: async (id) => {
     try {
-      return await api.delete(`${API_URL}/screen/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/screen/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleScreen: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/screen`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/screen`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -344,35 +344,35 @@ const attributeService = {
   // Storage
   getAllStorage: async () => {
     try {
-      return await api.get(`${API_URL}/storage`);
+      return await privateApi.get(`${privateApi_URL}/storage`);
     } catch (error) {
       return handleError(error);
     }
   },
   createStorage: async (storage) => {
     try {
-      return await api.put(`${API_URL}/storage`, storage);
+      return await privateApi.put(`${privateApi_URL}/storage`, storage);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleStorage: async (storages) => {
     try {
-      return await api.put(`${API_URL}/storage/multiple`, storages);
+      return await privateApi.put(`${privateApi_URL}/storage/multiple`, storages);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteStorage: async (id) => {
     try {
-      return await api.delete(`${API_URL}/storage/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/storage/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleStorage: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/storage`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/storage`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -381,35 +381,35 @@ const attributeService = {
   // Battery
   getAllBattery: async () => {
     try {
-      return await api.get(`${API_URL}/battery`);
+      return await privateApi.get(`${privateApi_URL}/battery`);
     } catch (error) {
       return handleError(error);
     }
   },
   createBattery: async (battery) => {
     try {
-      return await api.put(`${API_URL}/battery`, battery);
+      return await privateApi.put(`${privateApi_URL}/battery`, battery);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleBattery: async (batteries) => {
     try {
-      return await api.put(`${API_URL}/battery/multiple`, batteries);
+      return await privateApi.put(`${privateApi_URL}/battery/multiple`, batteries);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteBattery: async (id) => {
     try {
-      return await api.delete(`${API_URL}/battery/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/battery/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleBattery: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/battery`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/battery`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -418,35 +418,35 @@ const attributeService = {
   // RAM
   getAllRam: async () => {
     try {
-      return await api.get(`${API_URL}/ram`);
+      return await privateApi.get(`${privateApi_URL}/ram`);
     } catch (error) {
       return handleError(error);
     }
   },
   createRam: async (ram) => {
     try {
-      return await api.put(`${API_URL}/ram`, ram);
+      return await privateApi.put(`${privateApi_URL}/ram`, ram);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleRam: async (rams) => {
     try {
-      return await api.put(`${API_URL}/ram/multiple`, rams);
+      return await privateApi.put(`${privateApi_URL}/ram/multiple`, rams);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteRam: async (id) => {
     try {
-      return await api.delete(`${API_URL}/ram/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/ram/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleRam: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/ram`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/ram`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -455,35 +455,35 @@ const attributeService = {
   // Design
   getAllDesign: async () => {
     try {
-      return await api.get(`${API_URL}/design`);
+      return await privateApi.get(`${privateApi_URL}/design`);
     } catch (error) {
       return handleError(error);
     }
   },
   createDesign: async (design) => {
     try {
-      return await api.put(`${API_URL}/design`, design);
+      return await privateApi.put(`${privateApi_URL}/design`, design);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleDesign: async (designs) => {
     try {
-      return await api.put(`${API_URL}/design/multiple`, designs);
+      return await privateApi.put(`${privateApi_URL}/design/multiple`, designs);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteDesign: async (id) => {
     try {
-      return await api.delete(`${API_URL}/design/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/design/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleDesign: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/design`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/design`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -492,35 +492,35 @@ const attributeService = {
   // Webcam
   getAllWebcam: async () => {
     try {
-      return await api.get(`${API_URL}/webcam`);
+      return await privateApi.get(`${privateApi_URL}/webcam`);
     } catch (error) {
       return handleError(error);
     }
   },
   createWebcam: async (webcam) => {
     try {
-      return await api.put(`${API_URL}/webcam`, webcam);
+      return await privateApi.put(`${privateApi_URL}/webcam`, webcam);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleWebcam: async (webcams) => {
     try {
-      return await api.put(`${API_URL}/webcam/multiple`, webcams);
+      return await privateApi.put(`${privateApi_URL}/webcam/multiple`, webcams);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteWebcam: async (id) => {
     try {
-      return await api.delete(`${API_URL}/webcam/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/webcam/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleWebcam: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/webcam`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/webcam`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -529,35 +529,35 @@ const attributeService = {
   // Brand
   getAllBrand: async () => {
     try {
-      return await api.get(`${API_URL}/brands`);
+      return await privateApi.get(`${privateApi_URL}/brands`);
     } catch (error) {
       return handleError(error);
     }
   },
   createBrand: async (brand) => {
     try {
-      return await api.put(`${API_URL}/brands`, brand);
+      return await privateApi.put(`${privateApi_URL}/brands`, brand);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleBrand: async (brands) => {
     try {
-      return await api.put(`${API_URL}/brands/multiple`, brands);
+      return await privateApi.put(`${privateApi_URL}/brands/multiple`, brands);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteBrand: async (id) => {
     try {
-      return await api.delete(`${API_URL}/brands/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/brands/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleBrand: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/brands`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/brands`, { data: ids });
     } catch (error) {
       return handleError(error);
     }
@@ -566,35 +566,35 @@ const attributeService = {
   // Category
   getAllCategory: async () => {
     try {
-      return await api.get(`${API_URL}/categories`);
+      return await privateApi.get(`${privateApi_URL}/categories`);
     } catch (error) {
       return handleError(error);
     }
   },
   createCategory: async (category) => {
     try {
-      return await api.put(`${API_URL}/categories`, category);
+      return await privateApi.put(`${privateApi_URL}/categories`, category);
     } catch (error) {
       return handleError(error);
     }
   },
   createMultipleCategory: async (categories) => {
     try {
-      return await api.put(`${API_URL}/categories/multiple`, categories);
+      return await privateApi.put(`${privateApi_URL}/categories/multiple`, categories);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteCategory: async (id) => {
     try {
-      return await api.delete(`${API_URL}/categories/${id}`);
+      return await privateApi.delete(`${privateApi_URL}/categories/${id}`);
     } catch (error) {
       return handleError(error);
     }
   },
   deleteMultipleCategory: async (ids) => {
     try {
-      return await api.delete(`${API_URL}/categories`, { data: ids });
+      return await privateApi.delete(`${privateApi_URL}/categories`, { data: ids });
     } catch (error) {
       return handleError(error);
     }

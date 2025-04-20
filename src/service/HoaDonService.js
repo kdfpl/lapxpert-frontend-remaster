@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/hoa-don'; // Đổi theo API backend của bạn
+const API_URL = 'http://localhost:8080/api/v1/hoa-don'; // Đổi theo API backend của bạn
 
 export default {
     getAllHoaDons() {
@@ -18,6 +18,5 @@ export default {
     updateHoaDon(id, hoaDon) {
         return axios.put(`${API_URL}/${id}`, hoaDon);
     },
-
 
 };
