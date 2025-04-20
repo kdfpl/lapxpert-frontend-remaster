@@ -1,14 +1,13 @@
+import {privateApi} from "./axiosAPI";
 
-import api from "./axiosAPI";
-
-const API_URL = "phieu-giam-gia";
+const privateApi_URL = "phieu-giam-gia"; // Sử dụng URL đúng từ controller của Spring Boot
 
 const couponService = {
   // Lấy tất cả phiếu giảm giá
   async getAllCoupons() {
     try {
-      const response = await api.get(`${API_URL}`);
-      return response.data;
+      const response = await privateApi.get(`${privateApi_URL}`);
+      return response.data;  
     } catch (error) {
       console.error("Error fetching coupons:", error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Không thể lấy danh sách phiếu giảm giá. Vui lòng thử lại sau.");
@@ -16,7 +15,9 @@ const couponService = {
   },
   async getCouponById(id) {
     try {
-      const response = await api.get(`${API_URL}/${id}`);
+      // Tạo config để gửi danh sách nguoiDungIds
+      const data = { ...coupon, nguoiDungIds };
+      const response = await privateApi.post(`${privateApi_URL}`, data);
       return response.data;
     } catch (error) {
       console.error("Error fetching coupon by ID:", error.response?.data || error.message);
@@ -26,11 +27,8 @@ const couponService = {
   // Thêm mới phiếu giảm giá
   async addCoupon(phieuData, nguoiDungIds) {
     try {
-      const payload = {
-        ...phieuData,
-        danhSachNguoiDung: phieuData.phieuRiengTu && nguoiDungIds?.length > 0 ? nguoiDungIds : null,
-      };
-      const response = await api.post(`${API_URL}`, payload);
+      const data = { ...coupon, nguoiDungIds };
+      const response = await privateApi.put(`${privateApi_URL}/${id}`, data);
       return response.data;
     } catch (error) {
       console.error("Error adding coupon:", error.response?.data || error.message);
@@ -40,11 +38,7 @@ const couponService = {
   // Cập nhật phiếu giảm giá
 async updateCoupon(phieuId, phieuData, nguoiDungIds) {
   try {
-    const payload = {
-      ...phieuData,
-      danhSachNguoiDung: phieuData.phieuRiengTu && nguoiDungIds?.length > 0 ? nguoiDungIds : null,
-    };
-    const response = await api.put(`${API_URL}/${phieuId}`, payload);
+    const response = await privateApi.get(`${privateApi_URL}/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error updating coupon:", error.response?.data || error.message);
@@ -62,6 +56,16 @@ async updateCoupon(phieuId, phieuData, nguoiDungIds) {
     }
   },
 
-};
+// Kết thúc phiếu giảm giá theo ID (thay vì xóa)
+async endCoupon(id) {
+  try {
+    const response = await privateApi.put(`${privateApi_URL}/end/${id}`);
+    return response.data; // Phản hồi từ server sau khi phiếu giảm giá đã được kết thúc
+  } catch (error) {
+    console.error("Error ending coupon:", error.response?.data || error.message);
+    throw error;
+  }
+},
+}
 
 export default couponService;

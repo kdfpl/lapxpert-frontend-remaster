@@ -5,8 +5,15 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/login',
+      name: 'Login',
+      component: () => import('@/views/auth/LoginDashboard.vue'),
+      meta: { public: true },
+    },
+    {
       path: '/',
       component: AppLayout,
+      meta: { requiresAuth: true },
       children: [
         {
           path: '/',
@@ -24,6 +31,11 @@ const router = createRouter({
           component: () => import('@/views/product/Product.vue'),
         },
         {
+          path: '/products/add',
+          name: 'productAdd',
+          component: () => import('@/views/product/ProductAdd.vue'),
+        },
+        {
           path: '/products/attributes',
           name: 'products attributes',
           component: () => import('@/views/product/Attribute.vue'),
@@ -36,13 +48,13 @@ const router = createRouter({
         {
           path: '/staff/add',
           name: 'StaffAdd',
-          component: () => import('@/views/user/employees/StaffForm.vue')
+          component: () => import('@/views/user/employees/StaffForm.vue'),
         },
         {
           path: '/staff/edit/:id',
           name: 'StaffEdit',
           component: () => import('@/views/user/employees/StaffForm.vue'),
-          props: true
+          props: true,
         },
         {
           path: '/users/customers',
@@ -53,27 +65,66 @@ const router = createRouter({
           path: '/users/customers/edit/:id',
           name: 'CustomerEdit',
           component: () => import('@/views/user/customer/CustomerForm.vue'),
-          props: true
+          props: true,
         },
         {
           path: '/users/customers/add',
           name: 'CustomerAdd',
-          component: () => import('@/views/user/customer/CustomerForm.vue')
+          component: () => import('@/views/user/customer/CustomerForm.vue'),
         },
         {
           path: '/discounts/coupons',
           name: 'coupons',
-          component: () => import('@/views/coupons/Coupons.vue')
+          component: () => import('@/views/coupons/Coupons.vue'),
         },
         {
           path: '/discounts/couponsCRUD/:id?',
           name: 'couponsCRUD',
           component: () => import('@/views/coupons/CrudCoupons.vue'),
-          props: route => ({ id: route.params.id }) 
-        }
+          props: (route) => ({ id: route.query.id }),
+        },
+
+        {
+          path: '/invoices',
+          name: 'invoices',
+          component: () => import('@/views/invoice/HoaDon.vue')
+        },
+
+        {
+          path: "/chi-tiet-hoa-don/:id",
+          name: "ChiTietHoaDon",
+          component: () => import('@/views/invoice/ChiTietHoaDon.vue')
+        },
       ],
+    },
+
+    {
+      path: '/:pathMatch(.*)*',
+      component: () => import('@/views/auth/Error.vue'),
     },
   ],
 })
+
+// Navigation guard
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('vaiTro');
+
+  if (to.meta.requiresAuth) {
+    if (!token || token === "0" || token === "undefined") {
+      console.warn('Redirect vì token không hợp lệ');
+      next('/login');
+    } else {
+      if (role === 'CUSTOMER') {
+        console.warn('CUSTOMER không có quyền truy cập');
+        next('/error'); 
+      } else {
+        next();
+      }
+    }
+  } else {
+    next(); 
+  }
+});
 
 export default router

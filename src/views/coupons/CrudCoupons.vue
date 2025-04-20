@@ -94,6 +94,34 @@
 </div>
         </section>
     </section>
+
+    <section v-if="isCustomerSelectionEnabled" class="mb-6">
+      <div class="rounded-xl p-8 shadow-lg">
+        <span class="text-2xl font-bold mb-4 block">Chọn Khách Hàng</span>
+        <div class="overflow-auto">
+          <DataTable
+            :value="customerList"
+            selectionMode="checkbox"
+            v-model:selection="selectedCustomers"
+            @selection-change="handleSelectionChange"
+            class="w-full p-datatable-lg"
+            :paginator="true"
+            :rows="10"
+            :rowsPerPageOptions="[5, 10, 20, 50]"
+            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+            responsiveLayout="scroll"
+          >
+            <Column selectionMode="multiple" style="width: 3rem" />
+            <Column field="hoTen" header="Tên Khách Hàng" style="width: 20%" />
+            <Column field="ngaySinh" header="Ngày Sinh" style="width: 15%" />
+            <Column field="gioiTinh" header="Giới Tính" style="width: 15%" />
+            <Column field="email" header="Email" style="width: 30%" />
+            <Column field="soDienThoai" header="Số Điện Thoại" style="width: 20%" />
+          </DataTable>
+        </div>
+      </div>
+    </section>
+  </section>
 </template>
 
 <script setup>
