@@ -1,3 +1,19 @@
+<script >
+import ThongKeService from '@/service/ThongKeService'
+import{ ref, onMounted }from 'vue'
+const DoanhSo = ref(null)
+
+onMounted(() => {
+  ThongKeService.getDoanhThu()
+    .then((response) => {
+      DoanhSo.value = response.data.DoanhSo
+    })
+    .catch((error) => {
+      console.error('Lỗi khi tải dữ liệu doanh số:', error)
+    })
+})
+</script>
+
 <template>
     <div class="col-span-12 lg:col-span-6 xl:col-span-3 basis-1/4 mr-3 ">
         <div class="card mb-0">
@@ -34,7 +50,10 @@
             <div class="flex justify-between mb-4">
                 <div>
                     <span class="block text-muted-color font-medium mb-4">Doanh số</span>
-                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">5342</div>
+                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+                      <!-- {{ DoanhSo > 0 ? DoanhSo : "Loading..." }} -->
+                        5231
+                    </div>
                 </div>
                 <div class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border" style="width: 2.5rem; height: 2.5rem">
                     <i class="pi pi-users text-cyan-500 !text-xl"></i>

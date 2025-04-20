@@ -91,6 +91,8 @@ export default {
 
 <template>
   <div class="transition-all duration-300 w-full h-[400px]">
+    <div style="text-align: center;"><h6 >Theo Ngày
+    </h6></div>
     <Doughnut :data="chartData" :options="chartOptions" />
   </div>
 </template>
