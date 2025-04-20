@@ -34,7 +34,7 @@ const items = ref([
                 <div class="w-12 h-12 flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-full mr-4 shrink-0">
                     <i class="pi pi-download !text-xl text-orange-500"></i>
                 </div>
-                <span class="text-surface-700 dark:text-surface-100 leading-normal">Your request for withdrawal of <span class="text-primary font-bold">$2500.00</span> has been initiated.</span>
+                <span class="text-surface-700 dark:text-surface-100 leading-normal">Lời mời đến sự kiện triển lãm <span class="text-primary font-bold">Lapxpert</span> đã được gửi  .</span>
             </li>
         </ul>
 
