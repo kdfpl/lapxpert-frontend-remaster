@@ -1,6 +1,6 @@
 <template>
   <div class="card">
- 
+
     <DataTable
       v-model:filters="filters"
       :value="hoaDons"
@@ -109,7 +109,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import ThongKeService from '@/service/ThongKeService'
+import ThongKeService from '@/apis/dashboard'
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 const hoaDons = ref()
 const filters = ref()

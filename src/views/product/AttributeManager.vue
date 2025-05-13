@@ -2,8 +2,8 @@
 import { ref, computed, onBeforeMount, defineProps, watch } from 'vue';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import { useAttributeStore } from '@/stores/attributesstore';
-import attributeService from '@/apis/attributes';
+import { useAttributeStore } from '@/stores/attributestore';
+import attributeService from '@/apis/attribute';
 
 // --- Props ---
 const props = defineProps({

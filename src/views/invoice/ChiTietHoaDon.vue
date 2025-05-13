@@ -317,7 +317,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import HoaDonService from '@/apis/HoaDonService.js';
+import HoaDonService from '@/apis/invoice.js';
 // import { Icon } from '@iconify/vue';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Swal from 'sweetalert2';

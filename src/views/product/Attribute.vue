@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onBeforeMount } from 'vue';
 import AttributeManager from './AttributeManager.vue'; // Đường dẫn tới component chung
-import { useAttributeStore } from '@/stores/attributesstore';
+import { useAttributeStore } from '@/stores/attributestore';
 import { useToast } from 'primevue/usetoast'; // Có thể dùng toast ở đây hoặc để component con tự quản lý
 
 const attributeStore = useAttributeStore();

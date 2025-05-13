@@ -98,7 +98,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { usePhieuGiamGiaStore } from '@/stores/couponsStore';
+import { usePhieuGiamGiaStore } from '@/stores/couponstore';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import ConfirmDialog from 'primevue/confirmdialog';

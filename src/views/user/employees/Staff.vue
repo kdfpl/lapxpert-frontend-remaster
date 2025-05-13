@@ -8,19 +8,19 @@
           class="mr-2"
           @click="goToAdd"
         />
-        <Button 
-          label="In" 
-          icon="pi pi-print" 
-          class="mr-2" 
-          severity="secondary" 
-          @click="printPDF" 
+        <Button
+          label="In"
+          icon="pi pi-print"
+          class="mr-2"
+          severity="secondary"
+          @click="printPDF"
         />
-        <Button 
-          label="Xuất" 
-          icon="pi pi-upload" 
-          class="mr-2" 
-          severity="secondary" 
-          @click="exportExcel" 
+        <Button
+          label="Xuất"
+          icon="pi pi-upload"
+          class="mr-2"
+          severity="secondary"
+          @click="exportExcel"
         />
       </template>
       <template #end>
@@ -54,7 +54,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import { useStaffStore } from '@/stores/staffStore'
+import { useStaffStore } from '@/stores/staffstore'
 import UserTable from '@/components/UserTable.vue'
 import Toolbar from 'primevue/toolbar'
 import Button from 'primevue/button'
@@ -175,10 +175,10 @@ export default {
     // Format địa chỉ mặc định
     const formatDefaultAddress = (diaChis) => {
       if (!diaChis || diaChis.length === 0) return 'Không có';
-      
+
       // Lấy địa chỉ mặc định hoặc địa chỉ đầu tiên
       const diaChi = diaChis.find(d => d.laMacDinh) || diaChis[0];
-      
+
       return `${diaChi.duong}, ${diaChi.phuongXa}, ${diaChi.quanHuyen}, ${diaChi.tinhThanh}, ${diaChi.quocGia}`;
     }
 
@@ -186,7 +186,7 @@ export default {
     const exportExcel = () => {
       try {
         const staff = filteredStaff.value
-        
+
         // Transform data for Staff sheet
         const exportData = staff.map((member) => ({
           'ID': member.id,
@@ -224,25 +224,25 @@ export default {
             });
           }
         });
-        
+
         // Create workbook
         const workbook = XLSX.utils.book_new()
-        
+
         // Create Staff worksheet and add to workbook
         const staffWorksheet = XLSX.utils.json_to_sheet(exportData)
         XLSX.utils.book_append_sheet(workbook, staffWorksheet, 'Nhân Viên')
-        
+
         // Create Addresses worksheet and add to workbook
         const addressesWorksheet = XLSX.utils.json_to_sheet(addressesData)
         XLSX.utils.book_append_sheet(workbook, addressesWorksheet, 'Địa Chỉ')
-        
+
         // Generate file name with current date
         const date = new Date()
         const fileName = `danh_sach_nhan_vien_${date.getDate()}_${date.getMonth() + 1}_${date.getFullYear()}.xlsx`
-        
+
         // Export to file
         XLSX.writeFile(workbook, fileName)
-        
+
         toast.add({
           severity: 'success',
           summary: 'Thành công',
@@ -264,7 +264,7 @@ export default {
     const printPDF = () => {
       try {
         const staff = filteredStaff.value
-        
+
         // Tạo chuỗi HTML cho nội dung PDF
         let htmlContent = `
           <html>
@@ -304,7 +304,7 @@ export default {
               </thead>
               <tbody>
         `;
-        
+
         // Thêm dữ liệu nhân viên và địa chỉ
         staff.forEach(member => {
           // Thêm hàng nhân viên
@@ -322,13 +322,13 @@ export default {
               <td>${member.trangThai ? 'Hoạt động' : 'Không hoạt động'}</td>
             </tr>
           `;
-          
+
           // Thêm bảng địa chỉ cho nhân viên
           htmlContent += `
             <tr>
               <td colspan="10">
           `;
-          
+
           if (member.diaChis && member.diaChis.length > 0) {
             htmlContent += `
               <table class="address-table">
@@ -346,7 +346,7 @@ export default {
                 </thead>
                 <tbody>
             `;
-            
+
             member.diaChis.forEach(address => {
               htmlContent += `
                 <tr class="address-row">
@@ -361,7 +361,7 @@ export default {
                 </tr>
               `;
             });
-            
+
             htmlContent += `
                 </tbody>
               </table>
@@ -369,13 +369,13 @@ export default {
           } else {
             htmlContent += `<div class="no-address">Không có địa chỉ nào</div>`;
           }
-          
+
           htmlContent += `
               </td>
             </tr>
           `;
         });
-        
+
         // Đóng HTML
         htmlContent += `
               </tbody>
@@ -383,12 +383,12 @@ export default {
           </body>
           </html>
         `;
-        
+
         // Tạo element để render HTML
         const printWindow = window.open('', '_blank');
         printWindow.document.write(htmlContent);
         printWindow.document.close();
-        
+
         // Chờ cho nội dung được load
         printWindow.onload = function() {
           // In trang
@@ -396,7 +396,7 @@ export default {
           // Tùy chọn: đóng cửa sổ sau khi in
           // printWindow.close();
         };
-        
+
         toast.add({
           severity: 'success',
           summary: 'Thành công',

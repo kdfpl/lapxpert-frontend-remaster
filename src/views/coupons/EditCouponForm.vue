@@ -16,16 +16,16 @@
       </form>
     </div>
   </template>
-  
+
   <script setup>
   import { ref, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { usePhieuGiamGiaStore } from '@/stores/couponsStore';
-  
+  import { usePhieuGiamGiaStore } from '@/stores/couponstore';
+
   const router = useRouter();
   const route = useRoute();
   const phieuGiamGiaStore = usePhieuGiamGiaStore();
-  
+
   // Dữ liệu phiếu giảm giá sẽ được lưu trong một đối tượng coupon
   const coupon = ref({
     id: null,
@@ -33,7 +33,7 @@
     giaTriGiam: '',
     // Các trường khác
   });
-  
+
   onMounted(async () => {
     // Lấy thông tin phiếu giảm giá từ backend hoặc store khi route params có id
     const { id } = route.params;
@@ -42,7 +42,7 @@
       coupon.value = couponData;  // Cập nhật dữ liệu vào form
     }
   });
-  
+
   const updateCoupon = async () => {
     // Gửi yêu cầu cập nhật phiếu giảm giá
     await phieuGiamGiaStore.updateCoupon(coupon.value);
@@ -50,4 +50,3 @@
     router.push({ name: 'phieuGiamGiaList' });
   };
   </script>
-  

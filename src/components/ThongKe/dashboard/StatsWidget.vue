@@ -1,5 +1,5 @@
 <script >
-import ThongKeService from '@/service/ThongKeService'
+import ThongKeService from '@/apis/dashboard'
 import{ ref, onMounted }from 'vue'
 const DoanhSo = ref(null)
 

@@ -1,4 +1,4 @@
-import { privateApi } from '../apis/axiosAPI';
+import {privateApi} from "./axiosAPI";
 const API_URL = '/hoa-don'; // Đổi theo API backend của bạn
 
 export default {

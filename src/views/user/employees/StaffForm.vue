@@ -436,8 +436,8 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { useStaffStore } from '@/stores/staffStore'
-import addressApi from '@/apis/addressApi'
+import { useStaffStore } from '@/stores/staffstore'
+import addressApi from '@/apis/address'
 // Import thư viện QR scanner
 import { QrcodeStream } from 'vue-qrcode-reader'
 

@@ -34,7 +34,7 @@
                     </div>
                   </div>
                 </div>
-  
+
                 <!-- Basic Information Column -->
                 <div class="col-12 md:col-9">
                   <div class="grid gap-4">
@@ -52,7 +52,7 @@
                         Họ tên là bắt buộc
                       </small>
                     </div>
-  
+
                     <div class="col-12 md:col-6 space-y-2">
                       <label class="block font-medium ">
                         Giới tính <span class="text-red-500">*</span>
@@ -70,7 +70,7 @@
                         Giới tính là bắt buộc
                       </small>
                     </div>
-  
+
                     <div class="col-12 md:col-6 space-y-2">
                       <label class="block font-medium ">
                         Ngày sinh <span class="text-red-500">*</span>
@@ -88,7 +88,7 @@
                         Ngày sinh là bắt buộc
                       </small>
                     </div>
-  
+
                     <div class="col-12 md:col-6 space-y-2">
                       <label class="block font-medium ">
                         Email <span class="text-red-500">*</span>
@@ -107,7 +107,7 @@
                         {{ emailError }}
                       </small>
                     </div>
-  
+
                     <div class="col-12 md:col-6 space-y-2">
                       <label class="block font-medium ">
                         Số điện thoại <span class="text-red-500">*</span>
@@ -126,13 +126,13 @@
                         {{ phoneError }}
                       </small>
                     </div>
-  
+
                     <div class="col-12 md:col-6 flex items-center">
                       <div class="space-y-2">
                         <label class="block font-medium ">Trạng thái</label>
-                        <InputSwitch 
-                          v-model="form.trangThai" 
-                          :trueValue="true" 
+                        <InputSwitch
+                          v-model="form.trangThai"
+                          :trueValue="true"
                           :falseValue="false"
                         />
                       </div>
@@ -140,7 +140,7 @@
                   </div>
                 </div>
               </div>
-  
+
               <!-- Address Section -->
               <div class="space-y-4">
                 <Divider align="left" class="my-4">
@@ -149,7 +149,7 @@
                     <span class="font-semibold text-lg ">Địa chỉ</span>
                   </div>
                 </Divider>
-  
+
                 <div
                   v-for="(address, index) in form.diaChis"
                   :key="index"
@@ -172,7 +172,7 @@
                       class="hover:bg-red-50"
                     />
                   </div>
-  
+
                   <div class="grid gap-4">
                     <!-- Street -->
                     <div class="col-12 space-y-2">
@@ -189,7 +189,7 @@
                         Đường/Số nhà là bắt buộc
                       </small>
                     </div>
-  
+
                     <!-- Province -->
                     <div class="col-12 md:col-4 space-y-2">
                       <label class="block font-medium ">
@@ -209,7 +209,7 @@
                         Tỉnh/Thành phố là bắt buộc
                       </small>
                     </div>
-  
+
                     <!-- District -->
                     <div class="col-12 md:col-4 space-y-2">
                       <label class="block font-medium ">
@@ -230,7 +230,7 @@
                         Quận/Huyện là bắt buộc
                       </small>
                     </div>
-  
+
                     <!-- Ward -->
                     <div class="col-12 md:col-4 space-y-2">
                       <label class="block font-medium ">
@@ -250,7 +250,7 @@
                         Phường/Xã là bắt buộc
                       </small>
                     </div>
-  
+
                     <!-- Address Type -->
                     <div class="col-12 md:col-8 space-y-2">
                       <label class="block font-medium ">
@@ -262,7 +262,7 @@
                         class="w-full"
                       />
                     </div>
-  
+
                     <!-- Default Address Checkbox -->
                     <div class="col-12 md:col-4 flex items-center justify-end">
                       <div class="flex items-center space-x-2">
@@ -280,7 +280,7 @@
                     </div>
                   </div>
                 </div>
-  
+
                 <div class="flex justify-end">
                   <Button
                     label="Thêm địa chỉ"
@@ -292,15 +292,15 @@
                   />
                 </div>
               </div>
-  
+
               <!-- Form Actions -->
               <div class="flex flex-col md:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-                <Button 
-                  label="Hủy bỏ" 
-                  icon="pi pi-times" 
+                <Button
+                  label="Hủy bỏ"
+                  icon="pi pi-times"
                   severity="secondary"
                   outlined
-                  @click="goBack" 
+                  @click="goBack"
                   class="hover:bg-gray-100"
                 />
                 <Button
@@ -316,22 +316,22 @@
       </div>
     </div>
   </template>
-  
+
   <script setup>
   import { ref, onMounted, computed } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { useToast } from 'primevue/usetoast'
-  import { useCustomerStore } from '@/stores/customerStore'
-  import addressApi from '@/apis/addressApi'
-  
+  import { useCustomerStore } from '@/stores/customerstore'
+  import addressApi from '@/apis/address'
+
   const toast = useToast()
   const router = useRouter()
   const route = useRoute()
   const customerStore = useCustomerStore()
-  
+
   const isEditMode = computed(() => route.name === 'CustomerEdit')
   const customerId = computed(() => route.params.id)
-  
+
   // Form data
   const form = ref({
     avatar: null,
@@ -352,41 +352,41 @@
       },
     ],
   })
-  
+
   const imagePreview = ref(null)
   const submitted = ref(false)
   const emailError = ref(null)
   const phoneError = ref(null)
-  
+
   // Options
   const genderOptions = ref([
     { label: 'Nam', value: 'NAM' },
     { label: 'Nữ', value: 'NU' },
   ])
-  
+
   // Address data
   const provinces = ref([])
   const districts = ref([])
   const wards = ref([])
-  
+
   const maxBirthDate = computed(() => {
     const date = new Date()
     date.setFullYear(date.getFullYear() - 10)
     return date
   })
-  
+
   // Load customer data if in edit mode
   onMounted(async () => {
     await loadProvinces()
-  
+
     if (isEditMode.value) {
       try {
         const customer = await customerStore.fetchCustomerById(customerId.value)
-  
+
         // Khởi tạo districts và wards với mảng rỗng cho mỗi địa chỉ
         districts.value = new Array(customer.diaChis.length).fill().map(() => [])
         wards.value = new Array(customer.diaChis.length).fill().map(() => [])
-  
+
         form.value = {
           avatar: customer.avatar,
           hoTen: customer.hoTen,
@@ -411,35 +411,35 @@
             phuongXa: '',
           })),
         }
-  
+
         if (customer.avatar) {
           imagePreview.value = customer.avatar
         }
-  
+
         // Load các danh sách địa điểm cho từng địa chỉ
         for (let i = 0; i < form.value.diaChis.length; i++) {
           const address = form.value.diaChis[i]
           const provinceName = address.tinhThanhName
           const districtName = address.quanHuyenName
           const wardName = address.phuongXaName
-  
+
           // Tìm và thiết lập mã tỉnh/thành từ tên
           const province = provinces.value.find((p) => p.name === provinceName)
           if (province) {
             address.tinhThanh = province.code
-  
+
             // Load districts cho tỉnh này
             await getDistricts(address, i)
-  
+
             // Tìm và thiết lập mã quận/huyện từ tên
             if (districts.value[i] && districts.value[i].length > 0) {
               const district = districts.value[i].find((d) => d.name === districtName)
               if (district) {
                 address.quanHuyen = district.code
-  
+
                 // Load wards cho quận/huyện này
                 await getWards(address, i)
-  
+
                 // Tìm và thiết lập mã phường/xã từ tên
                 if (wards.value[i] && wards.value[i].length > 0) {
                   const ward = wards.value[i].find((w) => w.name === wardName)
@@ -450,7 +450,7 @@
               }
             }
           }
-  
+
           // Xóa các trường tạm
           delete address.tinhThanhName
           delete address.quanHuyenName
@@ -467,7 +467,7 @@
       }
     }
   })
-  
+
   // Load provinces
   const loadProvinces = async () => {
     try {
@@ -483,7 +483,7 @@
       })
     }
   }
-  
+
   // Get districts for a province
   const getDistricts = async (address, index) => {
     try {
@@ -502,7 +502,7 @@
       })
     }
   }
-  
+
   // Get wards for a district
   const getWards = async (address, index) => {
     try {
@@ -519,7 +519,7 @@
       })
     }
   }
-  
+
   // Handle avatar selection
   const onAvatarSelect = (event) => {
     const file = event.files[0]
@@ -532,7 +532,7 @@
       reader.readAsDataURL(file)
     }
   }
-  
+
   // Validate email
   const validateEmail = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -547,7 +547,7 @@
     emailError.value = null
     return true
   }
-  
+
   // Validate phone
   const validatePhone = () => {
     const phoneRegex = /^[0-9]{10,11}$/
@@ -562,7 +562,7 @@
     phoneError.value = null
     return true
   }
-  
+
   // Add new address
   const addNewAddress = () => {
     form.value.diaChis.push({
@@ -576,21 +576,21 @@
     districts.value.push([])
     wards.value.push([])
   }
-  
+
   // Remove address
   const removeAddress = (index) => {
     const wasDefault = form.value.diaChis[index].laMacDinh
-  
+
     form.value.diaChis.splice(index, 1)
     districts.value.splice(index, 1)
     wards.value.splice(index, 1)
-  
+
     // If we removed the default address and there are still addresses left
     if (wasDefault && form.value.diaChis.length > 0) {
       form.value.diaChis[0].laMacDinh = true
     }
   }
-  
+
   // Set default address
   const setDefaultAddress = (index) => {
     if (form.value.diaChis[index].laMacDinh) {
@@ -604,15 +604,15 @@
       form.value.diaChis[0].laMacDinh = true
     }
   }
-  
+
   // Handle form submission
   const handleSubmit = async () => {
     submitted.value = true
-  
+
     // Validate form
     const isEmailValid = validateEmail()
     const isPhoneValid = validatePhone()
-  
+
     // Check required fields
     const isFormValid =
       form.value.hoTen &&
@@ -625,7 +625,7 @@
       form.value.diaChis.every(
         (addr) => addr.duong && addr.tinhThanh && addr.quanHuyen && addr.phuongXa,
       )
-  
+
     if (!isFormValid) {
       toast.add({
         severity: 'warn',
@@ -635,7 +635,7 @@
       })
       return
     }
-  
+
     try {
       // Prepare data for API
       const customerData = {
@@ -646,7 +646,7 @@
           const province = provinces.value.find((p) => p.code === addr.tinhThanh)
           const district = districts.value[index]?.find((d) => d.code === addr.quanHuyen)
           const ward = wards.value[index]?.find((w) => w.code === addr.phuongXa)
-  
+
           return {
             ...addr,
             tinhThanh: province ? province.name : addr.tinhThanh,
@@ -655,7 +655,7 @@
           }
         }),
       }
-  
+
       if (isEditMode.value) {
         await customerStore.updateCustomer(customerId.value, customerData)
         toast.add({
@@ -673,7 +673,7 @@
           life: 3000,
         })
       }
-  
+
       router.push({ name: 'customers' })
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi xử lý yêu cầu'
@@ -685,34 +685,34 @@
       })
     }
   }
-  
+
   // Navigate back
   const goBack = () => {
     router.push({ name: 'customers' })
   }
   </script>
-  
+
   <style>
   /* Custom transitions */
   .p-card {
     transition: all 0.3s ease;
   }
-  
+
   /* Improved input focus */
   .p-inputtext:focus, .p-dropdown:focus, .p-calendar:focus {
     box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
     border-color: #6366f1;
   }
-  
+
   /* Better dropdown styling */
   .p-dropdown-panel .p-dropdown-items .p-dropdown-item {
     padding: 0.5rem 1rem;
   }
-  
+
   .p-dropdown-panel .p-dropdown-items .p-dropdown-item:hover {
     background-color: #f9fafb;
   }
-  
+
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .p-divider .p-divider-content {

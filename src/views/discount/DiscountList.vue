@@ -1,34 +1,28 @@
 <script setup>
 import { ref, computed, onBeforeMount } from 'vue'
+import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
-import { format, parseISO } from 'date-fns'
 import { useDiscountStore } from '@/stores/discountstore'
-import { useProductStore } from '@/stores/productstore'
 import discountService from '@/apis/discount'
 
 // --- 1. Store Access ---
 const discountStore = useDiscountStore()
-const productStore = useProductStore()
+// --- Router ---
+const router = useRouter()
 
 // --- 2. State ---
 
 // Data from Stores
 const discounts = computed(() => discountStore.discounts)
-const products = computed(() => productStore.products)
 
 // Component State - Main Data & Selection
 const discount = ref({}) // Holds the discount being edited or created
 const selectedDiscounts = ref([]) // For multi-select in the main table
-const selectedProductDetails = ref(new Map()) // Map<productId, SanPhamChiTiet[]> for selections in the dialog table
-const originalSelectedProductDetailIds = ref(new Set()) // Tracks original product detail IDs for diffing on update
 
 // Component State - UI Control (Dialogs, Table, Form)
-const discountDialog = ref(false)
 const deleteDiscountDialog = ref(false)
 const deleteDiscountsDialog = ref(false)
-const submitted = ref(false) // Form submission status for validation
-const expandedRows = ref([]) // Controls expanded rows in the product table (dialog)
 
 // Component State - PrimeVue Utilities
 const toast = useToast()
@@ -138,17 +132,11 @@ function clearSpecificFilter(fieldName) {
   }
 }
 
-// --- 4. Computed Properties ---
-
-// Computed properties for formatting dates in the form inputs
-const formattedNgayBatDau = createFormattedDateTime('ngayBatDau')
-const formattedNgayKetThuc = createFormattedDateTime('ngayKetThuc')
-
 // --- 5. Lifecycle Hooks ---
 onBeforeMount(async () => {
   // Fetch initial data when the component is about to mount
   try {
-    await Promise.all([discountStore.fetchDiscounts(), productStore.fetchProducts()])
+    await discountStore.fetchDiscounts()
   } catch (error) {
     console.error('Error fetching initial data:', error)
     toast.add({
@@ -189,49 +177,6 @@ const formatDateTime = (dateString, locale = navigator.language) => {
 }
 
 /**
- * Converts an ISO date string (UTC) to a local datetime string suitable for <input type="datetime-local">.
- * @param {string} dateString - The ISO date string (UTC).
- * @returns {string} Formatted string (yyyy-MM-ddTHH:mm) or empty string if input is invalid.
- */
-const formatLocalDateTime = (dateString) => {
-  if (!dateString) return ''
-  try {
-    const date = parseISO(dateString) // parseISO correctly handles UTC string to local Date object
-    return format(date, "yyyy-MM-dd'T'HH:mm") // Format for datetime-local input
-  } catch (error) {
-    console.error('Error formatting local date-time:', error)
-    return ''
-  }
-}
-
-/**
- * Formats a number as Vietnamese currency (VND).
- * @param {number} value - The numeric value to format.
- * @returns {string} Formatted currency string.
- */
-const formatCurrency = (value) => {
-  if (typeof value !== 'number') return ''
-  return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
-}
-
-/**
- * Factory function to create computed properties for handling date fields (get/set).
- * Converts between ISO string (model) and datetime-local string (input).
- * @param {string} fieldName - The name of the date field in the `discount.value` object.
- */
-function createFormattedDateTime(fieldName) {
-  return computed({
-    get() {
-      return discount.value[fieldName] ? formatLocalDateTime(discount.value[fieldName]) : ''
-    },
-    set(value) {
-      // When input changes, convert back to ISO string (UTC)
-      discount.value[fieldName] = value ? new Date(value).toISOString() : null // Use null for empty
-    },
-  })
-}
-
-/**
  * Gets the severity level for a discount status tag based on its state.
  * @param {string} trangThai - The status ('CHUA_DIEN_RA', 'DA_DIEN_RA', 'KET_THUC').
  * @returns {string|null} PrimeVue severity ('warn', 'success', 'danger') or null.
@@ -261,56 +206,17 @@ function getTrangThaiLabel(trangThai) {
 
 // --- 7. Dialog Control Methods ---
 
-/** Closes the main discount detail dialog and resets submission state. */
-function hideDialog() {
-  discountDialog.value = false
-  submitted.value = false
-}
-
-/** Opens the dialog to create a new discount, resetting relevant state. */
+/** Navigates to the form for creating a new discount. */
 function newDiscount() {
-  discount.value = {} // Reset discount object
-  selectedProductDetails.value.clear()
-  originalSelectedProductDetailIds.value.clear()
-  submitted.value = false // Reset validation state
-  discountDialog.value = true
+  router.push({ name: 'DiscountAdd' }) // Adjust 'DiscountCreate' to your route's name
 }
 
 /**
- * Opens the dialog to edit an existing discount, populating the form and loading associated products.
+ * Navigates to the form for editing an existing discount.
  * @param {object} discountData - The discount data object from the table row.
  */
-async function editDiscount(discountData) {
-  discount.value = { ...discountData } // Copy data to avoid modifying the original object directly
-  selectedProductDetails.value.clear()
-  originalSelectedProductDetailIds.value.clear()
-  submitted.value = false
-  discountDialog.value = true
-
-  // Fetch and pre-select products associated with this discount
-  try {
-    const discountProducts = await discountService.getDiscountProducts(discount.value.id)
-    const discountProductIds = new Set(discountProducts.map((p) => p.id))
-    originalSelectedProductDetailIds.value = new Set(discountProductIds) // Store original IDs for diffing
-
-    // Populate the selectedProductDetails Map for the UI checkboxes
-    products.value.forEach((product) => {
-      const selectedDetailsForProduct = product.sanPhamChiTiets.filter((detail) =>
-        discountProductIds.has(detail.id),
-      )
-      if (selectedDetailsForProduct.length > 0) {
-        selectedProductDetails.value.set(product.id, selectedDetailsForProduct)
-      }
-    })
-  } catch (error) {
-    console.error('Error fetching or processing discount products:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Không thể tải sản phẩm của đợt giảm giá',
-      life: 3000,
-    })
-  }
+function editDiscount(discountData) {
+  router.push({ name: 'DiscountEdit', params: { id: discountData.id } }) // Adjust 'DiscountEdit'
 }
 
 /**
@@ -390,158 +296,6 @@ async function deleteMultipleDiscounts() {
     })
   }
 }
-
-/** Saves the current discount (creates or updates). */
-async function saveDiscount() {
-  submitted.value = true // Trigger validation display
-
-  // Basic Validation
-  if (
-    !discount.value.maDotGiamGia?.trim() ||
-    !discount.value.tenDotGiamGia?.trim() ||
-    discount.value.phanTramGiam == null || // Check for null/undefined
-    !discount.value.ngayBatDau ||
-    !discount.value.ngayKetThuc
-  ) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cảnh báo',
-      detail: 'Vui lòng điền đầy đủ thông tin bắt buộc!',
-      life: 3000,
-    })
-    return
-  }
-
-  // Date Validation
-  if (
-    discount.value.ngayBatDau &&
-    discount.value.ngayKetThuc &&
-    new Date(discount.value.ngayKetThuc) < new Date(discount.value.ngayBatDau)
-  ) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cảnh báo',
-      detail: 'Ngày kết thúc không được trước ngày bắt đầu!',
-      life: 3000,
-    })
-    return
-  }
-
-  try {
-    const isUpdating = !!discount.value.id
-    let savedDiscountData // To potentially get the ID if creating
-
-    // --- Save Core Discount Info ---
-    if (isUpdating) {
-      savedDiscountData = await discountService.saveDiscount(discount.value)
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Cập nhật thông tin đợt giảm giá thành công',
-        life: 2000,
-      })
-    } else {
-      savedDiscountData = await discountService.saveDiscount(discount.value)
-      discount.value.id = savedDiscountData.id // Get the new ID for product association
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Tạo đợt giảm giá thành công',
-        life: 3000,
-      })
-    }
-
-    const discountId = discount.value.id
-
-    // --- Handle Product Association (Only if discount save was successful) ---
-    const currentSelectedIds = new Set(
-      Array.from(selectedProductDetails.value.values())
-        .flat()
-        .map((item) => item.id),
-    )
-
-    if (isUpdating) {
-      // Calculate differences
-      const idsToAdd = [...currentSelectedIds].filter(
-        (id) => !originalSelectedProductDetailIds.value.has(id),
-      )
-      const idsToRemove = [...originalSelectedProductDetailIds.value].filter(
-        (id) => !currentSelectedIds.has(id),
-      )
-
-      // API Calls for Associations (execute concurrently if possible and desired)
-      const associationPromises = []
-      if (idsToRemove.length > 0) {
-        console.log('Removing discount from product IDs:', idsToRemove)
-        associationPromises.push(
-          discountService.removeDiscountFromProducts(discountId, idsToRemove),
-        )
-      }
-      if (idsToAdd.length > 0) {
-        console.log('Adding discount to product IDs:', idsToAdd)
-        associationPromises.push(discountService.addDiscountToProducts(discountId, idsToAdd))
-      }
-
-      // Wait for association updates and show feedback
-      if (associationPromises.length > 0) {
-        await Promise.all(associationPromises)
-        toast.add({
-          severity: 'info',
-          summary: 'Thông tin',
-          detail: 'Cập nhật liên kết sản phẩm thành công',
-          life: 3000,
-        })
-      }
-    } else {
-      // Creating: Add all currently selected products
-      const allSelectedIdsForNew = Array.from(currentSelectedIds)
-      if (allSelectedIdsForNew.length > 0) {
-        console.log('Adding discount to product IDs for new discount:', allSelectedIdsForNew)
-        await discountService.addDiscountToProducts(discountId, allSelectedIdsForNew)
-        toast.add({
-          severity: 'success',
-          summary: 'Thành công',
-          detail: `Đã thêm ${allSelectedIdsForNew.length} sản phẩm vào đợt giảm giá mới`,
-          life: 3000,
-        })
-      }
-    }
-
-    // --- Final Steps ---
-    await discountStore.fetchDiscounts() // Refresh the main list
-    hideDialog() // Close the dialog
-    // Reset state for the next operation
-    discount.value = {}
-    selectedProductDetails.value.clear()
-    originalSelectedProductDetailIds.value.clear()
-  } catch (error) {
-    console.error('Error saving discount:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: `Lưu thất bại: ${error.response?.data?.message || error.message || 'Lỗi không xác định'}`,
-      life: 3000,
-    })
-  } finally {
-    submitted.value = false // Reset submission state regardless of outcome (optional)
-  }
-}
-
-// --- 9. Table Interaction Methods ---
-
-/** Expands all rows in the product details table within the dialog. */
-function expandAll() {
-  // Create an object where keys are product IDs and values are true
-  expandedRows.value = products.value.reduce((acc, product) => {
-    acc[product.id] = true
-    return acc
-  }, {})
-}
-
-/** Collapses all rows in the product details table within the dialog. */
-function collapseAll() {
-  expandedRows.value = [] // Set to empty array or null depending on PrimeVue DataTable expectation
-}
 </script>
 
 <template>
@@ -550,13 +304,7 @@ function collapseAll() {
 
     <Toolbar class="mb-6">
       <template #start>
-        <Button
-          label="Thêm"
-          icon="pi pi-plus"
-          class="mr-2"
-          outlined
-          @click="newDiscount"
-        />
+        <Button label="Thêm" icon="pi pi-plus" class="mr-2" outlined @click="newDiscount" />
         <Button label="In" icon="pi pi-print" class="mr-2" outlined />
         <Button label="Xuất" icon="pi pi-upload" class="mr-2" outlined />
         <Button
@@ -779,191 +527,7 @@ function collapseAll() {
     </DataTable>
   </div>
 
-  <Dialog
-    v-model:visible="discountDialog"
-    :style="{ width: '1200px' }"
-    header="Chi tiết đợt giảm giá"
-    :modal="true"
-  >
-    <div class="flex flex-col gap-6 mb-4">
-      <div class="grid grid-cols-12 gap-4">
-        <div class="col-span-6">
-          <label for="idDotGiamGia" class="block font-bold mb-3">_id</label>
-          <InputText
-            id="idDotGiamGia"
-            v-model.trim="discount.id"
-            fluid
-            disabled
-            placeholder="ID sẽ được tự động tạo"
-          />
-        </div>
-        <div class="col-span-6">
-          <label for="maDotGiamGia" class="block font-bold mb-3">Mã đợt giảm giá</label>
-          <InputText
-            id="maDotGiamGia"
-            v-model.trim="discount.maDotGiamGia"
-            required
-            :invalid="submitted && !discount.maDotGiamGia"
-            fluid
-          />
-          <small v-if="submitted && !discount.maDotGiamGia" class="text-red-500">
-            Mã đợt không được để trống
-          </small>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-12 gap-4">
-        <div class="col-span-8">
-          <label for="tenDotGiamGia" class="block font-bold mb-3">Tên đợt giảm giá</label>
-          <InputText
-            id="tenDotGiamGia"
-            v-model.trim="discount.tenDotGiamGia"
-            required="true"
-            :invalid="submitted && !discount.tenDotGiamGia"
-            fluid
-          />
-          <small v-if="submitted && !discount.tenDotGiamGia" class="text-red-500">
-            Tên đợt không được để trống
-          </small>
-        </div>
-        <div class="col-span-4">
-          <label for="phanTramGiam" class="block font-bold mb-3">Phần trăm giảm</label>
-          <InputNumber
-            id="phanTramGiam"
-            prefix="% "
-            v-model.trim="discount.phanTramGiam"
-            mode="decimal"
-            showButtons
-            :min="0"
-            :max="100"
-            :minFractionDigits="0"
-            :maxFractionDigits="2"
-            :invalid="submitted && !discount.phanTramGiam"
-            fluid
-            required
-          />
-          <small v-if="submitted && !discount.phanTramGiam" class="text-red-500">
-            Phần trăm giảm không được để trống
-          </small>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-12 gap-4">
-        <div class="col-span-4">
-          <label for="ngayBatDau" class="block font-bold mb-3">Ngày bắt đầu</label>
-          <input
-            id="ngayBatDau"
-            type="datetime-local"
-            v-model="formattedNgayBatDau"
-            class="p-inputtext p-component w-full"
-            :class="{ 'p-invalid': submitted && !discount.ngayBatDau }"
-            required
-          />
-          <small v-if="submitted && !discount.ngayBatDau" class="text-red-500">
-            Ngày bắt đầu không được để trống
-          </small>
-        </div>
-
-        <div class="col-span-4">
-          <label for="ngayKetThuc" class="block font-bold mb-3">Ngày kết thúc</label>
-          <input
-            id="ngayKetThuc"
-            type="datetime-local"
-            v-model="formattedNgayKetThuc"
-            :min="formattedNgayBatDau"
-            class="p-inputtext p-component w-full"
-            :class="{ 'p-invalid': submitted && !discount.ngayKetThuc }"
-            required
-          />
-          <small v-if="submitted && !discount.ngayKetThuc" class="text-red-500">
-            Ngày kết thúc không được để trống
-          </small>
-        </div>
-        <div class="col-span-4">
-          <label for="trangThai" class="block font-bold mb-3">Trạng thái</label>
-          <Select
-            id="trangThai"
-            v-model="discount.trangThai"
-            checkmark
-            :highlightOnSelect="true"
-            :options="[
-              { label: 'Chưa hoạt động', value: 'CHUA_DIEN_RA' },
-              { label: 'Đang hoạt động', value: 'DA_DIEN_RA' },
-              { label: 'Ngưng hoạt động', value: 'KET_THUC' },
-            ]"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Chọn trạng thái"
-            :invalid="submitted && !discount.trangThai"
-            required
-            fluid
-          />
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <div class="font-semibold text-xl">Sản phẩm</div>
-      <DataTable
-        v-model:expanded-rows="expandedRows"
-        :value="products"
-        dataKey="id"
-        scrollable
-        scrollHeight="300px"
-        fluid
-      >
-        <template #header>
-          <div class="flex flex-wrap justify-end gap-2">
-            <Button text icon="pi pi-plus" label="Expand All" @click="expandAll" />
-            <Button text icon="pi pi-minus" label="Collapse All" @click="collapseAll" />
-          </div>
-        </template>
-        <Column expander style="width: 5rem" />
-        <Column field="maSanPham" header="Mã sản phẩm"></Column>
-        <Column field="hinhAnh" header="Hình Ảnh"></Column>
-        <Column field="tenSanPham" header="Tên sản phẩm"></Column>
-        <Column field="thuongHieu.moTaThuongHieu" header="Thương hiệu"></Column>
-        <Column header="Danh Mục">
-          <template #body="{ data }">
-            {{ data.danhMucs.map((danhMuc) => danhMuc.tenDanhMuc).join(', ') }}
-          </template>
-        </Column>
-        <template #expansion="slotProps">
-          <div class="p-4">
-            <DataTable
-              :value="slotProps.data.sanPhamChiTiets"
-              :selection="selectedProductDetails.get(slotProps.data.id) || []"
-              @update:selection="
-                (selection) => {
-                  selectedProductDetails.set(slotProps.data.id, selection)
-                }
-              "
-              dataKey="id"
-            >
-              <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-              <Column header="STT">
-                <template #body="{ index }">
-                  {{ index + 1 }}
-                </template>
-              </Column>
-              <Column field="sku" header="SKU" sortable></Column>
-              <Column field="giaBan" header="Giá bán" sortable>
-                <template #body="{ data }">
-                  {{ formatCurrency(data.giaBan) }}
-                </template>
-              </Column>
-            </DataTable>
-          </div>
-        </template>
-      </DataTable>
-    </div>
-
-    <template #footer>
-      <Button label="Huỷ" icon="pi pi-times" text @click="hideDialog" />
-      <Button label="Lưu" icon="pi pi-check" @click="saveDiscount" />
-    </template>
-  </Dialog>
-
+  <!-- Delete Discount Confirmation Dialogs -->
   <Dialog
     v-model:visible="deleteDiscountDialog"
     :style="{ width: '450px' }"
