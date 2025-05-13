@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 import { useProductStore } from '@/stores/productstore'
-import { useAttributeStore } from '@/stores/attributesstore'
+import { useAttributeStore } from '@/stores/attributestore'
 import productService from '@/apis/product'
 import productDetailService from '@/apis/productdetail'
 import { useRouter } from 'vue-router'
@@ -399,12 +399,12 @@ onMounted(async () => {
           </div>
           <div class="flex-auto mr-5">
             <label class="text-lg">Giá Bán</label>
-            <Slider 
-              v-model="productDetail.giaBan" 
-              range 
-              class="m-4" 
-              :min="0" 
-              :max="100000000" 
+            <Slider
+              v-model="productDetail.giaBan"
+              range
+              class="m-4"
+              :min="0"
+              :max="100000000"
               :step="500000"
             ></Slider>
             <div class="flex items-center justify-between px-2">

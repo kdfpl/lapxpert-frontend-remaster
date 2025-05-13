@@ -21,9 +21,30 @@ const router = createRouter({
           component: () => import('@/views/Dashboard.vue'),
         },
         {
+          path: '/pos',
+          name: 'Pos',
+          component: () => import('@/views/pos/POS.vue'),
+        },
+        {
+          path: '/pos/orders',
+          name: 'PosOrder',
+          component: () => import('@/views/pos/POS.vue'),
+        },
+        {
           path: '/discounts',
-          name: 'discounts',
-          component: () => import('@/views/discount/Discount.vue'),
+          name: 'DiscountList',
+          component: () => import('@/views/discount/DiscountList.vue'),
+        },
+        {
+          path: '/discounts/edit/:id',
+          name: 'DiscountEdit',
+          component: () => import('@/views/discount/DiscountForm.vue'),
+          props: true
+        },
+        {
+          path: '/discounts/add',
+          name: 'DiscountAdd',
+          component: () => import('@/views/discount/DiscountForm.vue')
         },
         {
           path: '/products/list',
@@ -117,13 +138,13 @@ router.beforeEach((to, from, next) => {
     } else {
       if (role === 'CUSTOMER') {
         console.warn('CUSTOMER không có quyền truy cập');
-        next('/error'); 
+        next('/error');
       } else {
         next();
       }
     }
   } else {
-    next(); 
+    next();
   }
 });
 

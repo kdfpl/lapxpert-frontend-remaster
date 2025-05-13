@@ -909,7 +909,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useAttributeStore } from '@/stores/attributesstore'
+import { useAttributeStore } from '@/stores/attributestore'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode } from '@primevue/core/api'
 import productService from '@/apis/product'

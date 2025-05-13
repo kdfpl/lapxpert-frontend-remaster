@@ -13,6 +13,16 @@ const discountService = {
     }
   },
 
+  async getDiscountById(discountId) {
+    try {
+      const response = await privateApi.get(`${privateApi_URL}/${discountId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching discount by ID:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   async saveDiscount(discount) {
     try {
       const response = await privateApi.put(`${privateApi_URL}`, discount);

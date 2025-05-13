@@ -1,7 +1,7 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout'
 import AppConfigurator from './AppConfigurator.vue'
-import AuthService from '@/apis/authhApi'
+import AuthService from '@/apis/auth'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()

@@ -2,7 +2,7 @@
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import AuthService from '@/apis/authhApi'
+import AuthService from '@/apis/auth'
 import { useToast } from 'primevue/usetoast'
 import Toast from 'primevue/toast'
 

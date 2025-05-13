@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import couponService from '@/apis/coupons';
+import couponService from '@/apis/coupon';
 
 export const usePhieuGiamGiaStore = defineStore('phieuGiamGia', {
   state: () => ({
@@ -43,7 +43,7 @@ export const usePhieuGiamGiaStore = defineStore('phieuGiamGia', {
         this.loading = false;
       }
     },
-    
+
     async createPhieu(phieuData, nguoiDungIds) {
       this.loading = true;
       this.error = '';
@@ -65,13 +65,13 @@ export const usePhieuGiamGiaStore = defineStore('phieuGiamGia', {
       this.error = '';
       try {
         const response = await couponService.updateCoupon(id, phieuData, nguoiDungIds);
-        
+
         // Cập nhật phiếu giảm giá trong phieuGiamGiaList
         const updatedCouponIndex = this.phieuGiamGiaList.findIndex(coupon => coupon.id === id);
         if (updatedCouponIndex !== -1) {
           this.phieuGiamGiaList[updatedCouponIndex] = { ...this.phieuGiamGiaList[updatedCouponIndex], ...response };
         }
-        
+
         return response;
       } catch (error) {
         this.error = error.response?.data?.message || error.message;
@@ -104,8 +104,8 @@ export const usePhieuGiamGiaStore = defineStore('phieuGiamGia', {
         this.loading = false;
       }
     },
-    
-  
+
+
   setStatusFilter(status) {
     this.statusFilter = status;
   },

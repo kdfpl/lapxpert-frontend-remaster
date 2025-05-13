@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import attributeService from '@/apis/attributes';
+import attributeService from '@/apis/attribute';
 
 export const useAttributeStore = defineStore('attributes', {
     state: () => ({
