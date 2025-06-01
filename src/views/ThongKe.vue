@@ -427,6 +427,16 @@ const lamMoiDuLieu = () => {
   taiTatCaDuLieu()
 }
 
+// Export Report
+const xuatBaoCao = () => {
+  toast.add({
+    severity: 'info',
+    summary: 'Thông báo',
+    detail: 'Tính năng xuất báo cáo đang được phát triển',
+    life: 3000
+  })
+}
+
 // ==================== WATCHERS ====================
 watch([getPrimary, getSurface, isDarkTheme], () => {
   khoiTaoTuyChonBieuDo()
@@ -440,13 +450,24 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-12 gap-8">
+  <Fluid>
+    <Toast />
+
     <!-- Page Header -->
-    <div class="col-span-12">
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <h1 class="text-3xl font-bold text-surface-900 dark:text-surface-0">Thống Kê Dashboard</h1>
-          <p class="text-surface-600 dark:text-surface-400 mt-2">Tổng quan về doanh thu, đơn hàng và hiệu suất kinh doanh</p>
+    <div class="card mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+            <i class="pi pi-chart-bar text-lg text-primary"></i>
+          </div>
+          <div>
+            <h1 class="font-semibold text-xl text-surface-900 m-0">
+              Thống Kê
+            </h1>
+            <p class="text-surface-500 text-sm mt-1 mb-0">
+              Tổng quan về doanh thu, đơn hàng và hiệu suất kinh doanh
+            </p>
+          </div>
         </div>
         <div class="flex gap-2">
           <Button
@@ -454,11 +475,25 @@ onMounted(() => {
             label="Làm mới"
             @click="lamMoiDuLieu"
             :loading="dangTai"
+            severity="secondary"
             outlined
+            size="small"
+            v-tooltip.left="'Cập nhật dữ liệu mới nhất'"
+          />
+          <Button
+            icon="pi pi-download"
+            label="Xuất báo cáo"
+            severity="primary"
+            outlined
+            size="small"
+            v-tooltip.left="'Xuất báo cáo thống kê'"
+            @click="xuatBaoCao"
           />
         </div>
       </div>
     </div>
+
+  <div class="grid grid-cols-12 gap-8">
 
     <!-- Error Message -->
     <div v-if="loi" class="col-span-12">
@@ -662,4 +697,5 @@ onMounted(() => {
       </Tabs>
     </div>
   </div>
+  </Fluid>
 </template>
