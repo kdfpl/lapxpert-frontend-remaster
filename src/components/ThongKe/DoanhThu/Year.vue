@@ -1,5 +1,5 @@
 <script>
-import axios from "axios";
+import ThongKeService from '@/apis/dashboard'
 import { Line } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -60,10 +60,24 @@ export default {
   methods: {
     async fetchData() {
       try {
-        const response = await axios.get("http://localhost:8080/thong-ke/this-year");
-        this.chartData = response.data;
+        // Get yearly revenue data (last 5 years)
+        const response = await ThongKeService.layDoanhThuTheoNam()
+
+        // Format data for chart
+        this.chartData = {
+          labels: response.data.labels || [],
+          datasets: [{
+            label: 'Doanh thu theo năm (VNĐ)',
+            data: response.data.data || [],
+            borderColor: '#36A2EB',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            fill: true,
+            tension: 0.4
+          }]
+        }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu từ API:", error);
+        this.chartData = { labels: [], datasets: [] }
       }
     },
 

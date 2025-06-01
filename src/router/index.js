@@ -21,16 +21,6 @@ const router = createRouter({
           component: () => import('@/views/Dashboard.vue'),
         },
         {
-          path: '/pos',
-          name: 'Pos',
-          component: () => import('@/views/pos/POS.vue'),
-        },
-        {
-          path: '/pos/orders',
-          name: 'PosOrder',
-          component: () => import('@/views/pos/POS.vue'),
-        },
-        {
           path: '/discounts',
           name: 'DiscountList',
           component: () => import('@/views/discount/DiscountList.vue'),
@@ -49,12 +39,24 @@ const router = createRouter({
         {
           path: '/products/list',
           name: 'products',
-          component: () => import('@/views/product/Product.vue'),
+          component: () => import('@/views/product/ProductList.vue'),
         },
         {
           path: '/products/add',
-          name: 'productAdd',
-          component: () => import('@/views/product/ProductAdd.vue'),
+          name: 'product-add',
+          component: () => import('@/views/product/ProductForm.vue'),
+        },
+        {
+          path: '/products/edit/:id',
+          name: 'product-edit',
+          component: () => import('@/views/product/ProductForm.vue'),
+          props: true
+        },
+        {
+          path: '/products/detail/:id',
+          name: 'product-detail',
+          component: () => import('@/views/product/ProductDetail.vue'),
+          props: true
         },
         {
           path: '/products/attributes',
@@ -102,22 +104,60 @@ const router = createRouter({
           path: '/discounts/couponsCRUD/:id?',
           name: 'couponsCRUD',
           component: () => import('@/views/coupons/CrudCoupons.vue'),
-          props: (route) => ({ id: route.query.id }),
+          props: true,
         },
 
+        // Order Management Routes
         {
-          path: '/invoices',
-          name: 'invoices',
-          component: () => import('@/views/invoice/HoaDon.vue')
+          path: '/orders',
+          name: 'OrderList',
+          component: () => import('@/views/orders/OrderList.vue'),
+          meta: {
+            title: 'Quản lý đơn hàng',
+            breadcrumb: [
+              { label: 'Trang chủ', to: '/' },
+              { label: 'Quản lý đơn hàng', to: '/orders' }
+            ],
+            permissions: ['ORDER_VIEW', 'ORDER_MANAGE'],
+            icon: 'pi pi-shopping-cart'
+          }
+        },
+        {
+          path: '/orders/create',
+          name: 'OrderCreate',
+          component: () => import('@/views/orders/OrderCreate.vue'),
+          meta: {
+            title: 'Tạo đơn hàng mới',
+            breadcrumb: [
+              { label: 'Trang chủ', to: '/' },
+              { label: 'Quản lý đơn hàng', to: '/orders' },
+              { label: 'Tạo đơn hàng mới', to: '/orders/create' }
+            ],
+            permissions: ['ORDER_CREATE'],
+            icon: 'pi pi-plus'
+          }
+        },
+        {
+          path: '/orders/:id',
+          name: 'OrderDetail',
+          component: () => import('@/views/orders/OrderDetail.vue'),
+          props: true,
+          meta: {
+            title: 'Chi tiết đơn hàng',
+            breadcrumb: [
+              { label: 'Trang chủ', to: '/' },
+              { label: 'Quản lý đơn hàng', to: '/orders' },
+              { label: 'Chi tiết đơn hàng', to: null }
+            ],
+            permissions: ['ORDER_VIEW'],
+            icon: 'pi pi-eye'
+          }
         },
 
-        {
-          path: "/chi-tiet-hoa-don/:id",
-          name: "ChiTietHoaDon",
-          component: () => import('@/views/invoice/ChiTietHoaDon.vue')
-        },
       ],
     },
+
+
 
     {
       path: '/:pathMatch(.*)*',

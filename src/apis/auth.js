@@ -12,8 +12,8 @@ const AuthService = {
 
       if (token && user) {
         localStorage.setItem("token", token);
-        localStorage.setItem("vaiTro", user.vaiTro); 
-        localStorage.setItem("nguoiDung", user);
+        localStorage.setItem("vaiTro", user.vaiTro);
+        localStorage.setItem("nguoiDung", JSON.stringify(user));
       }
 
       return token;
@@ -26,7 +26,7 @@ const AuthService = {
   logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("vaiTro");
-    localStorage.removeItem("nguoiDung");  
+    localStorage.removeItem("nguoiDung");
   },
 
   isAuthenticated() {

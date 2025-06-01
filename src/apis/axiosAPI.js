@@ -2,8 +2,11 @@ import axios from "axios";
 
 const DEFAULT_TIMEOUT = 10000;
 
+// Use environment variable for baseURL, with a fallback for local development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+
 const commonConfig = {
-  baseURL: "http://localhost:8080/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
