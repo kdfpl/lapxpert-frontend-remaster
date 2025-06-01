@@ -1,387 +1,389 @@
 <template>
-  <div class="grid">
+  <Fluid>
     <Toast />
-    <div class="col-12">
-      <Card class="shadow-sm hover:shadow-md transition-shadow duration-300">
-        <template #title>
-          <div class="flex items-center gap-2 text-900">
-            <i class="pi pi-users text-primary"></i>
-            <span class="font-semibold">{{
-              isEditMode ? 'Cập nhật nhân viên' : 'Thêm nhân viên mới'
-            }}</span>
+
+    <!-- Page Header -->
+    <div class="card mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+            <i class="pi pi-users text-lg text-primary"></i>
           </div>
-        </template>
-        <template #content>
-          <form @submit.prevent="handleSubmit" class="space-y-6">
-            <!-- Main Information Section -->
-            <div class="grid">
-              <!-- Avatar Column -->
-              <div class="col-12 md:col-3 flex mb-5 flex-col items-center gap-4">
-                <div class="w-full space-y-2">
-                  <label class="block font-medium ">Ảnh đại diện</label>
-                  <div class="border border-gray-200 rounded-lg p-3 ">
-                    <FileUpload
-                      mode="basic"
-                      name="avatar"
-                      accept="image/*"
-                      :maxFileSize="2000000"
-                      chooseLabel="Chọn ảnh"
-                      @select="onAvatarSelect"
-                      :class="{
-                        'p-invalid border-red-500': submitted && !form.avatar && !imagePreview,
-                      }"
-                      class="w-full"
-                    />
-                    <small
-                      class="text-red-500 text-xs mt-1 block"
-                      v-if="submitted && !form.avatar && !imagePreview"
-                    >
-                      Vui lòng chọn ảnh đại diện
-                    </small>
+          <div>
+            <h1 class="font-semibold text-xl text-surface-900 m-0">
+              {{ isEditMode ? 'Cập nhật nhân viên' : 'Thêm nhân viên mới' }}
+            </h1>
+            <p class="text-surface-500 text-sm mt-1 mb-0">
+              {{ isEditMode ? 'Chỉnh sửa thông tin nhân viên' : 'Tạo hồ sơ nhân viên mới trong hệ thống' }}
+            </p>
+          </div>
+        </div>
+        <Button
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="goBack"
+          v-tooltip.left="'Quay lại'"
+        />
+      </div>
+    </div>
+
+    <form @submit.prevent="handleSubmit">
+      <div class="flex flex-col gap-6">
+
+        <!-- Personal Information Card -->
+        <div class="card">
+          <div class="flex items-center gap-2 mb-4">
+            <i class="pi pi-user text-primary"></i>
+            <span class="font-semibold text-xl">Thông tin cá nhân</span>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6">
+            <!-- Avatar Section -->
+            <div class="col-span-12 lg:col-span-4">
+              <div class="flex flex-col gap-4">
+                <label class="font-semibold">Ảnh đại diện <span class="text-red-500">*</span></label>
+
+                <!-- Avatar Preview -->
+                <div class="flex justify-center">
+                  <div class="relative">
+                    <div class="w-32 h-32 border-2 border-dashed border-surface-300 rounded-lg flex items-center justify-center overflow-hidden bg-surface-50">
+                      <img
+                        v-if="imagePreview"
+                        :src="imagePreview"
+                        alt="Avatar preview"
+                        class="w-full h-full object-cover"
+                      />
+                      <div v-else class="text-center">
+                        <i class="pi pi-camera text-3xl text-surface-400 mb-2 block"></i>
+                        <span class="text-surface-600 text-sm">Chọn ảnh</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Basic Information Column -->
-              <div class="col-12 md:col-9">
-                <div class="grid gap-4">
-                  <div class="col-12 md:col-6 space-y-2">
-                    <label class="block font-medium ">
+                <!-- Upload Button -->
+                <FileUpload
+                  mode="basic"
+                  name="avatar"
+                  accept="image/*"
+                  :maxFileSize="2000000"
+                  chooseLabel="Chọn ảnh"
+                  @select="onAvatarSelect"
+                  :class="{
+                    'p-invalid': submitted && !form.avatar && !imagePreview,
+                  }"
+                  customUpload
+                />
+
+                <small
+                  class="text-red-500"
+                  v-if="submitted && !form.avatar && !imagePreview"
+                >
+                  Vui lòng chọn ảnh đại diện
+                </small>
+              </div>
+            </div>
+
+            <!-- Basic Information Fields -->
+            <div class="col-span-12 lg:col-span-8">
+              <div class="grid grid-cols-12 gap-4">
+
+                <!-- Full Name -->
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Họ và tên <span class="text-red-500">*</span>
                     </label>
                     <InputText
                       v-model="form.hoTen"
                       placeholder="Nhập họ và tên"
-                      :class="{ 'p-invalid border-red-500': submitted && !form.hoTen }"
-                      class="w-full"
+                      :invalid="submitted && !form.hoTen"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && !form.hoTen">
+                    <small class="text-red-500" v-if="submitted && !form.hoTen">
                       Họ tên là bắt buộc
                     </small>
                   </div>
+                </div>
 
-                  <div class="col-12 md:col-6 space-y-2">
-                    <label class="block font-medium ">
+                <!-- Gender -->
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Giới tính <span class="text-red-500">*</span>
                     </label>
-                    <Dropdown
+                    <Select
                       v-model="form.gioiTinh"
                       :options="genderOptions"
                       optionLabel="label"
                       optionValue="value"
                       placeholder="Chọn giới tính"
-                      :class="{ 'p-invalid border-red-500': submitted && form.gioiTinh === null }"
-                      class="w-full"
+                      :invalid="submitted && form.gioiTinh === null"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && form.gioiTinh === null">
+                    <small class="text-red-500" v-if="submitted && form.gioiTinh === null">
                       Giới tính là bắt buộc
                     </small>
                   </div>
+                </div>
 
-                  <div class="col-12 md:col-6 space-y-2">
-                    <label class="block font-medium ">
+                <!-- Birth Date -->
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Ngày sinh <span class="text-red-500">*</span>
                     </label>
-                    <Calendar
+                    <DatePicker
                       v-model="form.ngaySinh"
                       dateFormat="dd/mm/yy"
                       :showIcon="true"
                       :maxDate="maxBirthDate"
                       placeholder="Chọn ngày sinh"
-                      :class="{ 'p-invalid border-red-500': submitted && !form.ngaySinh }"
-                      class="w-full"
+                      :invalid="submitted && !form.ngaySinh"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && !form.ngaySinh">
+                    <small class="text-red-500" v-if="submitted && !form.ngaySinh">
                       Ngày sinh là bắt buộc
                     </small>
                   </div>
+                </div>
 
-                  <div class="col-12 md:col-6 space-y-2">
-                    <label class="block font-medium ">
+                <!-- CCCD/CMND with QR Scanner -->
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       CCCD/CMND <span class="text-red-500">*</span>
                     </label>
-                    <div class="flex gap-2">
-                      <div class="flex-1">
-                        <InputText
-                          v-model="form.cccd"
-                          placeholder="Nhập số CCCD/CMND"
-                          :class="{
-                            'p-invalid border-red-500': (submitted && !form.cccd) || cccdError,
-                          }"
-                          @blur="validateCCCD"
-                          class="w-full"
-                        />
-                      </div>
+                    <InputGroup>
+                      <InputText
+                        v-model="form.cccd"
+                        placeholder="Nhập số CCCD/CMND"
+                        :invalid="(submitted && !form.cccd) || cccdError"
+                        @blur="validateCCCD"
+                      />
                       <Button
                         icon="pi pi-qrcode"
                         severity="info"
                         @click="showQRScanner = true"
                         v-tooltip.top="'Quét QR CCCD'"
                       />
-                    </div>
-                    <small class="text-red-500 text-xs" v-if="submitted && !form.cccd">
+                    </InputGroup>
+                    <small class="text-red-500" v-if="submitted && !form.cccd">
                       CCCD/CMND là bắt buộc
                     </small>
-                    <small class="text-red-500 text-xs" v-if="cccdError">
+                    <small class="text-red-500" v-if="cccdError">
                       {{ cccdError }}
                     </small>
                   </div>
+                </div>
 
-                  <!-- QR Scanner Dialog -->
-                  <Dialog
-                    v-model:visible="showQRScanner"
-                    modal
-                    header="Quét QR CCCD"
-                    :style="{ width: '500px' }"
-                    @hide="stopScanner"
-                    :closable="true"
-                  >
-                    <div class="text-center">
-                      <p class="mb-4">Vui lòng quét mã QR từ CCCD của nhân viên</p>
-                      <div class="border-2 border-primary border-dashed rounded-lg p-4 mb-4">
-                        <!-- QR Scanner component -->
-                        <div class="flex flex-col items-center justify-center">
-                          <div v-if="!qrScanResult" class="w-full">
-                            <div v-if="!cameraError">
-                              <qrcode-stream
-                                @detect="onDetect"
-                                @init="onInit"
-                                :track="paintBoundingBox"
-                                class="w-full h-64 rounded-lg overflow-hidden"
-                              />
-
-                              <p class="text-gray-500 mt-2">Đưa mã QR vào khung hình để quét</p>
-                            </div>
-                            <div v-else class="p-4 bg-red-50 rounded-lg">
-                              <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
-                              <p class="text-red-700 font-medium mt-2">Lỗi khi truy cập camera</p>
-                              <p class="mt-2">{{ cameraError }}</p>
-                              <Button
-                                label="Cấp quyền camera"
-                                icon="pi pi-camera"
-                                severity="info"
-                                @click="requestCameraPermission"
-                                class="mt-3"
-                              />
-                            </div>
-                          </div>
-                          <div v-else class="p-4 bg-green-50 rounded-lg w-full">
-                            <p class="text-green-700 font-medium">Quét thành công!</p>
-                            <p class="mt-2">{{ qrScanResult }}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="flex justify-center gap-2">
-                        <Button
-                          label="Hủy"
-                          icon="pi pi-times"
-                          severity="secondary"
-                          @click="showQRScanner = false"
-                        />
-                        <Button
-                          label="Xác nhận"
-                          icon="pi pi-check"
-                          severity="success"
-                          @click="applyQRScanResult"
-                          :disabled="!qrScanResult"
-                        />
-                      </div>
-                    </div>
-                  </Dialog>
-
-                  <div class="col-12 md:col-6 space-y-2">
-                    <label class="block font-medium ">
+                <!-- Email -->
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Email <span class="text-red-500">*</span>
                     </label>
                     <InputText
                       v-model="form.email"
                       placeholder="Nhập email"
-                      :class="{
-                        'p-invalid border-red-500': (submitted && !form.email) || emailError,
-                      }"
+                      :invalid="(submitted && !form.email) || emailError"
                       @blur="validateEmail"
-                      class="w-full"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && !form.email">
+                    <small class="text-red-500" v-if="submitted && !form.email">
                       Email là bắt buộc
                     </small>
-                    <small class="text-red-500 text-xs" v-if="emailError">
+                    <small class="text-red-500" v-if="emailError">
                       {{ emailError }}
                     </small>
                   </div>
+                </div>
 
-                  <div class="col-12 md:col-6 space-y-2">
-                    <label class="block font-medium ">
+                <!-- Phone -->
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Số điện thoại <span class="text-red-500">*</span>
                     </label>
                     <InputText
                       v-model="form.soDienThoai"
                       placeholder="Nhập số điện thoại"
-                      :class="{
-                        'p-invalid border-red-500': (submitted && !form.soDienThoai) || phoneError,
-                      }"
+                      :invalid="(submitted && !form.soDienThoai) || phoneError"
                       @blur="validatePhone"
-                      class="w-full"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && !form.soDienThoai">
+                    <small class="text-red-500" v-if="submitted && !form.soDienThoai">
                       Số điện thoại là bắt buộc
                     </small>
-                    <small class="text-red-500 text-xs" v-if="phoneError">
+                    <small class="text-red-500" v-if="phoneError">
                       {{ phoneError }}
                     </small>
                   </div>
+                </div>
 
-                  <div class="col-12 md:col-6 space-y-2">
-                    <label class="block font-medium ">
+                <!-- Role -->
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Vai trò <span class="text-red-500">*</span>
                     </label>
-                    <Dropdown
+                    <Select
                       v-model="form.vaiTro"
                       :options="roleOptions"
                       optionLabel="label"
                       optionValue="value"
                       placeholder="Chọn vai trò"
-                      :class="{ 'p-invalid border-red-500': submitted && !form.vaiTro }"
-                      class="w-full"
+                      :invalid="submitted && !form.vaiTro"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && !form.vaiTro">
+                    <small class="text-red-500" v-if="submitted && !form.vaiTro">
                       Vai trò là bắt buộc
                     </small>
                   </div>
+                </div>
 
-                  <div class="col-12 md:col-6 flex items-center">
-                    <div class="space-y-2">
-                      <label class="block font-medium ">Trạng thái</label>
-                      <InputSwitch v-model="form.trangThai" :trueValue="true" :falseValue="false" />
-                    </div>
+                <!-- Status -->
+                <div class="col-span-12 md:col-span-6">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">Trạng thái</label>
+                    <Select
+                      v-model="form.trangThai"
+                      :options="statusOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Chọn trạng thái"
+                    />
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Address Section -->
-            <div class="space-y-4">
-              <Divider align="left" class="my-4">
-                <div class="flex items-center gap-2 px-2 ">
-                  <i class="pi pi-map-marker text-primary"></i>
-                  <span class="font-semibold text-lg ">Địa chỉ</span>
+        <!-- Address Section -->
+        <div class="card">
+          <div class="flex items-center gap-2 mb-4">
+            <i class="pi pi-map-marker text-primary"></i>
+            <span class="font-semibold text-xl">Địa chỉ</span>
+          </div>
+
+          <div class="flex flex-col gap-4">
+            <div
+              v-for="(address, index) in form.diaChis"
+              :key="index"
+              class="border border-surface-200 rounded-lg p-4"
+            >
+              <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-home text-primary"></i>
+                  <span class="font-semibold">Địa chỉ {{ index + 1 }}</span>
                 </div>
-              </Divider>
+                <Button
+                  v-if="form.diaChis.length > 1"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  text
+                  rounded
+                  @click="removeAddress(index)"
+                  :disabled="form.diaChis.length === 1"
+                  v-tooltip.top="'Xóa địa chỉ'"
+                />
+              </div>
 
-              <div
-                v-for="(address, index) in form.diaChis"
-                :key="index"
-                class="p-4 rounded-lg border border-gray-200  shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div class="flex justify-between items-center mb-4">
-                  <div class="flex items-center gap-2">
-                    <i class="pi pi-home text-primary"></i>
-                    <h4 class="m-0 font-medium ">Địa chỉ {{ index + 1 }}</h4>
-                  </div>
-                  <Button
-                    v-if="form.diaChis.length > 1"
-                    icon="pi pi-trash"
-                    severity="danger"
-                    text
-                    rounded
-                    @click="removeAddress(index)"
-                    :disabled="form.diaChis.length === 1"
-                    v-tooltip.top="'Xóa địa chỉ'"
-                    class="hover:bg-red-50"
-                  />
-                </div>
-
-                <div class="grid gap-4">
-                  <!-- Street -->
-                  <div class="col-12 space-y-2">
-                    <label class="block font-medium ">
+              <div class="grid grid-cols-12 gap-4">
+                <!-- Street -->
+                <div class="col-span-12">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Đường/Số nhà <span class="text-red-500">*</span>
                     </label>
                     <InputText
                       v-model="address.duong"
                       placeholder="Nhập đường/số nhà"
-                      :class="{ 'p-invalid border-red-500': submitted && !address.duong }"
-                      class="w-full"
+                      :invalid="submitted && !address.duong"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && !address.duong">
+                    <small class="text-red-500" v-if="submitted && !address.duong">
                       Đường/Số nhà là bắt buộc
                     </small>
                   </div>
+                </div>
 
-                  <!-- Province -->
-                  <div class="col-12 md:col-4 space-y-2">
-                    <label class="block font-medium ">
+                <!-- Province -->
+                <div class="col-span-12 md:col-span-4">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Tỉnh/Thành phố <span class="text-red-500">*</span>
                     </label>
-                    <Dropdown
+                    <Select
                       v-model="address.tinhThanh"
                       :options="provinces"
                       optionLabel="name"
                       optionValue="code"
                       placeholder="Chọn tỉnh/thành"
-                      :class="{ 'p-invalid border-red-500': submitted && !address.tinhThanh }"
+                      :invalid="submitted && !address.tinhThanh"
                       @change="getDistricts(address, index)"
-                      class="w-full"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && !address.tinhThanh">
+                    <small class="text-red-500" v-if="submitted && !address.tinhThanh">
                       Tỉnh/Thành phố là bắt buộc
                     </small>
                   </div>
+                </div>
 
-                  <!-- District -->
-                  <div class="col-12 md:col-4 space-y-2">
-                    <label class="block font-medium ">
+                <!-- District -->
+                <div class="col-span-12 md:col-span-4">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Quận/Huyện <span class="text-red-500">*</span>
                     </label>
-                    <Dropdown
+                    <Select
                       v-model="address.quanHuyen"
                       :options="districts[index]"
                       optionLabel="name"
                       optionValue="code"
                       placeholder="Chọn quận/huyện"
-                      :class="{ 'p-invalid border-red-500': submitted && !address.quanHuyen }"
+                      :invalid="submitted && !address.quanHuyen"
                       @change="getWards(address, index)"
                       :disabled="!address.tinhThanh"
-                      class="w-full"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && !address.quanHuyen">
+                    <small class="text-red-500" v-if="submitted && !address.quanHuyen">
                       Quận/Huyện là bắt buộc
                     </small>
                   </div>
+                </div>
 
-                  <!-- Ward -->
-                  <div class="col-12 md:col-4 space-y-2">
-                    <label class="block font-medium ">
+                <!-- Ward -->
+                <div class="col-span-12 md:col-span-4">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">
                       Phường/Xã <span class="text-red-500">*</span>
                     </label>
-                    <Dropdown
+                    <Select
                       v-model="address.phuongXa"
                       :options="wards[index]"
                       optionLabel="name"
                       optionValue="code"
                       placeholder="Chọn phường/xã"
-                      :class="{ 'p-invalid border-red-500': submitted && !address.phuongXa }"
+                      :invalid="submitted && !address.phuongXa"
                       :disabled="!address.quanHuyen"
-                      class="w-full"
                     />
-                    <small class="text-red-500 text-xs" v-if="submitted && !address.phuongXa">
+                    <small class="text-red-500" v-if="submitted && !address.phuongXa">
                       Phường/Xã là bắt buộc
                     </small>
                   </div>
+                </div>
 
-                  <!-- Address Type -->
-                  <div class="col-12 md:col-8 space-y-2">
-                    <label class="block font-medium "> Loại địa chỉ </label>
+                <!-- Address Type -->
+                <div class="col-span-12 md:col-span-8">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">Loại địa chỉ</label>
                     <InputText
                       v-model="address.loaiDiaChi"
                       placeholder="Ví dụ: Nhà riêng, Công ty..."
-                      class="w-full"
                     />
                   </div>
+                </div>
 
-                  <!-- Default Address Checkbox -->
-                  <div class="col-12 md:col-4 flex items-center justify-end">
-                    <div class="flex items-center space-x-2">
+                <!-- Default Address Checkbox -->
+                <div class="col-span-12 md:col-span-4">
+                  <div class="flex flex-col gap-2">
+                    <label class="font-semibold">Tùy chọn</label>
+                    <div class="flex items-center gap-2">
                       <Checkbox
                         v-model="address.laMacDinh"
                         :binary="true"
@@ -389,47 +391,194 @@
                         :disabled="form.diaChis.length === 1"
                         inputId="defaultAddress"
                       />
-                      <label for="defaultAddress" class=""> Địa chỉ mặc định </label>
+                      <label for="defaultAddress">Địa chỉ mặc định</label>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div class="flex justify-end">
+            <div class="flex justify-end mt-4">
+              <Button
+                label="Thêm địa chỉ"
+                icon="pi pi-plus"
+                outlined
+                @click="addNewAddress"
+                :disabled="form.diaChis.length >= 5"
+                v-tooltip.top="'Tối đa 5 địa chỉ'"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Audit Log Section -->
+        <div v-if="isEditMode && auditTrail.length > 0" class="card">
+          <div class="flex items-center gap-2 mb-4">
+            <i class="pi pi-history text-primary"></i>
+            <span class="font-semibold text-xl">Lịch sử thay đổi</span>
+            <div class="flex items-center gap-2 text-sm text-surface-500 ml-auto">
+              <i class="pi pi-clock"></i>
+              <span>{{ auditTrail.length }} mục</span>
+            </div>
+          </div>
+
+          <div class="space-y-4 max-h-96 overflow-y-auto">
+            <div
+              v-for="(entry, index) in auditTrail"
+              :key="entry.id || index"
+              class="border-l-4 pl-4 py-3 rounded-r-lg"
+              :class="getAuditBorderColor(entry.hanhDong)"
+            >
+              <!-- Header with action and timestamp -->
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <i :class="[getAuditIcon(entry.hanhDong), getAuditIconColor(entry.hanhDong), 'text-lg']"></i>
+                  <span class="font-medium text-base">{{ getActionDisplayName(entry.hanhDong) }}</span>
+                  <span class="text-sm text-surface-500">{{ formatAuditDate(entry.thoiGianThayDoi) }}</span>
+                </div>
+              </div>
+
+              <!-- User and Reason Information -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                <div class="space-y-2">
+                  <div class="text-sm text-surface-700">
+                    <strong class="text-surface-900">Người thực hiện:</strong>
+                    <span class="font-medium ml-2">{{ entry.nguoiThucHien || 'Hệ thống' }}</span>
+                  </div>
+
+                  <div v-if="entry.lyDoThayDoi" class="text-sm text-surface-700">
+                    <strong class="text-surface-900">Lý do:</strong>
+                    <span class="italic ml-2">{{ entry.lyDoThayDoi }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Change Details Section -->
+              <div v-if="entry.giaTriCu || entry.giaTriMoi" class="bg-surface-50 rounded-lg p-4">
+                <strong class="text-surface-900 text-base block mb-3">Chi tiết thay đổi:</strong>
+
+                <!-- Parse and display changes for UPDATE entries (both old and new values) -->
+                <div v-if="entry.giaTriCu && entry.giaTriMoi" class="space-y-3">
+                  <div v-for="change in parseAuditChanges(entry.giaTriCu, entry.giaTriMoi)" :key="change.field" class="border-b border-surface-200 pb-3 last:border-b-0 last:pb-0">
+                    <div class="font-medium text-surface-700 mb-2 text-sm">{{ change.fieldName }}:</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <!-- Old Value Column -->
+                      <div>
+                        <div class="text-red-600 bg-red-50 p-2 rounded text-sm">{{ change.oldValue }}</div>
+                      </div>
+                      <!-- New Value Column -->
+                      <div>
+                        <div class="text-green-600 bg-green-50 p-2 rounded text-sm">{{ change.newValue }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Parse and display values for CREATE entries (only new values) -->
+                <div v-else-if="entry.giaTriMoi" class="space-y-3">
+                  <div v-for="field in parseCreateAuditValues(entry.giaTriMoi)" :key="field.field" class="border-b border-surface-200 pb-3 last:border-b-0 last:pb-0">
+                    <div class="font-medium text-surface-700 mb-2 text-sm">{{ field.fieldName }}:</div>
+                    <div class="text-green-600 bg-green-50 p-2 rounded text-sm">{{ field.value }}</div>
+                  </div>
+                </div>
+
+                <!-- Fallback for raw JSON display (only for old values without new values) -->
+                <div v-else-if="entry.giaTriCu" class="space-y-3">
+                  <div class="text-sm">
+                    <span class="font-medium text-surface-700">Giá trị cũ:</span>
+                    <div class="text-red-600 mt-1 font-mono bg-red-50 p-2 rounded">{{ formatJsonData(entry.giaTriCu) }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div v-if="auditTrail.length === 0" class="text-center py-8 text-surface-500">
+            <i class="pi pi-history text-2xl mb-2"></i>
+            <p class="text-base">Chưa có lịch sử thay đổi</p>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex justify-end gap-3 pt-6 border-t border-surface-200">
+          <Button
+            label="Hủy bỏ"
+            icon="pi pi-times"
+            severity="secondary"
+            outlined
+            @click="goBack"
+          />
+          <Button
+            type="submit"
+            :label="isEditMode ? 'Cập nhật' : 'Tạo mới'"
+            icon="pi pi-check"
+          />
+        </div>
+      </div>
+    </form>
+
+    <!-- QR Scanner Dialog -->
+    <Dialog
+      v-model:visible="showQRScanner"
+      modal
+      header="Quét QR CCCD"
+      :style="{ width: '500px' }"
+      @hide="stopScanner"
+      :closable="true"
+    >
+      <div class="text-center">
+        <p class="mb-4">Vui lòng quét mã QR từ CCCD của nhân viên</p>
+        <div class="border-2 border-primary border-dashed rounded-lg p-4 mb-4">
+          <!-- QR Scanner component -->
+          <div class="flex flex-col items-center justify-center">
+            <div v-if="!qrScanResult" class="w-full">
+              <div v-if="!cameraError">
+                <qrcode-stream
+                  @detect="onDetect"
+                  @init="onInit"
+                  :track="paintBoundingBox"
+                  class="w-full h-64 rounded-lg overflow-hidden"
+                />
+                <p class="text-surface-600 mt-2">Đưa mã QR vào khung hình để quét</p>
+              </div>
+              <div v-else class="p-4 bg-red-50 rounded-lg">
+                <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
+                <p class="text-red-700 font-medium mt-2">Lỗi khi truy cập camera</p>
+                <p class="mt-2">{{ cameraError }}</p>
                 <Button
-                  label="Thêm địa chỉ"
-                  icon="pi pi-plus"
-                  class="p-button-outlined p-button-sm"
-                  @click="addNewAddress"
-                  :disabled="form.diaChis.length >= 5"
-                  v-tooltip.top="'Tối đa 5 địa chỉ'"
+                  label="Cấp quyền camera"
+                  icon="pi pi-camera"
+                  severity="info"
+                  @click="requestCameraPermission"
+                  class="mt-3"
                 />
               </div>
             </div>
-
-            <!-- Form Actions -->
-            <div
-              class="flex flex-col md:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200"
-            >
-              <Button
-                label="Hủy bỏ"
-                icon="pi pi-times"
-                severity="secondary"
-                outlined
-                @click="goBack"
-                class="hover:bg-gray-100"
-              />
-              <Button
-                type="submit"
-                :label="isEditMode ? 'Cập nhật' : 'Tạo mới'"
-                icon="pi pi-check"
-              />
+            <div v-else class="p-4 bg-green-50 rounded-lg w-full">
+              <p class="text-green-700 font-medium">Quét thành công!</p>
+              <p class="mt-2">{{ qrScanResult }}</p>
             </div>
-          </form>
-        </template>
-      </Card>
-    </div>
-  </div>
+          </div>
+        </div>
+        <div class="flex justify-center gap-2">
+          <Button
+            label="Hủy"
+            icon="pi pi-times"
+            severity="secondary"
+            @click="showQRScanner = false"
+          />
+          <Button
+            label="Xác nhận"
+            icon="pi pi-check"
+            severity="success"
+            @click="applyQRScanResult"
+            :disabled="!qrScanResult"
+          />
+        </div>
+      </div>
+    </Dialog>
+  </Fluid>
 </template>
 
 <script setup>
@@ -438,6 +587,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useStaffStore } from '@/stores/staffstore'
 import addressApi from '@/apis/address'
+import userApi from '@/apis/user'
+import storageApi from '@/apis/storage'
 // Import thư viện QR scanner
 import { QrcodeStream } from 'vue-qrcode-reader'
 
@@ -455,6 +606,9 @@ const qrScanResult = ref(null)
 const cameraError = ref(null)
 const hasCamera = ref(true)
 
+// Audit trail
+const auditTrail = ref([])
+
 // Form data
 const form = ref({
   avatar: null,
@@ -465,7 +619,7 @@ const form = ref({
   email: '',
   soDienThoai: '',
   vaiTro: null,
-  trangThai: true,
+  trangThai: 'HOAT_DONG',
   diaChis: [], // Khởi tạo mảng rỗng
 })
 
@@ -498,6 +652,11 @@ const genderOptions = ref([
 const roleOptions = ref([
   { label: 'Nhân viên', value: 'STAFF' },
   { label: 'Admin', value: 'ADMIN' },
+])
+
+const statusOptions = ref([
+  { label: 'Hoạt động', value: 'HOAT_DONG' },
+  { label: 'Không hoạt động', value: 'KHONG_HOAT_DONG' },
 ])
 
 // Address data
@@ -644,6 +803,192 @@ watch(showQRScanner, (newVal) => {
   }
 })
 
+// Audit trail functions
+const loadAuditHistory = async () => {
+  if (!isEditMode.value || !staffId.value) return
+
+  try {
+    const response = await userApi.getStaffAuditHistory(staffId.value)
+    auditTrail.value = response.data || []
+  } catch (error) {
+    console.error('Error loading audit history:', error)
+    // Don't show error toast for audit history as it's not critical
+    auditTrail.value = []
+  }
+}
+
+const formatAuditDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
+
+const getActionDisplayName = (action) => {
+  const actionMap = {
+    'CREATE': 'Tạo mới',
+    'UPDATE': 'Cập nhật',
+    'DELETE': 'Xóa',
+    'STATUS_CHANGE': 'Thay đổi trạng thái',
+    'ROLE_CHANGE': 'Thay đổi vai trò'
+  }
+  return actionMap[action] || action
+}
+
+const getAuditIcon = (action) => {
+  const iconMap = {
+    'CREATE': 'pi pi-plus-circle',
+    'UPDATE': 'pi pi-pencil',
+    'DELETE': 'pi pi-trash',
+    'STATUS_CHANGE': 'pi pi-sync',
+    'ROLE_CHANGE': 'pi pi-user-edit'
+  }
+  return iconMap[action] || 'pi pi-info-circle'
+}
+
+const getAuditIconColor = (action) => {
+  const colorMap = {
+    'CREATE': 'text-green-600',
+    'UPDATE': 'text-blue-600',
+    'DELETE': 'text-red-600',
+    'STATUS_CHANGE': 'text-purple-600',
+    'ROLE_CHANGE': 'text-orange-600'
+  }
+  return colorMap[action] || 'text-surface-600'
+}
+
+const getAuditBorderColor = (action) => {
+  const colorMap = {
+    'CREATE': 'border-green-400 bg-green-50',
+    'UPDATE': 'border-blue-400 bg-blue-50',
+    'DELETE': 'border-red-400 bg-red-50',
+    'STATUS_CHANGE': 'border-purple-400 bg-purple-50',
+    'ROLE_CHANGE': 'border-orange-400 bg-orange-50'
+  }
+  return colorMap[action] || 'border-surface-400 bg-surface-50'
+}
+
+const formatJsonData = (jsonString) => {
+  if (!jsonString) return ''
+  try {
+    const data = JSON.parse(jsonString)
+    return Object.entries(data)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(', ')
+  } catch (error) {
+    return jsonString
+  }
+}
+
+// Parse audit changes to compare old and new values
+const parseAuditChanges = (oldValuesJson, newValuesJson) => {
+  if (!oldValuesJson || !newValuesJson) return []
+
+  try {
+    const oldValues = JSON.parse(oldValuesJson)
+    const newValues = JSON.parse(newValuesJson)
+    const changes = []
+
+    // Field name mappings for user-friendly display
+    const fieldNames = {
+      maNguoiDung: 'Mã người dùng',
+      hoTen: 'Họ và tên',
+      gioiTinh: 'Giới tính',
+      ngaySinh: 'Ngày sinh',
+      email: 'Email',
+      soDienThoai: 'Số điện thoại',
+      cccd: 'CCCD',
+      avatar: 'Ảnh đại diện',
+      vaiTro: 'Vai trò',
+      trangThai: 'Trạng thái'
+    }
+
+    // Compare each field
+    for (const [field, newValue] of Object.entries(newValues)) {
+      const oldValue = oldValues[field]
+      if (oldValue !== newValue) {
+        changes.push({
+          field: field,
+          fieldName: fieldNames[field] || field,
+          oldValue: formatAuditValue(field, oldValue),
+          newValue: formatAuditValue(field, newValue)
+        })
+      }
+    }
+
+    return changes
+  } catch (error) {
+    console.error('Error parsing audit changes:', error)
+    return []
+  }
+}
+
+// Format audit values for display
+const formatAuditValue = (field, value) => {
+  if (value === null || value === undefined) return 'Không có'
+
+  switch (field) {
+    case 'gioiTinh':
+      return value === 'NAM' ? 'Nam' : value === 'NU' ? 'Nữ' : value
+    case 'trangThai':
+      return value === 'HOAT_DONG' ? 'Hoạt động' : value === 'KHONG_HOAT_DONG' ? 'Không hoạt động' : value
+    case 'vaiTro':
+      return value === 'CUSTOMER' ? 'Khách hàng' : value === 'STAFF' ? 'Nhân viên' : value === 'ADMIN' ? 'Quản trị viên' : value
+    case 'ngaySinh':
+      return value ? new Date(value).toLocaleDateString('vi-VN') : 'Không có'
+    case 'avatar':
+      return value ? 'Có ảnh đại diện' : 'Không có ảnh'
+    default:
+      return String(value)
+  }
+}
+
+// Parse audit values for CREATE entries (only new values)
+const parseCreateAuditValues = (newValuesJson) => {
+  if (!newValuesJson) return []
+
+  try {
+    const newValues = JSON.parse(newValuesJson)
+    const fields = []
+
+    // Field name mappings for user-friendly display
+    const fieldNames = {
+      maNguoiDung: 'Mã người dùng',
+      hoTen: 'Họ và tên',
+      gioiTinh: 'Giới tính',
+      ngaySinh: 'Ngày sinh',
+      email: 'Email',
+      soDienThoai: 'Số điện thoại',
+      cccd: 'CCCD',
+      avatar: 'Ảnh đại diện',
+      vaiTro: 'Vai trò',
+      trangThai: 'Trạng thái'
+    }
+
+    // Process each field
+    for (const [field, value] of Object.entries(newValues)) {
+      if (value !== null && value !== undefined) {
+        fields.push({
+          field: field,
+          fieldName: fieldNames[field] || field,
+          value: formatAuditValue(field, value)
+        })
+      }
+    }
+
+    return fields
+  } catch (error) {
+    console.error('Error parsing create audit values:', error)
+    return []
+  }
+}
+
 onMounted(async () => {
   await loadProvinces()
   initDefaultAddress() // Đảm bảo luôn có ít nhất 1 địa chỉ
@@ -739,6 +1084,9 @@ onMounted(async () => {
         delete address.quanHuyenName
         delete address.phuongXaName
       }
+
+      // Load audit history after loading staff data
+      await loadAuditHistory()
     } catch (error) {
       console.error('Error loading staff:', error)
       toast.add({
@@ -957,9 +1305,34 @@ const handleSubmit = async () => {
   }
 
   try {
+    let avatarUrl = null
+
+    // Upload avatar file if it's a File object (new upload)
+    if (form.value.avatar && form.value.avatar instanceof File) {
+      try {
+        avatarUrl = await storageApi.uploadFile(form.value.avatar, 'avatars')
+        if (!avatarUrl) {
+          throw new Error('No file URL returned from upload')
+        }
+      } catch (uploadError) {
+        console.error('Avatar upload error:', uploadError)
+        toast.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: uploadError.message || 'Không thể tải lên ảnh đại diện',
+          life: 3000,
+        })
+        return
+      }
+    } else if (typeof form.value.avatar === 'string') {
+      // If avatar is already a string (URL), use it as is (for edit mode)
+      avatarUrl = form.value.avatar
+    }
+
     // Prepare data for API
     const staffData = {
       ...form.value,
+      avatar: avatarUrl, // Use the uploaded URL or existing URL
       ngaySinh: form.value.ngaySinh.toISOString().split('T')[0],
       diaChis: form.value.diaChis.map((addr, index) => {
         // Tìm tên từ code hoặc giữ nguyên nếu không tìm thấy (trường hợp đã là tên)
@@ -984,6 +1357,9 @@ const handleSubmit = async () => {
         detail: 'Cập nhật nhân viên thành công',
         life: 3000,
       })
+
+      // Reload audit history to show the new update entry
+      await loadAuditHistory()
     } else {
       await staffStore.createStaff(staffData)
       toast.add({
@@ -992,9 +1368,10 @@ const handleSubmit = async () => {
         detail: 'Tạo nhân viên mới thành công',
         life: 3000,
       })
-    }
 
-    router.push({ name: 'employees' })
+      // For new staff, redirect to list
+      router.push({ name: 'employees' })
+    }
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi xử lý yêu cầu'
     toast.add({

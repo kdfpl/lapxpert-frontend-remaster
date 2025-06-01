@@ -10,13 +10,4 @@ import ThongKe from './ThongKe.vue';
 
 <template>
       <ThongKe/>
-        <!-- <StatsWidget />
-        <div class="col-span-12 xl:col-span-6">
-            <RecentSalesWidget />
-            <BestSellingWidget />
-        </div>
-        <div class="col-span-12 xl:col-span-6">
-            <RevenueStreamWidget />
-            <NotificationsWidget />
-        </div> -->
 </template>

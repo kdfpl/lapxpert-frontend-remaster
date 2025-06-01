@@ -563,6 +563,43 @@ const attributeService = {
     }
   },
 
+  // Colors
+  getAllColors: async () => {
+    try {
+      return await privateApi.get(`${privateApi_URL}/colors`);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+  createColor: async (color) => {
+    try {
+      return await privateApi.put(`${privateApi_URL}/colors`, color);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+  createMultipleColors: async (colors) => {
+    try {
+      return await privateApi.put(`${privateApi_URL}/colors/multiple`, colors);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+  deleteColor: async (id) => {
+    try {
+      return await privateApi.delete(`${privateApi_URL}/colors/${id}`);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+  deleteMultipleColors: async (ids) => {
+    try {
+      return await privateApi.delete(`${privateApi_URL}/colors`, { data: ids });
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Category
   getAllCategory: async () => {
     try {

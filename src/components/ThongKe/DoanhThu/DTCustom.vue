@@ -1,5 +1,5 @@
 <script>
-import axios from "axios";
+import ThongKeService from '@/apis/dashboard'
 import { Line } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -65,24 +65,32 @@ export default {
   methods: {
     async fetchData() {
       if (!this.start_date || !this.end_date) {
-      console.error("Vui lòng chọn đầy đủ ngày bắt đầu và kết thúc");
-      return; // Dừng phương thức nếu dữ liệu không hợp lệ
-    }
-    if(this.start_date  > this.end_date){
-console.error("Thời gian kết thúc không được quá ngày bắt đầu");
-return
-    }
-      try {
-        const response = await axios.get("http://localhost:8080/thong-ke/custom-data", {
-          params: {
-            start_date: this.start_date,  // Truyền trực tiếp giá trị start_date và end_date
-            end_date: this.end_date,
+        console.error("Vui lòng chọn đầy đủ ngày bắt đầu và kết thúc");
+        return; // Dừng phương thức nếu dữ liệu không hợp lệ
       }
-        });
+      if(this.start_date > this.end_date){
+        console.error("Thời gian kết thúc không được quá ngày bắt đầu");
+        return
+      }
 
-        this.chartData = response.data;
+      try {
+        const response = await ThongKeService.layDoanhThuTheoNgay(this.start_date, this.end_date)
+
+        // Format data for chart
+        this.chartData = {
+          labels: response.data.labels || [],
+          datasets: [{
+            label: 'Doanh thu tùy chỉnh (VNĐ)',
+            data: response.data.data || [],
+            borderColor: '#36A2EB',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            fill: true,
+            tension: 0.4
+          }]
+        }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu từ API:", error);
+        this.chartData = { labels: [], datasets: [] }
       }
     },
 

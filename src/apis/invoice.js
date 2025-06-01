@@ -17,7 +17,14 @@ export default {
     updateHoaDon(id, hoaDon) {
         return privateApi.put(`${API_URL}/${id}`, hoaDon);
     },
+
+    // New function to get orders for the authenticated user
+    getMyOrders() {
+        return privateApi.get(`${API_URL}/me`);
+    },
+
+    // New function to get the history of a specific order
+    getOrderHistory(orderId) {
+        return privateApi.get(`${API_URL}/${orderId}/history`);
+    },
 };
-
-
-

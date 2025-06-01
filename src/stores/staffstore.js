@@ -93,7 +93,7 @@ export const useStaffStore = defineStore('staff', {
     },
   },
   getters: {
-    activeStaff: (state) => state.staff.filter((s) => s.trangThai),
-    inactiveStaff: (state) => state.staff.filter((s) => !s.trangThai),
+    activeStaff: (state) => state.staff.filter((s) => s.trangThai === 'HOAT_DONG' || s.trangThai === true),
+    inactiveStaff: (state) => state.staff.filter((s) => s.trangThai === 'KHONG_HOAT_DONG' || s.trangThai === false),
   },
 })

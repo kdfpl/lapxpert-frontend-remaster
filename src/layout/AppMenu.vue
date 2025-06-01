@@ -12,23 +12,17 @@ const adminModel = ref([
     items: [{ label: 'Thống kê', icon: 'icon-[line-md--speed-loop] size-5', to: '/' }],
   },
   {
-    label: 'Bán hàng',
-    to: '/pos',
+    label: 'Quản lý đơn hàng',
     items: [
       {
-        label: 'Bán Hàng',
-        icon: 'icon-[hugeicons--delivery-truck-02] size-5',
-        to: '/pos',
+        label: 'Danh sách đơn hàng',
+        icon: 'icon-[hugeicons--package-delivered] size-5',
+        to: '/orders',
       },
       {
-        label: 'Đơn hàng',
-        icon: 'icon-[hugeicons--delivery-truck-02] size-5',
-        to: '/pos/orders',
-      },
-      {
-        label: 'Hoá đơn',
-        icon: 'icon-[hugeicons--invoice-02] size-5',
-        to: '/invoices',
+        label: 'Tạo đơn hàng',
+        icon: 'icon-[hugeicons--add-square] size-5',
+        to: '/orders/create',
       },
     ],
   },
@@ -89,24 +83,23 @@ const staffModel = ref([
     items: [{ label: 'Thống kê', icon: 'icon-[line-md--speed-loop] size-5', to: '/' }],
   },
   {
-    label: 'Bán hàng',
-    to: '/pos',
+    label: 'Quản lý đơn hàng',
     items: [
       {
-        label: 'Đơn hàng',
-        icon: 'icon-[hugeicons--delivery-truck-02] size-5',
-        to: '/pos/orders',
+        label: 'Danh sách đơn hàng',
+        icon: 'icon-[hugeicons--package-delivered] size-5',
+        to: '/orders',
       },
       {
-        label: 'Hoá đơn',
-        icon: 'icon-[hugeicons--invoice-02] size-5',
-        to: '/pos/invoices',
+        label: 'Tạo đơn hàng',
+        icon: 'icon-[hugeicons--add-square] size-5',
+        to: '/orders/create',
       },
     ],
   },
 ])
 
-// Duyệt menu theo vai trò (nếu vai trò là STAFF, chỉ hiển thị menu Bán hàng)
+// Duyệt menu theo vai trò
 const filteredModel = computed(() => {
   return role === 'ADMIN' ? adminModel.value : staffModel.value
 })

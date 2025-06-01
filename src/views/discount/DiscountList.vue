@@ -6,6 +6,10 @@ import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 import { useDiscountStore } from '@/stores/discountstore'
 import discountService from '@/apis/discount'
 
+// PrimeVue Components
+import Toast from 'primevue/toast'
+import Textarea from 'primevue/textarea'
+
 // --- 1. Store Access ---
 const discountStore = useDiscountStore()
 // --- Router ---
@@ -23,9 +27,20 @@ const selectedDiscounts = ref([]) // For multi-select in the main table
 // Component State - UI Control (Dialogs, Table, Form)
 const deleteDiscountDialog = ref(false)
 const deleteDiscountsDialog = ref(false)
+const restoreDiscountsDialog = ref(false)
+
+// Audit reason state
+const deleteReason = ref('')
+const batchCloseReason = ref('')
+
+// View mode state - show cancelled discounts
+const showCancelledDiscounts = ref(false)
 
 // Component State - PrimeVue Utilities
 const toast = useToast()
+
+// Performance optimization state
+const isLoading = ref(false)
 
 // --- 3. Filters ---
 // Define the initial structure for filters
@@ -65,6 +80,33 @@ const normalizeDateToStartOfDay = (dateInput) => {
     return null
   }
 }
+
+// Enhanced filter tracking following ProductList.vue patterns
+const hasActiveFilters = computed(() => {
+  return !!(
+    filters.value.global.value ||
+    filters.value.maDotGiamGia.constraints[0].value ||
+    filters.value.tenDotGiamGia.constraints[0].value ||
+    filters.value.trangThai.value ||
+    filters.value.ngayBatDau.constraints[0].value ||
+    filters.value.ngayKetThuc.constraints[0].value ||
+    (filters.value.phanTramGiam.value &&
+     (filters.value.phanTramGiam.value[0] !== 0 || filters.value.phanTramGiam.value[1] !== 100))
+  )
+})
+
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (filters.value.global.value) count++
+  if (filters.value.maDotGiamGia.constraints[0].value) count++
+  if (filters.value.tenDotGiamGia.constraints[0].value) count++
+  if (filters.value.trangThai.value) count++
+  if (filters.value.ngayBatDau.constraints[0].value) count++
+  if (filters.value.ngayKetThuc.constraints[0].value) count++
+  if (filters.value.phanTramGiam.value &&
+      (filters.value.phanTramGiam.value[0] !== 0 || filters.value.phanTramGiam.value[1] !== 100)) count++
+  return count
+})
 
 const filteredDiscounts = computed(() => {
   let data = [...discounts.value]
@@ -132,79 +174,124 @@ function clearSpecificFilter(fieldName) {
   }
 }
 
-// --- 5. Lifecycle Hooks ---
-onBeforeMount(async () => {
-  // Fetch initial data when the component is about to mount
+
+
+// Enhanced data fetching with loading states
+async function fetchDiscountsWithLoading() {
+  isLoading.value = true
   try {
-    await discountStore.fetchDiscounts()
+    if (showCancelledDiscounts.value) {
+      // Fetch all discounts including cancelled ones
+      const response = await discountService.getAllDiscountsIncludingHidden()
+      discountStore.discounts = response || []
+    } else {
+      // Fetch only active discounts (normal behavior)
+      await discountStore.fetchDiscounts()
+    }
   } catch (error) {
-    console.error('Error fetching initial data:', error)
+    console.error('Error fetching discounts:', error)
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: 'Không thể tải dữ liệu ban đầu',
+      detail: 'Không thể tải dữ liệu đợt giảm giá',
       life: 3000,
     })
+  } finally {
+    isLoading.value = false
   }
+}
+
+// Toggle between showing all discounts and only active ones
+async function toggleShowCancelled() {
+  showCancelledDiscounts.value = !showCancelledDiscounts.value
+  await fetchDiscountsWithLoading()
+
+  toast.add({
+    severity: 'info',
+    summary: 'Thông báo',
+    detail: showCancelledDiscounts.value
+      ? 'Hiển thị tất cả đợt giảm giá (bao gồm đã hủy)'
+      : 'Chỉ hiển thị đợt giảm giá đang hoạt động',
+    life: 3000,
+  })
+}
+
+// --- 6. Lifecycle Hooks ---
+onBeforeMount(async () => {
+  // Fetch initial data when the component is about to mount
+  await fetchDiscountsWithLoading()
 })
 
 // --- 6. Utility Functions ---
 
 /**
- * Formats an ISO date string into a locale-specific date and time string.
+ * Formats an ISO date string into Vietnam timezone date and time string.
+ * Following PhieuGiamGia pattern exactly for consistent timezone display
  * @param {string} dateString - The ISO date string (UTC).
- * @param {string} [locale=navigator.language] - The locale to use for formatting.
- * @returns {string} Formatted date-time string or empty string if input is invalid.
+ * @returns {string} Formatted date-time string in Vietnam timezone or empty string if input is invalid.
  */
-const formatDateTime = (dateString, locale = navigator.language) => {
+const formatDateTime = (dateString) => {
   if (!dateString) return ''
   try {
     const date = new Date(dateString)
     if (isNaN(date.getTime())) return '' // Check for invalid date
+
+    // Format in Vietnam timezone (Asia/Ho_Chi_Minh)
     const options = {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true, // Use hour12: false for 24-hour format if needed
+      timeZone: 'Asia/Ho_Chi_Minh',
+      hour12: false // Use 24-hour format for business operations
     }
-    return new Intl.DateTimeFormat(locale, options).format(date)
+    return new Intl.DateTimeFormat('vi-VN', options).format(date)
   } catch (error) {
     console.error('Error formatting date-time:', error)
     return '' // Return empty on error
   }
 }
 
+
+
 /**
  * Gets the severity level for a discount status tag based on its state.
- * @param {string} trangThai - The status ('CHUA_DIEN_RA', 'DA_DIEN_RA', 'KET_THUC').
- * @returns {string|null} PrimeVue severity ('warn', 'success', 'danger') or null.
+ * @param {string} trangThai - The status ('CHUA_DIEN_RA', 'DA_DIEN_RA', 'KET_THUC', 'BI_HUY').
+ * @returns {string|null} PrimeVue severity ('warn', 'success', 'danger', 'secondary') or null.
  */
 function getSeverity(trangThai) {
   const severityMap = {
     CHUA_DIEN_RA: 'warn',
     DA_DIEN_RA: 'success',
     KET_THUC: 'danger',
+    BI_HUY: 'secondary',
   }
   return severityMap[trangThai] || null
 }
 
-/**
- * Gets the display label for a discount status.
- * @param {string} trangThai - The status ('CHUA_DIEN_RA', 'DA_DIEN_RA', 'KET_THUC').
- * @returns {string} User-friendly status label.
- */
-function getTrangThaiLabel(trangThai) {
-  const labelMap = {
-    CHUA_DIEN_RA: 'Chưa hoạt động',
-    DA_DIEN_RA: 'Đang hoạt động',
-    KET_THUC: 'Ngưng hoạt động',
-  }
-  return labelMap[trangThai] || 'Không xác định'
+
+
+// --- 6. Status Options (Following PhieuGiamGia pattern) ---
+const statusOptions = ref([
+  { label: 'Chưa diễn ra', value: 'CHUA_DIEN_RA' },
+  { label: 'Đang diễn ra', value: 'DA_DIEN_RA' },
+  { label: 'Kết thúc', value: 'KET_THUC' },
+  { label: 'Đã hủy', value: 'BI_HUY' },
+])
+
+// --- 7. Data Refresh Method ---
+async function refreshData() {
+  await fetchDiscountsWithLoading()
+  toast.add({
+    severity: 'success',
+    summary: 'Thành công',
+    detail: 'Dữ liệu đã được làm mới',
+    life: 3000,
+  })
 }
 
-// --- 7. Dialog Control Methods ---
+// --- 8. Dialog Control Methods ---
 
 /** Navigates to the form for creating a new discount. */
 function newDiscount() {
@@ -225,6 +312,7 @@ function editDiscount(discountData) {
  */
 function confirmDeleteDiscount(discountData) {
   discount.value = discountData // Store the discount to be deleted
+  deleteReason.value = '' // Clear previous reason
   deleteDiscountDialog.value = true
 }
 
@@ -239,7 +327,38 @@ function confirmDeleteDiscounts() {
     })
     return
   }
+  batchCloseReason.value = '' // Clear previous reason
   deleteDiscountsDialog.value = true
+}
+
+
+
+/** Opens the confirmation dialog for restoring multiple selected hidden discounts. */
+function confirmRestoreDiscounts() {
+  if (!selectedDiscounts.value || selectedDiscounts.value.length === 0) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: 'Chưa chọn đợt giảm giá nào để khôi phục',
+      life: 3000,
+    })
+    return
+  }
+
+  // Check if any selected discounts are cancelled (BI_HUY status)
+  const cancelledDiscounts = selectedDiscounts.value.filter(discount => discount.trangThai === 'BI_HUY')
+
+  if (cancelledDiscounts.length === 0) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: 'Không có đợt giảm giá nào bị hủy trong danh sách đã chọn',
+      life: 3000,
+    })
+    return
+  }
+
+  restoreDiscountsDialog.value = true
 }
 
 // --- 8. CRUD Action Methods ---
@@ -248,25 +367,47 @@ function confirmDeleteDiscounts() {
 async function deleteSingleDiscount() {
   if (!discount.value || !discount.value.id) return
 
+  // Validate delete reason
+  if (!deleteReason.value?.trim()) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: 'Vui lòng nhập lý do xóa',
+      life: 3000,
+    })
+    return
+  }
+
+  isLoading.value = true
   try {
-    await discountService.deleteDiscount(discount.value.id)
+    // Use audit-aware delete method with fallback
+    try {
+      await discountService.deleteDiscountWithAudit(discount.value.id, deleteReason.value.trim())
+    } catch (error) {
+      console.warn('Audit delete method failed, using standard method:', error)
+      await discountService.deleteDiscount(discount.value.id)
+    }
+
     toast.add({
       severity: 'success',
       summary: 'Thành công',
-      detail: 'Xoá đợt giảm giá thành công',
+      detail: 'Xóa đợt giảm giá thành công',
       life: 3000,
     })
-    await discountStore.fetchDiscounts() // Refresh the list
+    await fetchDiscountsWithLoading() // Refresh the list with loading state
     deleteDiscountDialog.value = false
     discount.value = {} // Clear the reference
+    deleteReason.value = '' // Clear the reason
   } catch (error) {
     console.error('Error deleting discount:', error)
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: `Có lỗi xảy ra khi xoá: ${error.message || 'Lỗi không xác định'}`,
+      detail: `Có lỗi xảy ra khi xóa: ${error.message || 'Lỗi không xác định'}`,
       life: 3000,
     })
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -274,199 +415,351 @@ async function deleteSingleDiscount() {
 async function deleteMultipleDiscounts() {
   if (!selectedDiscounts.value || selectedDiscounts.value.length === 0) return
 
+  // Validate batch delete reason
+  if (!batchCloseReason.value?.trim()) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cảnh báo',
+      detail: 'Vui lòng nhập lý do xóa',
+      life: 3000,
+    })
+    return
+  }
+
   const selectedIds = selectedDiscounts.value.map((item) => item.id)
+  isLoading.value = true
   try {
-    await discountService.deleteDiscounts(selectedIds)
+    // Use audit-aware batch delete method with fallback
+    try {
+      await discountService.deleteDiscountsWithAudit(selectedIds, batchCloseReason.value.trim())
+    } catch (error) {
+      console.warn('Audit batch delete method failed, using standard method:', error)
+      await discountService.deleteDiscounts(selectedIds)
+    }
+
     toast.add({
       severity: 'success',
       summary: 'Thành công',
-      detail: `Đã xoá ${selectedIds.length} đợt giảm giá`,
+      detail: `Đã xóa ${selectedIds.length} đợt giảm giá`,
       life: 3000,
     })
-    await discountStore.fetchDiscounts() // Refresh the list
+    await fetchDiscountsWithLoading() // Refresh the list with loading state
     deleteDiscountsDialog.value = false
     selectedDiscounts.value = [] // Clear selection
+    batchCloseReason.value = '' // Clear the reason
   } catch (error) {
     console.error('Error deleting multiple discounts:', error)
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: `Có lỗi xảy ra khi xoá: ${error.message || 'Lỗi không xác định'}`,
+      detail: `Có lỗi xảy ra khi xóa: ${error.message || 'Lỗi không xác định'}`,
       life: 3000,
     })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+
+
+/** Handles the actual restoration of multiple selected hidden discounts after confirmation. */
+async function restoreMultipleDiscounts() {
+  if (!selectedDiscounts.value || selectedDiscounts.value.length === 0) return
+
+  // Filter only cancelled discounts
+  const cancelledDiscounts = selectedDiscounts.value.filter(discount => discount.trangThai === 'BI_HUY')
+
+  if (cancelledDiscounts.length === 0) return
+
+  const selectedIds = cancelledDiscounts.map((item) => item.id)
+  isLoading.value = true
+  try {
+    await discountService.restoreMultipleDiscounts(selectedIds)
+    toast.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: `Đã khôi phục ${selectedIds.length} đợt giảm giá`,
+      life: 3000,
+    })
+    await fetchDiscountsWithLoading() // Refresh the list with loading state
+    restoreDiscountsDialog.value = false
+    selectedDiscounts.value = [] // Clear selection
+  } catch (error) {
+    console.error('Error restoring multiple discounts:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: `Có lỗi xảy ra khi khôi phục: ${error.message || 'Lỗi không xác định'}`,
+      life: 3000,
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+/** Handles the restoration of a single cancelled discount. */
+async function restoreDiscount(discountData) {
+  if (!discountData || !discountData.id) return
+
+  isLoading.value = true
+  try {
+    await discountService.restoreDiscount(discountData.id)
+    toast.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: `Đã khôi phục đợt giảm giá "${discountData.tenDotGiamGia}"`,
+      life: 3000,
+    })
+    await fetchDiscountsWithLoading() // Refresh the list with loading state
+  } catch (error) {
+    console.error('Error restoring single discount:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: `Có lỗi xảy ra khi khôi phục: ${error.message || 'Lỗi không xác định'}`,
+      life: 3000,
+    })
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
 
 <template>
-  <div class="card">
-    <div class="font-semibold text-xl mb-4">Đợt giảm giá</div>
+    <Toast />
 
-    <Toolbar class="mb-6">
-      <template #start>
-        <Button label="Thêm" icon="pi pi-plus" class="mr-2" outlined @click="newDiscount" />
-        <Button label="In" icon="pi pi-print" class="mr-2" outlined />
-        <Button label="Xuất" icon="pi pi-upload" class="mr-2" outlined />
-        <Button
-          label="Xoá"
-          icon="pi pi-trash"
-          severity="danger"
-          outlined
-          @click="confirmDeleteDiscounts"
-          :disabled="!selectedDiscounts || !selectedDiscounts.length"
-        />
-      </template>
-    </Toolbar>
-
-    <div class="font-semibold text-xl mb-4">Bộ lọc</div>
-
-    <Button
-      type="button"
-      icon="pi pi-filter-slash"
-      label="Xoá toàn bộ bộ lọc"
-      outlined
-      class="mb-4"
-      @click="clearFilter()"
-    />
-
-    <div class="mb-6 grid grid-cols-3 gap-4 border p-4 rounded-lg">
-      <div>
-        <label class="block mb-2">Mã đợt giảm giá</label>
-        <InputGroup>
-          <Button
-            v-if="filters['maDotGiamGia'].constraints[0].value"
-            icon="pi pi-filter-slash"
-            outlined
-            @click="clearSpecificFilter('maDotGiamGia')"
-          />
-          <InputText
-            v-model="filters['maDotGiamGia'].constraints[0].value"
-            type="text"
-            placeholder="Lọc mã"
-            fluid
-          />
-        </InputGroup>
-      </div>
-
-      <div>
-        <label class="block mb-2">Tên đợt giảm giá</label>
-        <InputGroup>
-          <Button
-            v-if="filters['tenDotGiamGia'].constraints[0].value"
-            icon="pi pi-filter-slash"
-            outlined
-            @click="clearSpecificFilter('tenDotGiamGia')"
-          />
-          <InputText
-            v-model="filters['tenDotGiamGia'].constraints[0].value"
-            type="text"
-            placeholder="Lọc tên"
-            fluid
-          />
-        </InputGroup>
-      </div>
-
-      <div>
-        <label class="block mb-4">Phần trăm giảm</label>
-        <div class="px-3">
-          <Slider v-model="filters['phanTramGiam'].value" range class="mb-2" fluid />
-          <div class="flex items-center justify-between px-2">
-            <span>{{ filters['phanTramGiam'].value ? filters['phanTramGiam'].value[0] : 0 }}</span>
-            <span>{{
-              filters['phanTramGiam'].value ? filters['phanTramGiam'].value[1] : 100
-            }}</span>
+    <!-- Page Header -->
+    <div class="card mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+            <i class="pi pi-percentage text-lg text-primary"></i>
+          </div>
+          <div>
+            <h1 class="font-semibold text-xl text-surface-900 m-0">
+              Quản lý đợt giảm giá
+            </h1>
+            <p class="text-surface-500 text-sm mt-1 mb-0">
+              Tạo và quản lý các đợt giảm giá cho sản phẩm
+            </p>
           </div>
         </div>
-      </div>
-
-      <div>
-        <label class="block mb-2">Ngày bắt đầu</label>
-        <InputGroup>
+        <div class="flex items-center gap-2">
           <Button
-            v-if="filters['ngayBatDau'].constraints[0].value"
-            icon="pi pi-filter-slash"
+            label="Làm mới"
+            icon="pi pi-refresh"
             outlined
-            @click="clearSpecificFilter('ngayBatDau')"
+            @click="refreshData"
+            :loading="isLoading"
           />
-          <DatePicker
-            v-model="filters['ngayBatDau'].constraints[0].value"
-            dateFormat="dd/mm/yy"
-            placeholder="dd/mm/yyyy"
-            showButtonBar
-            showIcon
-            fluid
-            iconDisplay="input"
-          />
-        </InputGroup>
-      </div>
-
-      <div>
-        <label class="block mb-2">Ngày kết thúc</label>
-        <InputGroup>
           <Button
-            v-if="filters['ngayKetThuc'].constraints[0].value"
-            icon="pi pi-filter-slash"
+            :label="showCancelledDiscounts ? 'Chỉ hiện hoạt động' : 'Hiện tất cả'"
+            :icon="showCancelledDiscounts ? 'pi pi-eye-slash' : 'pi pi-eye'"
             outlined
-            @click="clearSpecificFilter('ngayKetThuc')"
+            @click="toggleShowCancelled"
+            :severity="showCancelledDiscounts ? 'warn' : 'info'"
           />
-          <DatePicker
-            v-model="filters['ngayKetThuc'].constraints[0].value"
-            dateFormat="dd/mm/yy"
-            placeholder="dd/mm/yyyy"
-            showButtonBar
-            showIcon
-            fluid
-            iconDisplay="input"
-            :minDate="filters['ngayBatDau'].constraints[0].value"
-          />
-        </InputGroup>
-      </div>
-
-      <div>
-        <label class="block mb-2">Trạng thái</label>
-        <InputGroup>
           <Button
-            v-if="filters['trangThai'].value"
-            icon="pi pi-filter-slash"
-            outlined
-            @click="clearSpecificFilter('trangThai')"
+            label="Thêm đợt giảm giá"
+            icon="pi pi-plus"
+            severity="success"
+            @click="newDiscount"
           />
-          <Select
-            v-model="filters['trangThai'].value"
-            :options="[
-              { label: 'Chưa hoạt động', value: 'CHUA_DIEN_RA' },
-              { label: 'Đang hoạt động', value: 'DA_DIEN_RA' },
-              { label: 'Ngưng hoạt động', value: 'KET_THUC' },
-            ]"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Chọn trạng thái"
-            fluid
-          >
-            <template #option="{ option }">
-              <Tag :value="getTrangThaiLabel(option.value)" :severity="getSeverity(option.value)" />
-            </template>
-          </Select>
-        </InputGroup>
+          <Button
+            v-if="!showCancelledDiscounts"
+            label="Xóa nhiều đợt"
+            icon="pi pi-trash"
+            severity="danger"
+            outlined
+            @click="confirmDeleteDiscounts"
+            :disabled="!selectedDiscounts || !selectedDiscounts.length"
+          />
+          <Button
+            v-if="showCancelledDiscounts"
+            label="Khôi phục nhiều đợt"
+            icon="pi pi-refresh"
+            severity="success"
+            outlined
+            @click="confirmRestoreDiscounts"
+            :disabled="!selectedDiscounts || !selectedDiscounts.length"
+          />
+        </div>
       </div>
     </div>
 
+  <div class="card">
+
+    <div class="font-semibold text-xl mb-4">Bộ lọc</div>
+
+    <!-- Enhanced Filter Section Following ProductList.vue Patterns -->
+    <div class="mb-6 border rounded-lg p-4">
+      <!-- Filter Actions Row -->
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-filter text-primary"></i>
+          <span class="text-sm text-surface-600">Sử dụng các bộ lọc dưới đây để tìm kiếm đợt giảm giá</span>
+          <Badge v-if="hasActiveFilters" :value="activeFilterCount" severity="info" />
+        </div>
+        <Button
+          type="button"
+          icon="pi pi-filter-slash"
+          label="Xóa toàn bộ bộ lọc"
+          outlined
+          size="small"
+          @click="clearFilter()"
+          :disabled="!hasActiveFilters"
+        />
+      </div>
+
+      <!-- Filters Grid - Enhanced Responsive Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <!-- Mã đợt giảm giá -->
+        <div>
+          <label class="block mb-2">Mã đợt giảm giá</label>
+          <InputGroup>
+            <Button
+              v-if="filters['maDotGiamGia'].constraints[0].value"
+              icon="pi pi-filter-slash"
+              outlined
+              @click="clearSpecificFilter('maDotGiamGia')"
+            />
+            <InputText
+              v-model="filters['maDotGiamGia'].constraints[0].value"
+              type="text"
+              placeholder="Lọc mã"
+              fluid
+            />
+          </InputGroup>
+        </div>
+
+        <!-- Tên đợt giảm giá -->
+        <div>
+          <label class="block mb-2">Tên đợt giảm giá</label>
+          <InputGroup>
+            <Button
+              v-if="filters['tenDotGiamGia'].constraints[0].value"
+              icon="pi pi-filter-slash"
+              outlined
+              @click="clearSpecificFilter('tenDotGiamGia')"
+            />
+            <InputText
+              v-model="filters['tenDotGiamGia'].constraints[0].value"
+              type="text"
+              placeholder="Lọc tên"
+              fluid
+            />
+          </InputGroup>
+        </div>
+
+        <!-- Trạng thái -->
+        <div>
+          <label class="block mb-2">Trạng thái</label>
+          <InputGroup>
+            <Button
+              v-if="filters['trangThai'].value"
+              icon="pi pi-filter-slash"
+              outlined
+              @click="clearSpecificFilter('trangThai')"
+            />
+            <Select
+              v-model="filters['trangThai'].value"
+              :options="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Chọn trạng thái"
+              fluid
+            >
+              <template #option="{ option }">
+                <Tag :value="option.label" :severity="getSeverity(option.value)" />
+              </template>
+            </Select>
+          </InputGroup>
+        </div>
+
+        <!-- Phần trăm giảm - Range Slider -->
+        <div>
+          <label class="block mb-4">Phần trăm giảm (%)</label>
+          <div class="px-3">
+            <Slider
+              v-model="filters['phanTramGiam'].value"
+              range
+              class="mb-2"
+              :max="100"
+              fluid
+            />
+            <div class="flex items-center justify-between px-2">
+              <span>{{ filters['phanTramGiam'].value ? filters['phanTramGiam'].value[0] : 0 }}%</span>
+              <span>{{ filters['phanTramGiam'].value ? filters['phanTramGiam'].value[1] : 100 }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ngày bắt đầu -->
+        <div>
+          <label class="block mb-2">Ngày bắt đầu</label>
+          <InputGroup>
+            <Button
+              v-if="filters['ngayBatDau'].constraints[0].value"
+              icon="pi pi-filter-slash"
+              outlined
+              @click="clearSpecificFilter('ngayBatDau')"
+            />
+            <DatePicker
+              v-model="filters['ngayBatDau'].constraints[0].value"
+              dateFormat="dd/mm/yy"
+              placeholder="dd/mm/yyyy"
+              showButtonBar
+              showIcon
+              fluid
+              iconDisplay="input"
+            />
+          </InputGroup>
+        </div>
+
+        <!-- Ngày kết thúc -->
+        <div>
+          <label class="block mb-2">Ngày kết thúc</label>
+          <InputGroup>
+            <Button
+              v-if="filters['ngayKetThuc'].constraints[0].value"
+              icon="pi pi-filter-slash"
+              outlined
+              @click="clearSpecificFilter('ngayKetThuc')"
+            />
+            <DatePicker
+              v-model="filters['ngayKetThuc'].constraints[0].value"
+              dateFormat="dd/mm/yy"
+              placeholder="dd/mm/yyyy"
+              showButtonBar
+              showIcon
+              fluid
+              iconDisplay="input"
+              :minDate="filters['ngayBatDau'].constraints[0].value"
+            />
+          </InputGroup>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Discount DataTable with Performance Optimization -->
     <DataTable
       v-model:selection="selectedDiscounts"
       :value="filteredDiscounts"
-      dataKey="id"
-      :paginator="true"
+      :loading="isLoading || discountStore.loading"
+      paginator
       :rows="10"
-      :globalFilterFields="['maDotGiamGia', 'tenDotGiamGia']"
-      filterDisplay="menu"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
-      :rowsPerPageOptions="[5, 10, 25]"
-      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+      :rowsPerPageOptions="[5, 10, 20, 50]"
       showGridlines
-      :rowHover="true"
+      dataKey="id"
+      filterDisplay="menu"
+      class="p-datatable-sm"
+      currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} đợt giảm giá"
+      :globalFilterFields="['maDotGiamGia', 'tenDotGiamGia']"
+      scrollable
+      scrollHeight="600px"
     >
       <template #header>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
           <div class="flex">
             <IconField>
               <InputIcon>
@@ -478,88 +771,305 @@ async function deleteMultipleDiscounts() {
         </div>
       </template>
 
-      <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-      <Column header="STT">
-        <template #body="{ index }"> {{ index + 1 }} </template>
-      </Column>
-      <Column field="maDotGiamGia" header="Mã đợt giảm giá" sortable></Column>
-      <Column field="tenDotGiamGia" header="Tên đợt giảm giá" sortable></Column>
-      <Column field="phanTramGiam" header="Phần trăm giảm" sortable>
-        <template #body="{ data }"> {{ data.phanTramGiam }}% </template>
-      </Column>
+      <!-- Empty State -->
+      <template #empty>
+        <div class="py-8 text-center">
+          <i class="pi pi-search text-2xl mb-2" />
+          <p>Không tìm thấy đợt giảm giá</p>
+        </div>
+      </template>
+
+      <!-- Loading State -->
+      <template #loading>
+        <div class="py-8 text-center">
+          <i class="pi pi-spinner pi-spin text-2xl mb-2" />
+          <p>Đang tải dữ liệu...</p>
+        </div>
+      </template>
+
+      <!-- Table Columns -->
+
+      <!-- Selection Column with Checkboxes -->
+      <Column selectionMode="multiple" headerStyle="width: 3rem" />
+
       <Column
-        field="ngayBatDau"
-        header="Ngày bắt đầu"
-        dataType="date"
+        field="maDotGiamGia"
+        header="Mã đợt"
         sortable
-        style="min-width: 12rem"
-      >
-        <template #body="{ data }"> {{ formatDateTime(data.ngayBatDau) }} </template>
-      </Column>
+        headerClass="!text-md"
+        class="!text-sm"
+      />
+
       <Column
-        field="ngayKetThuc"
-        header="Ngày kết thúc"
-        dataType="date"
+        field="tenDotGiamGia"
+        header="Tên đợt giảm giá"
         sortable
-        style="min-width: 12rem"
+        headerClass="!text-md"
+        class="!text-sm"
+      />
+
+      <Column
+        field="phanTramGiam"
+        header="Phần trăm giảm"
+        sortable
+        headerClass="!text-md"
+        class="!text-sm"
       >
-        <template #body="{ data }"> {{ formatDateTime(data.ngayKetThuc) }} </template>
-      </Column>
-      <Column field="trangThai" header="Trạng thái" sortable style="min-width: 12rem">
         <template #body="{ data }">
-          <Tag :value="getTrangThaiLabel(data.trangThai)" :severity="getSeverity(data.trangThai)" />
-        </template>
-      </Column>
-      <Column :exportable="false" style="min-width: 12rem">
-        <template #body="{ data }">
-          <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editDiscount(data)" />
-          <Button
-            icon="pi pi-trash"
-            outlined
-            rounded
-            severity="danger"
-            @click="confirmDeleteDiscount(data)"
+          <Tag
+            :value="`${data.phanTramGiam}%`"
+            severity="success"
           />
         </template>
       </Column>
 
-      <template #empty>Không tìm thấy đợt giảm giá phù hợp với tiêu chí lọc.</template>
-    </DataTable>
-  </div>
-
-  <!-- Delete Discount Confirmation Dialogs -->
-  <Dialog
-    v-model:visible="deleteDiscountDialog"
-    :style="{ width: '450px' }"
-    header="Cảnh báo"
-    :modal="true"
-  >
-    <div class="flex items-center gap-4">
-      <i class="pi pi-exclamation-triangle !text-3xl" />
-      <span v-if="discount"
-        >Bạn có chắc chắn muốn xoá <b>{{ discount.maDotGiamGia }}</b
-        >?</span
+      <Column
+        field="ngayBatDau"
+        header="Bắt đầu"
+        sortable
+        headerClass="!text-md"
+        class="!text-sm"
       >
-    </div>
-    <template #footer>
-      <Button label="Huỷ" icon="pi pi-times" text @click="deleteDiscountDialog = false" />
-      <Button label="Đồng ý" icon="pi pi-check" @click="deleteSingleDiscount" />
-    </template>
-  </Dialog>
+        <template #body="{ data }">
+          {{ formatDateTime(data.ngayBatDau) }}
+        </template>
+      </Column>
 
-  <Dialog
-    v-model:visible="deleteDiscountsDialog"
-    :style="{ width: '450px' }"
-    header="Cảnh báo"
-    :modal="true"
-  >
-    <div class="flex items-center gap-4">
-      <i class="pi pi-exclamation-triangle !text-3xl" />
-      <span v-if="discount">Bạn có muốn xoá những đợt giảm giá đã chọn?</span>
-    </div>
-    <template #footer>
-      <Button label="Huỷ" icon="pi pi-times" text @click="deleteDiscountsDialog = false" />
-      <Button label="Đồng ý" icon="pi pi-check" @click="deleteMultipleDiscounts" />
-    </template>
-  </Dialog>
+      <Column
+        field="ngayKetThuc"
+        header="Kết thúc"
+        sortable
+        headerClass="!text-md"
+        class="!text-sm"
+      >
+        <template #body="{ data }">
+          {{ formatDateTime(data.ngayKetThuc) }}
+        </template>
+      </Column>
+
+      <Column
+        field="trangThai"
+        header="Trạng thái"
+        sortable
+        headerClass="!text-md"
+        class="!text-sm"
+      >
+        <template #body="{ data }">
+          <div class="flex items-center gap-2">
+            <Tag
+              :value="discountStore.getStatusLabel(data.trangThai)"
+              :severity="discountStore.getStatusSeverity(data.trangThai)"
+            />
+          </div>
+        </template>
+      </Column>
+
+      <Column header="Hành động" headerClass="!text-md" class="!text-sm" style="width: 150px">
+        <template #body="{ data }">
+          <div class="flex gap-1">
+            <Button
+              v-if="data.trangThai !== 'BI_HUY'"
+              icon="pi pi-pencil"
+              text
+              rounded
+              size="small"
+              @click="editDiscount(data)"
+              class="!w-8 !h-8 !text-blue-500 hover:!bg-blue-50"
+              v-tooltip.top="'Chỉnh sửa'"
+            />
+            <Button
+              v-if="data.trangThai !== 'BI_HUY'"
+              icon="pi pi-trash"
+              text
+              rounded
+              size="small"
+              severity="danger"
+              @click="confirmDeleteDiscount(data)"
+              class="!w-8 !h-8 !text-red-500 hover:!bg-red-50"
+              v-tooltip.top="'Xóa đợt'"
+            />
+            <Button
+              v-if="data.trangThai === 'BI_HUY'"
+              icon="pi pi-refresh"
+              text
+              rounded
+              size="small"
+              severity="success"
+              @click="restoreDiscount(data)"
+              class="!w-8 !h-8 !text-green-500 hover:!bg-green-50"
+              v-tooltip.top="'Khôi phục'"
+            />
+          </div>
+        </template>
+      </Column>
+    </DataTable>
+
+    <!-- Confirmation Dialogs -->
+
+    <!-- Delete Single Discount Dialog -->
+    <Dialog
+      v-model:visible="deleteDiscountDialog"
+      :style="{ width: '500px' }"
+      header="Xác nhận xóa đợt giảm giá"
+      :modal="true"
+      class="p-fluid"
+    >
+      <div class="flex items-start gap-4 mb-4">
+        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <i class="pi pi-exclamation-triangle text-red-600 text-xl"></i>
+        </div>
+        <div class="flex-1">
+          <h4 class="text-lg font-semibold text-surface-900 mb-2">Xóa đợt giảm giá</h4>
+          <p class="text-surface-600 mb-3">
+            Bạn có chắc chắn muốn xóa đợt giảm giá
+            <span class="font-semibold text-surface-900">{{ discount?.tenDotGiamGia }}</span>
+            ({{ discount?.maDotGiamGia }})?
+          </p>
+          <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p class="text-red-700 text-sm mb-0">
+              <i class="pi pi-info-circle mr-2"></i>
+              Hành động này không thể hoàn tác. Đợt giảm giá sẽ được chuyển sang trạng thái "Đã hủy".
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Reason Input -->
+      <div class="mt-4">
+        <label for="deleteReason" class="block text-sm font-medium mb-2">
+          Lý do xóa <span class="text-red-500">*</span>
+        </label>
+        <Textarea
+          id="deleteReason"
+          v-model="deleteReason"
+          placeholder="Nhập lý do xóa đợt giảm giá..."
+          rows="3"
+          class="w-full"
+        />
+      </div>
+
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="Hủy"
+            icon="pi pi-times"
+            outlined
+            @click="deleteDiscountDialog = false"
+          />
+          <Button
+            label="Xóa đợt giảm giá"
+            icon="pi pi-trash"
+            severity="danger"
+            @click="deleteSingleDiscount"
+          />
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- Delete Multiple Discounts Dialog -->
+    <Dialog
+      v-model:visible="deleteDiscountsDialog"
+      :style="{ width: '500px' }"
+      header="Xác nhận xóa nhiều đợt giảm giá"
+      :modal="true"
+      class="p-fluid"
+    >
+      <div class="flex items-start gap-4 mb-4">
+        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <i class="pi pi-exclamation-triangle text-red-600 text-xl"></i>
+        </div>
+        <div class="flex-1">
+          <h4 class="text-lg font-semibold text-surface-900 mb-2">Xóa nhiều đợt giảm giá</h4>
+          <p class="text-surface-600 mb-3">
+            Bạn có chắc chắn muốn xóa
+            <span class="font-semibold text-surface-900">{{ selectedDiscounts?.length || 0 }}</span>
+            đợt giảm giá đã chọn?
+          </p>
+          <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p class="text-red-700 text-sm mb-0">
+              <i class="pi pi-info-circle mr-2"></i>
+              Hành động này không thể hoàn tác. Tất cả đợt giảm giá được chọn sẽ chuyển sang trạng thái "Đã hủy".
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Batch Delete Audit Reason Input -->
+      <div class="mt-4">
+        <label for="batchDeleteReason" class="block text-sm font-medium mb-2">
+          Lý do xóa <span class="text-red-500">*</span>
+        </label>
+        <Textarea
+          id="batchDeleteReason"
+          v-model="batchCloseReason"
+          placeholder="Nhập lý do xóa nhiều đợt giảm giá..."
+          rows="3"
+          class="w-full"
+        />
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="Hủy"
+            icon="pi pi-times"
+            outlined
+            @click="deleteDiscountsDialog = false"
+          />
+          <Button
+            label="Xóa tất cả"
+            icon="pi pi-trash"
+            severity="danger"
+            @click="deleteMultipleDiscounts"
+          />
+        </div>
+      </template>
+    </Dialog>
+
+
+
+    <!-- Restore Multiple Discounts Dialog -->
+    <Dialog
+      v-model:visible="restoreDiscountsDialog"
+      :style="{ width: '500px' }"
+      header="Xác nhận khôi phục đợt giảm giá"
+      :modal="true"
+      class="p-fluid"
+    >
+      <div class="flex items-start gap-4 mb-4">
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <i class="pi pi-refresh text-green-600 text-xl"></i>
+        </div>
+        <div class="flex-1">
+          <h4 class="text-lg font-semibold text-surface-900 mb-2">Khôi phục đợt giảm giá</h4>
+          <p class="text-surface-600 mb-3">
+            Bạn có chắc chắn muốn khôi phục
+            <span class="font-semibold text-surface-900">{{ selectedDiscounts?.length || 0 }}</span>
+            đợt giảm giá đã chọn?
+          </p>
+          <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p class="text-green-700 text-sm mb-0">
+              <i class="pi pi-info-circle mr-2"></i>
+              Các đợt giảm giá sẽ được hiển thị trở lại trong danh sách và có thể được sử dụng.
+            </p>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="Hủy"
+            icon="pi pi-times"
+            outlined
+            @click="restoreDiscountsDialog = false"
+          />
+          <Button
+            label="Khôi phục đợt giảm giá"
+            icon="pi pi-refresh"
+            severity="success"
+            @click="restoreMultipleDiscounts"
+          />
+        </div>
+      </template>
+    </Dialog>
+  </div>
 </template>

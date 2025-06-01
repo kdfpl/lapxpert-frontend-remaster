@@ -19,6 +19,7 @@ export const useAttributeStore = defineStore('attributes', {
         webcam: [],
         brand: [],
         category: [],
+        colors: [],
         loading: false,
         error: null
     }),
@@ -232,6 +233,19 @@ export const useAttributeStore = defineStore('attributes', {
             }
         },
 
+        async fetchColors() {
+            try {
+                this.loading = true;
+                const response = await attributeService.getAllColors();
+                this.colors = response.data;
+            } catch (error) {
+                this.error = error.message;
+                console.error('Error fetching colors:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
         // Utility action to fetch all attributes at once
         async fetchAllAttributes() {
             await Promise.all([
@@ -250,7 +264,8 @@ export const useAttributeStore = defineStore('attributes', {
                 this.fetchDesign(),
                 this.fetchWebcam(),
                 this.fetchBrand(),
-                this.fetchCategory()
+                this.fetchCategory(),
+                this.fetchColors()
             ]);
         },
 

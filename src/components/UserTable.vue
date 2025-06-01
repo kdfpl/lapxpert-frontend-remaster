@@ -1,11 +1,11 @@
 <template>
-  <div class="p-6 card rounded-lg shadow-md">
+  <div class="card">
     <DataTable
       v-model:filters="filters"
       v-model:expandedRows="expandedRows"
       :value="processedUsers"
       paginator
-      removableSort 
+      removableSort
       :rows="10"
       :rowsPerPageOptions="[5, 10, 20, 50]"
       showGridlines
@@ -16,16 +16,16 @@
       class="p-datatable-sm"
     >
       <template #header>
-        <div class="space-y-3">
-          <div class="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             <!-- Left Controls -->
-            <div class="flex flex-wrap gap-2 items-center w-full md:w-auto">
+            <div class="flex flex-wrap gap-2 items-center">
               <Button
                 icon="pi pi-filter-slash"
                 label="Xóa bộ lọc"
                 outlined
+                size="small"
                 @click="clearFilter"
-                class="shrink-0"
               />
 
               <div class="flex gap-2">
@@ -33,43 +33,43 @@
                   icon="pi pi-plus"
                   label="Mở rộng"
                   text
+                  size="small"
                   severity="secondary"
                   @click="expandAll"
-                  class="shrink-0"
                 />
                 <Button
                   icon="pi pi-minus"
                   label="Thu gọn"
                   text
+                  size="small"
                   severity="secondary"
                   @click="collapseAll"
-                  class="shrink-0"
                 />
               </div>
             </div>
 
             <!-- Right Controls -->
-            <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+            <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
               <!-- Filters -->
-              <div class="flex flex-wrap gap-2 flex-grow">
-                <Dropdown
+              <div class="flex flex-wrap gap-2">
+                <Select
                   v-model="filters.gioiTinh.value"
                   :options="genders"
                   optionLabel="label"
                   optionValue="value"
                   placeholder="Giới tính"
                   showClear
-                  class="min-w-[120px] flex-grow"
+                  class="w-32"
                 />
 
-                <Dropdown
+                <Select
                   v-model="filters.trangThai.value"
                   :options="statuses"
                   optionLabel="label"
                   optionValue="value"
                   placeholder="Trạng thái"
                   showClear
-                  class="min-w-[140px] flex-grow"
+                  class="w-36"
                 >
                   <template #option="slotProps">
                     <Tag
@@ -77,9 +77,9 @@
                       :severity="slotProps.option.value ? 'success' : 'danger'"
                     />
                   </template>
-                </Dropdown>
+                </Select>
 
-                <Dropdown
+                <Select
                   v-if="showStaffFields"
                   v-model="filters.vaiTro.value"
                   :options="roles"
@@ -87,17 +87,34 @@
                   optionValue="value"
                   placeholder="Vai trò"
                   showClear
-                  class="min-w-[120px] flex-grow"
+                  class="w-32"
                 />
               </div>
 
               <!-- Search -->
-              <IconField>
-                <InputIcon>
-                  <i class="pi pi-search" />
-                </InputIcon>
-                <InputText v-model="filters['global'].value" placeholder="Tìm kiếm..." />
-              </IconField>
+              <div class="flex gap-2 items-center">
+                <IconField>
+                  <InputIcon>
+                    <i class="pi pi-search" />
+                  </InputIcon>
+                  <InputText
+                    v-model="filters['global'].value"
+                    placeholder="Tìm kiếm người dùng..."
+                    class="w-80"
+                  />
+                </IconField>
+                <Button
+                  v-if="filters['global'].value"
+                  icon="pi pi-times"
+                  text
+                  rounded
+                  size="small"
+                  severity="secondary"
+                  @click="clearGlobalFilter"
+                  v-tooltip.top="'Xóa tìm kiếm'"
+                  class="!w-8 !h-8"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -205,34 +222,37 @@
         </template>
       </Column>
 
-      <Column header="Hành động" headerClass="!text-md" class="!text-sm">
+      <Column header="Hành động" headerClass="!text-md" class="!text-sm" style="width: 120px">
         <template #body="{ data }">
-          <div class="flex gap-2">
+          <div class="flex gap-1">
             <Button
               icon="pi pi-pencil"
               text
               rounded
-              outlined
+              size="small"
               @click="$emit('edit', data)"
-              class="!text-blue-500 hover:!bg-blue-50"
+              class="!w-8 !h-8 !text-blue-500 hover:!bg-blue-50"
+              v-tooltip.top="'Chỉnh sửa'"
             />
             <Button
               v-if="data.trangThai"
               icon="pi pi-trash"
               text
               rounded
-              outlined
+              size="small"
               @click="$emit('delete', data)"
-              class="!text-red-500 hover:!bg-red-50"
+              class="!w-8 !h-8 !text-red-500 hover:!bg-red-50"
+              v-tooltip.top="'Vô hiệu hóa'"
             />
             <Button
               v-else
               icon="pi pi-replay"
               text
               rounded
-              outlined
+              size="small"
               @click="$emit('restore', data)"
-              class="!text-primary-500 hover:!bg-green-50"
+              class="!w-8 !h-8 !text-green-500 hover:!bg-green-50"
+              v-tooltip.top="'Khôi phục'"
             />
           </div>
         </template>
@@ -240,25 +260,30 @@
 
       <!-- Row Expansion -->
       <template #expansion="slotProps">
-        <div class="p-4 ">
-          <h5 class="text-lg font-semibold mb-3">Địa chỉ</h5>
-          <DataTable :value="slotProps.data.diaChis" class="p-datatable-sm shadow-inner">
-            <Column field="duong" header="Đường" headerClass="!bg-gray-100 !text-md" />
-            <Column field="phuongXa" header="Phường/Xã" headerClass="!bg-gray-100 !text-md" />
+        <div class="p-4 bg-surface-50">
+          <div class="flex items-center gap-2 mb-3">
+            <i class="pi pi-map-marker text-primary"></i>
+            <h5 class="font-semibold text-surface-900 m-0">Địa chỉ</h5>
+          </div>
+          <DataTable :value="slotProps.data.diaChis" class="p-datatable-sm">
+            <Column field="duong" header="Đường" headerClass="!bg-surface-100 !text-sm" class="!text-sm" />
+            <Column field="phuongXa" header="Phường/Xã" headerClass="!bg-surface-100 !text-sm" class="!text-sm" />
             <Column
               field="quanHuyen"
               header="Quận/Huyện"
-              headerClass="!bg-gray-100 !text-md"
+              headerClass="!bg-surface-100 !text-sm"
+              class="!text-sm"
             />
             <Column
               field="tinhThanh"
               header="Tỉnh/Thành"
-              headerClass="!bg-gray-100 !text-md"
+              headerClass="!bg-surface-100 !text-sm"
+              class="!text-sm"
             />
-            <Column field="loaiDiaChi" header="Loại" headerClass="!bg-gray-100 !text-md" />
-            <Column header="Mặc định" headerClass="!bg-gray-100 !text-md">
+            <Column field="loaiDiaChi" header="Loại" headerClass="!bg-surface-100 !text-sm" class="!text-sm" />
+            <Column header="Mặc định" headerClass="!bg-surface-100 !text-sm" class="!text-sm" style="width: 100px">
               <template #body="{ data }">
-                <i v-if="data.laMacDinh" class="pi pi-check-circle text-primary-emphasis" />
+                <Tag v-if="data.laMacDinh" value="Mặc định" severity="success" />
               </template>
             </Column>
           </DataTable>
@@ -336,4 +361,8 @@ const expandAll = () =>
   (expandedRows.value = props.users.reduce((acc, user) => ({ ...acc, [user.id]: true }), {}))
 
 const collapseAll = () => (expandedRows.value = [])
+
+const clearGlobalFilter = () => {
+  filters.value.global.value = null
+}
 </script>

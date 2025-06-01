@@ -1,5 +1,5 @@
 <script>
-import axios from "axios";
+import ThongKeService from '@/apis/dashboard'
 import { Line } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -62,10 +62,31 @@ export default {
   methods: {
     async fetchData() {
       try {
-        const response = await axios.get("http://localhost:8080/thong-ke/this-week");
-        this.chartData = response.data;
+        // Calculate date range for this week
+        const today = new Date()
+        const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()))
+        const endOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6))
+
+        const tuNgay = startOfWeek.toISOString().split('T')[0]
+        const denNgay = endOfWeek.toISOString().split('T')[0]
+
+        const response = await ThongKeService.layDoanhThuTheoNgay(tuNgay, denNgay)
+
+        // Format data for chart
+        this.chartData = {
+          labels: response.data.labels || [],
+          datasets: [{
+            label: 'Doanh thu tuần này (VNĐ)',
+            data: response.data.data || [],
+            borderColor: '#36A2EB',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            fill: true,
+            tension: 0.4
+          }]
+        }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu từ API:", error);
+        this.chartData = { labels: [], datasets: [] }
       }
     },
 
